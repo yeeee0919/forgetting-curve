@@ -4,7 +4,7 @@ const LANG_MAP = {
     nl: 'nl', en: 'en', ja: 'ja', de: 'de', fr: 'fr', ko: 'ko', es: 'es',
 }
 
-export default function SettingsModal({ settings, onSave, onClose }) {
+export default function SettingsModal({ settings, onSave, onClose, onExport, onRestore }) {
     const [key, setKey] = useState(settings.openaiKey || '')
     const [geminiKey, setGeminiKey] = useState(settings.geminiKey || '')
     const [voices, setVoices] = useState([])
