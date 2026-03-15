@@ -1,0 +1,941 @@
+/* ── Layout ── */
+.rc-layout {
+    display: flex;
+    gap: var(--space-lg);
+    justify-content: center;
+    align-items: flex-start;
+    width: 100%;
+}
+
+.rc-wrap {
+    width: 100%;
+    max-width: 580px;
+    /* Keeps the card focused and "narrow" as requested */
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+/* ── Left Sidebar & Topbar ── */
+.rc-left-sidebar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-xl);
+    padding-top: var(--space-md);
+    position: sticky;
+    top: 24px;
+}
+
+.rc-vertical-progress {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.rc-progress-fraction {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-weight: 800;
+    line-height: 1.1;
+    color: var(--text-tertiary);
+}
+
+.rc-progress-current {
+    font-size: 1.25rem;
+    color: var(--text-primary);
+}
+
+.rc-progress-total {
+    font-size: 0.85rem;
+}
+
+.rc-progress-divider {
+    font-size: 0.8rem;
+    opacity: 0.5;
+    margin: 2px 0;
+}
+
+.rc-progress-bar-vertical {
+    width: 6px;
+    height: 140px;
+    background: var(--border-default);
+    border-radius: 4px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+}
+
+.rc-progress-fill-vertical {
+    width: 100%;
+    background: var(--brand-primary);
+    border-radius: 4px;
+    transition: height 0.4s ease;
+}
+
+.rc-autoplay-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: var(--radius-full);
+    background: var(--bg-surface);
+    border: 1.5px solid var(--border-default);
+    box-shadow: var(--elevation-1);
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s var(--spring-bounce);
+}
+
+.rc-autoplay-btn:active {
+    transform: scale(0.96);
+}
+
+.rc-autoplay-btn.on {
+    background: rgba(88, 204, 2, 0.1);
+    border-color: var(--brand-primary);
+}
+
+/* ── Card ── */
+.rc-card {
+    position: relative;
+    width: 100%;
+    min-height: 280px;
+    cursor: pointer;
+    user-select: none;
+    border-radius: var(--radius-xl);
+    background: var(--bg-surface);
+    box-shadow: var(--elevation-2);
+    display: flex;
+    flex-direction: column;
+}
+
+.rc-card-back-style {
+    border: 2px solid rgba(124, 58, 237, 0.18);
+    box-shadow: 0 4px 24px rgba(124, 58, 237, 0.1);
+    cursor: pointer;
+}
+
+.rc-face {
+    padding: var(--space-lg) var(--space-md);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-sm);
+    flex: 1;
+    min-height: 0;
+}
+
+/* Content */
+.rc-status-badge {
+    position: absolute;
+    top: var(--space-md);
+    right: var(--space-md);
+    font-size: 0.65rem;
+    font-weight: 800;
+    padding: 3px var(--space-sm);
+    border-radius: var(--radius-lg);
+    letter-spacing: 0.06em;
+}
+
+.rc-delete-btn {
+    position: absolute;
+    top: var(--space-md);
+    left: var(--space-md);
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-full);
+    background: transparent;
+    border: none;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    transition: all 0.2s var(--spring-bounce);
+    z-index: 10;
+}
+
+.rc-delete-btn:hover {
+    background: var(--again-bg);
+    color: var(--again);
+    transform: scale(1.1);
+}
+
+.rc-delete-btn:active {
+    transform: scale(0.9);
+}
+
+.rc-phonetic {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    font-style: italic;
+    margin-bottom: var(--space-xs);
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+}
+
+.rc-main-word-area {
+    min-height: 120px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-top: var(--space-sm);
+    margin-bottom: var(--space-md);
+}
+
+.rc-word-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+}
+
+.rc-word {
+    font-size: 2.8rem;
+    font-weight: 900;
+    color: var(--text-primary);
+    text-align: center;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+}
+
+.rc-flip-hint {
+    font-size: 0.76rem;
+    color: var(--text-tertiary);
+    margin-top: var(--space-xs);
+    font-weight: 700;
+}
+
+.rc-back-top-row {
+    position: absolute;
+    top: var(--space-md);
+    left: var(--space-md);
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.rc-back-word {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-tertiary);
+}
+
+.rc-translation {
+    font-size: 2.4rem;
+    font-weight: 900;
+    color: var(--text-primary);
+    text-align: center;
+    line-height: 1.2;
+}
+
+.rc-example {
+    width: 100%;
+    text-align: center;
+    margin-top: var(--space-xs);
+}
+
+.rc-ex-text {
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    font-style: italic;
+    line-height: 1.5;
+    font-weight: 700;
+}
+
+.rc-front-example {
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    font-style: italic;
+    line-height: 1.5;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    text-align: center;
+}
+
+.rc-ex-trans {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-top: 2px;
+    font-weight: 700;
+}
+
+/* Speak button */
+.rc-speak-icon-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-canvas);
+    border: 1.5px solid var(--border-default);
+    border-radius: var(--radius-full);
+    color: var(--text-primary);
+    font-size: 1.2rem;
+    width: 36px;
+    height: 36px;
+    transition: all 0.2s var(--spring-bounce);
+    cursor: pointer;
+}
+
+.rc-speak-icon-btn.small {
+    width: 28px;
+    height: 28px;
+    font-size: 0.9rem;
+    border: none;
+    background: var(--bg-surface);
+    box-shadow: var(--elevation-1);
+}
+
+.rc-speak-icon-btn:hover {
+    background: rgba(124, 58, 237, 0.08);
+    /* accent-bg */
+    border-color: rgba(167, 139, 250, 1);
+    /* accent-light */
+    transform: scale(1.05);
+}
+
+.rc-speak-icon-btn:active {
+    transform: scale(0.96);
+}
+
+/* Tips */
+.rc-tips-wrap {
+    margin-top: var(--space-xs);
+    width: 100%;
+}
+
+.rc-tips-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    background: var(--bg-canvas);
+    border: 1.5px solid var(--border-default);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: var(--space-sm) var(--space-md);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.rc-tips-btn.open,
+.rc-tips-btn:hover {
+    background: rgba(124, 58, 237, 0.08);
+    border-color: rgba(167, 139, 250, 1);
+    color: var(--brand-accent);
+}
+
+.rc-tips-chevron {
+    font-size: 0.65rem;
+    opacity: 0.6;
+}
+
+.rc-tips-content {
+    background: rgba(124, 58, 237, 0.04);
+    border-radius: var(--radius-sm);
+    padding: var(--space-sm) var(--space-md);
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    line-height: 1.65;
+    font-weight: 600;
+}
+
+.rc-tips-content-wrap {
+    margin-top: var(--space-xs);
+    display: flex;
+    flex-direction: column;
+}
+
+.rc-user-note-input {
+    width: 100%;
+    min-height: 80px;
+    background: rgba(124, 58, 237, 0.02);
+    border: 1.5px solid rgba(124, 58, 237, 0.15);
+    border-radius: var(--radius-sm);
+    padding: var(--space-sm) var(--space-md);
+    font-size: 0.82rem;
+    color: var(--text-primary);
+    line-height: 1.65;
+    font-weight: 600;
+    resize: vertical;
+    outline: none;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+
+.rc-user-note-input:focus {
+    background: rgba(124, 58, 237, 0.05);
+    border-color: rgba(167, 139, 250, 1);
+    box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.15);
+}
+
+.rc-user-note-input::placeholder {
+    color: var(--text-tertiary);
+    font-weight: 500;
+}
+
+/* Show answer btn */
+.rc-show-btn {
+    width: 100%;
+    padding: var(--space-md);
+    background: var(--bg-surface);
+    border: 2px solid var(--border-default);
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    font-size: 1rem;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    box-shadow: var(--elevation-1);
+    transition: all 0.2s var(--spring-bounce);
+}
+
+.rc-show-btn:hover {
+    border-color: rgba(167, 139, 250, 1);
+    color: var(--brand-accent);
+    background: rgba(124, 58, 237, 0.08);
+}
+
+.rc-show-btn:active {
+    transform: scale(0.96);
+    box-shadow: none;
+}
+
+/* Rating — 切割明確的獨立區塊 */
+.rc-rating-wrap {
+    background: var(--bg-surface);
+    border: 2px solid var(--border-default);
+    border-radius: var(--radius-xl);
+    padding: var(--space-md) var(--space-lg) var(--space-lg);
+    box-shadow: var(--elevation-1);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.rc-rating-wrap-hidden {
+    padding: 0;
+    border: none;
+    box-shadow: none;
+    background: transparent;
+}
+
+.rc-rating-hint {
+    text-align: center;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    font-weight: 800;
+    letter-spacing: 0.02em;
+}
+
+.rc-front-example {
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    font-weight: 700;
+    font-style: italic;
+    text-align: center;
+}
+
+.rc-rating-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-sm);
+    align-items: stretch;
+}
+
+/* 動態懸浮 Tooltip（安全版：移除易破圖的 blur，維持獨立 DOM 節點） */
+.rcb-wrap {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.rcb-tooltip {
+    position: absolute;
+    bottom: calc(100% + var(--space-sm));
+    left: 50%;
+    transform: translateX(-50%) translateY(var(--space-xs));
+    background: #1e1e24;
+    /* 純色，避免 backdrop-filter 造成 Safari 破圖 */
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 800;
+    padding: 6px var(--space-md);
+    border-radius: var(--radius-sm);
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 20;
+    box-shadow: var(--elevation-2);
+}
+
+.rcb-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: #1e1e24;
+}
+
+.rcb-wrap:hover .rcb-tooltip {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+.rc-rating-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-xs);
+    background: var(--rbg);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid color-mix(in srgb, var(--rc) 20%, transparent);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.2s var(--spring-bounce);
+    padding: var(--space-sm) var(--space-xs);
+    width: 100%;
+    color: var(--rc);
+}
+
+
+
+.rc-rating-btn:hover {
+    transform: translateY(-4px);
+    background: color-mix(in srgb, var(--rbg) 70%, #ffffff);
+    border-color: color-mix(in srgb, var(--rc) 40%, transparent);
+    box-shadow: 0 8px 20px color-mix(in srgb, var(--rc) 20%, transparent);
+}
+
+
+
+.rc-rating-btn:active {
+    transform: scale(0.92);
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--rc) 8%, transparent);
+}
+
+/* Icon Styles */
+.rcb-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.25s ease, transform 0.25s ease;
+}
+
+.rc-rating-btn .rcb-icon svg {
+    width: 24px;
+    height: 24px;
+}
+
+.rc-rating-btn:hover .rcb-icon {
+    transform: scale(1.1);
+    filter: drop-shadow(0 2px 6px color-mix(in srgb, var(--rc) 30%, transparent));
+}
+
+/* Text Styles */
+.rcb-text-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    height: 14px;
+}
+
+.rcb-label {
+    font-size: 0.72rem;
+    font-weight: 800;
+    transition: color 0.25s ease;
+    letter-spacing: 0;
+    white-space: nowrap;
+}
+
+
+
+.rcb-shortcut {
+    font-size: 0.65rem;
+    font-weight: 700;
+    opacity: 0.4;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    transition: opacity 0.25s ease, color 0.25s ease;
+    letter-spacing: 0;
+}
+
+.rc-rating-btn:hover .rcb-shortcut {
+    opacity: 0.8;
+}
+
+/* ── Done screen ── */
+.rc-done {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-md);
+    text-align: center;
+    padding: var(--space-md) 0;
+}
+
+.rc-done-icon {
+    font-size: 4rem;
+}
+
+.rc-done-title {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: var(--text-primary);
+}
+
+.rc-done-sub {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.rc-done-stats {
+    display: flex;
+    gap: var(--space-sm);
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.rc-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-md);
+    border: 2px solid;
+    border-radius: var(--radius-md);
+    min-width: 74px;
+}
+
+/* ── Sidebar (Weak Words) ── */
+.rc-sidebar {
+    width: 180px;
+    flex-shrink: 0;
+    background: var(--bg-surface);
+    border: 2px solid rgba(255, 75, 75, 0.2);
+    border-radius: var(--radius-lg);
+    padding: var(--space-md) var(--space-sm);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    position: sticky;
+    top: var(--space-md);
+    box-shadow: var(--elevation-1);
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    transition: opacity 0.3s var(--spring-smooth), transform 0.3s var(--spring-smooth);
+}
+
+/* 專注模式下側欄會被淡化但保留空間，由外層控制 class */
+.rc-sidebar.focus-mode {
+    opacity: 0.05;
+    pointer-events: none;
+    transform: translateX(10px);
+}
+
+.rc-sidebar:hover {
+    opacity: 1 !important;
+    transform: translateX(0) !important;
+    pointer-events: auto !important;
+}
+
+.rc-sidebar-title {
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: var(--again);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.rc-sidebar-count {
+    background: var(--again-bg);
+    color: var(--again);
+    border-radius: 10px;
+    padding: 1px 7px;
+    font-size: 0.78rem;
+}
+
+.rc-sidebar-empty {
+    font-size: 0.76rem;
+    color: var(--text-tertiary);
+    text-align: center;
+    padding: var(--space-md) 0;
+    line-height: 1.6;
+    font-weight: 600;
+}
+
+.rc-sidebar-item {
+    background: rgba(255, 75, 75, 0.05);
+    border: 1.5px solid rgba(255, 75, 75, 0.15);
+    border-radius: var(--radius-sm);
+    padding: var(--space-sm);
+}
+
+.rc-sidebar-front {
+    font-size: 0.88rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+}
+
+.rc-sidebar-back {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+/* ── 極簡行內鍵盤提示 ── */
+.rc-inline-hint {
+    margin-top: var(--space-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
+    background: transparent;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    border-radius: var(--radius-sm);
+    animation: fadeIn 0.4s ease;
+}
+
+.rc-inline-hint-text {
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.rc-inline-hint kbd {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    border-bottom-width: 2px;
+    border-radius: var(--radius-xs, 4px);
+    padding: 1px 5px;
+    margin: 0 2px;
+    font-size: 0.65rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+}
+
+.rc-inline-hint-close {
+    background: transparent;
+    border: none;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    padding: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-full);
+    transition: all 0.2s var(--spring-bounce);
+    margin-left: 2px;
+}
+
+.rc-inline-hint-close:hover {
+    color: var(--text-primary);
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.rc-inline-hint-close:active {
+    transform: scale(0.96);
+}
+
+/* Mobile */
+@media (max-width: 680px) {
+    .rc-layout {
+        flex-direction: column;
+    }
+
+    .rc-card {
+        max-height: calc(100vh - 300px);
+    }
+
+    .rc-sidebar {
+        width: 100%;
+        position: static;
+        max-height: 400px;
+    }
+
+    .rc-word {
+        font-size: 2.2rem;
+    }
+}
+
+/* ── 蕃茄鐘計時器 ── */
+.pomodoro-widget {
+    position: fixed;
+    bottom: calc(64px + var(--space-md));
+    /* 64px = tabbar height */
+    right: var(--space-md);
+    z-index: 100;
+    background: var(--bg-surface, #fff);
+    border: 1.5px solid var(--border-default, #e5e7eb);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--elevation-2);
+    padding: var(--space-sm) var(--space-md);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-sm);
+    min-width: 110px;
+    transition: box-shadow 0.2s, opacity 0.3s var(--spring-smooth), transform 0.3s var(--spring-smooth);
+}
+
+/* 專注模式下稍微淡出計時器 */
+.pomodoro-widget.focus-mode {
+    opacity: 0.1;
+    pointer-events: none;
+    transform: translateY(10px);
+}
+
+.pomodoro-widget:hover {
+    box-shadow: var(--elevation-3);
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    transform: translateY(0) !important;
+}
+
+.pomodoro-widget.done {
+    border-color: var(--brand-primary);
+    background: rgba(88, 204, 2, 0.06);
+    animation: pomodoro-pulse 0.6s ease;
+}
+
+@keyframes pomodoro-pulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+.pomodoro-label {
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: var(--text-secondary, #888);
+    letter-spacing: 0.03em;
+}
+
+.pomodoro-presets {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.pomodoro-preset-btn {
+    background: var(--bg-canvas, #f4f4f5);
+    color: var(--text-primary, #333);
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 4px 9px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.15s var(--spring-bounce);
+}
+
+.pomodoro-preset-btn:hover {
+    background: #FF6B35;
+    color: #fff;
+    transform: scale(1.08);
+}
+
+.pomodoro-preset-btn:active {
+    transform: scale(0.92);
+}
+
+/* ── 環形進度 ── */
+.pomodoro-ring-wrap {
+    position: relative;
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pomodoro-ring {
+    width: 64px;
+    height: 64px;
+    transform: rotate(-90deg);
+}
+
+.pomodoro-ring-bg {
+    fill: none;
+    stroke: var(--border-default, #e5e7eb);
+    stroke-width: 4;
+}
+
+.pomodoro-ring-fill {
+    fill: none;
+    stroke: #FF6B35;
+    stroke-width: 4;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.9s linear;
+}
+
+.pomodoro-widget.done .pomodoro-ring-fill {
+    stroke: var(--brand-primary);
+}
+
+.pomodoro-time {
+    position: absolute;
+    font-size: 0.78rem;
+    font-weight: 900;
+    color: var(--text-primary, #333);
+    font-variant-numeric: tabular-nums;
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+    letter-spacing: -0.02em;
+}
+
+.pomodoro-done-msg {
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: var(--brand-primary);
+}
+
+.pomodoro-reset-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1rem;
+    color: var(--text-secondary, #aaa);
+    padding: 0 4px;
+    line-height: 1;
+    transition: color 0.15s, transform 0.15s var(--spring-bounce);
+}
+
+.pomodoro-reset-btn:hover {
+    color: var(--text-primary, #333);
+    transform: rotate(-30deg) scale(1.15);
+}
+
+.pomodoro-reset-btn:active {
+    transform: rotate(-60deg) scale(0.9);
+}

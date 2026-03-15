@@ -1,0 +1,112 @@
+/* =========================================
+   MemoFlip - Global Styles
+   Duolingo × Apple Design Language
+   ========================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    /* =========================================
+       DESIGN TOKEN ARCHITECTURE (V6.0)
+       = ========================================= */
+
+    /* 1. Spacing System (Base 4) */
+    --space-xs: 4px;
+    --space-sm: 8px;
+    --space-md: 16px;
+    --space-lg: 24px;
+    --space-xl: 32px;
+    --space-2xl: 48px;
+
+    /* 2. Radius System */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 20px;
+    --radius-xl: 28px;
+    --radius-full: 9999px;
+
+    /* 3. Color Semantic System */
+    --bg-canvas: #F5F5F7;
+    --bg-surface: #FFFFFF;
+    --bg-elevated: rgba(245, 245, 247, 0.85);
+    /* For blur */
+
+    --border-subtle: rgba(0, 0, 0, 0.05);
+    --border-default: #E0E0E5;
+
+    --brand-primary: #58CC02;
+    --brand-accent: #7C3AED;
+
+    --text-primary: #1D1D1F;
+    --text-secondary: #6E6E73;
+    --text-tertiary: #AEAEB2;
+
+    /* Status/Rating Colors */
+    --again: #FF4B4B;
+    --again-bg: rgba(255, 75, 75, 0.1);
+    --hard: #FF9600;
+    --hard-bg: rgba(255, 150, 0, 0.1);
+    --good: #58CC02;
+    --good-bg: rgba(88, 204, 2, 0.1);
+    --easy: #1CB0F6;
+    --easy-bg: rgba(28, 176, 246, 0.1);
+
+    /* 4. Elevation System */
+    --elevation-1: 0 2px 8px rgba(0, 0, 0, 0.04);
+    --elevation-2: 0 8px 24px rgba(0, 0, 0, 0.08);
+    --elevation-3: 0 20px 60px rgba(0, 0, 0, 0.12);
+
+    /* 5. Motion System */
+    --spring-bounce: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    --spring-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+body {
+    /* 6. Typography System Reset */
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+    background: var(--bg-canvas);
+    color: var(--text-primary);
+    min-height: 100vh;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+button {
+    cursor: pointer;
+    border: none;
+    outline: none;
+    font-family: inherit;
+    transition: transform 0.1s ease, opacity 0.2s ease;
+}
+
+button:active {
+    transform: scale(0.97);
+}
+
+textarea,
+input {
+    font-family: inherit;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 5px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border-default);
+    border-radius: 4px;
+}
