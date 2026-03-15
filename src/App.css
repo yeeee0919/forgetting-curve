@@ -620,7 +620,7 @@
     display: flex;
     align-items: flex-end;
     justify-content: center;
-    z-index: 100;
+    z-index: 3000;
     padding: 0;
 }
 
