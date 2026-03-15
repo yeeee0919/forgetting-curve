@@ -190,6 +190,42 @@ export default function App() {
         setShowSettings(false)
     }
 
+    const handleExport = () => {
+        const data = {
+            cards,
+            activityLog,
+            settings,
+            version: '1.0.0',
+            exportDate: new Date().toISOString()
+        }
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `forgetting_curve_backup_${new Date().toISOString().split('T')[0]}.json`
+        a.click()
+        URL.revokeObjectURL(url)
+    }
+
+    const handleRestoreBackup = (data) => {
+        if (!data.cards || !Array.isArray(data.cards)) {
+            alert('無效的備份檔案：缺少卡片資料')
+            return
+        }
+        
+        if (confirm(`確定要還原備份嗎？這將會覆蓋目前的 ${cards.length} 張卡片與進度。`)) {
+            updateCards(data.cards)
+            if (data.activityLog) {
+                setActivityLog(data.activityLog)
+                localStorage.setItem('memoflip_activity', JSON.stringify(data.activityLog))
+            }
+            if (data.settings) {
+                handleSaveSettings(data.settings)
+            }
+            alert('還原成功！')
+        }
+    }
+
     const clearAllWeakCards = () => {
         const updated = cards.map(c => ({ ...c, isWeak: false }))
         updateCards(updated)
@@ -315,6 +351,8 @@ export default function App() {
                     settings={settings}
                     onSave={handleSaveSettings}
                     onClose={() => setShowSettings(false)}
+                    onExport={handleExport}
+                    onRestore={handleRestoreBackup}
                 />
             )}
         </div>

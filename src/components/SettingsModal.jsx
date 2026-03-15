@@ -179,6 +179,52 @@ export default function SettingsModal({ settings, onSave, onClose }) {
                 >
                     儲存設定
                 </button>
+
+                {/* 資料遷移備份 */}
+                <div style={{ marginTop: 'var(--space-xl)', paddingTop: 'var(--space-lg)', borderTop: '2px dashed var(--border-default)' }}>
+                    <h3 style={{ fontSize: '0.95rem', marginBottom: 'var(--space-md)', color: 'var(--text-primary)' }}>📦 資料備份與還原</h3>
+                    <div style={{ display: 'flex', gap: 'var(--space-md)' }}>
+                        <button
+                            className="btn-secondary"
+                            style={{ flex: 1, fontSize: '0.85rem', height: '40px' }}
+                            onClick={onExport}
+                        >
+                            📤 匯出備份 (JSON)
+                        </button>
+                        <div style={{ flex: 1, position: 'relative' }}>
+                            <button
+                                className="btn-secondary"
+                                style={{ width: '100%', fontSize: '0.85rem', height: '40px' }}
+                                onClick={() => document.getElementById('restore-input').click()}
+                            >
+                                📥 還原備份
+                            </button>
+                            <input
+                                id="restore-input"
+                                type="file"
+                                accept=".json"
+                                style={{ display: 'none' }}
+                                onChange={(e) => {
+                                    const file = e.target.files[0]
+                                    if (!file) return
+                                    const reader = new FileReader()
+                                    reader.onload = (event) => {
+                                        try {
+                                            const data = JSON.parse(event.target.result)
+                                            onRestore(data)
+                                        } catch (err) {
+                                            alert('讀取備份檔案失敗：' + err.message)
+                                        }
+                                    }
+                                    reader.readAsText(file)
+                                }}
+                            />
+                        </div>
+                    </div>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginTop: 'var(--space-sm)' }}>
+                        可以用來將資料從 localhost 遷移到 Vercel 或是備份到雲端。
+                    </p>
+                </div>
             </div>
         </div>
     )
