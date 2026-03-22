@@ -328,9 +328,10 @@ export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdat
           <div
             className={`rc-card ${flipped ? 'rc-card-back-style' : 'rc-card-front-style'}`}
             onClick={() => {
-              if (!flipped) setTipsOpen(true)
+              if (!flipped && !isMobile) setTipsOpen(true)
               setFlipped(f => !f)
             }}
+
           >
             {!flipped ? (
               /* ─ 正面 ─ */
