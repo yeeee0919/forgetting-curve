@@ -32,7 +32,9 @@
     width: 100%;
     overflow-y: auto;
     min-height: 0;
+    transition: padding 0.2s ease;
 }
+
 
 .app-content.wide {
     max-width: 1200px;
@@ -182,6 +184,18 @@
     .icon-btn {
         width: 34px !important;
         height: 34px !important;
+    }
+
+    .app-header {
+        padding: 6px 12px !important;
+    }
+
+    .hide-tabbar .app-header {
+        display: none; /* Hide header completely on mobile review to maximize space */
+    }
+
+    .hide-tabbar .app-content {
+        padding-top: 10px !important;
     }
 }
 

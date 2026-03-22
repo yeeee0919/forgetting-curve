@@ -241,7 +241,7 @@ export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdat
         if (e.code === 'Space') {
           e.preventDefault()
           setFlipped(true)
-          setTipsOpen(true)
+          if (!isMobile) setTipsOpen(true)
         }
       } else {
         // 卡片已翻開，按下空白鍵可翻回正面
@@ -471,13 +471,14 @@ export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdat
                     <span>💡 記憶提示與筆記</span>
                     <span className="rc-tips-chevron">{tipsOpen ? '▲' : '▼'}</span>
                   </button>
-                  {tipsOpen && (
+                {tipsOpen && (
                     <div className="rc-tips-content-wrap">
                       {card.tips && (
-                        <div className="rc-tips-content" style={{ userSelect: 'text', marginBottom: '8px' }}>
+                        <div className="rc-tips-content" style={{ userSelect: 'text', marginBottom: '8px', maxWidth: '100%', wordBreak: 'break-word' }}>
                           {card.tips}
                         </div>
                       )}
+
                       <textarea
                         className="rc-user-note-input"
                         placeholder="點此新增你的專屬記憶筆記..."
@@ -499,7 +500,7 @@ export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdat
         <div className="rc-bottom-area">
           <div className={`rc-rating-wrap ${!flipped ? 'rc-rating-wrap-hidden' : ''}`}>
             {!flipped ? (
-              <button className="rc-show-btn" onClick={() => { setFlipped(true); setTipsOpen(true); }}>
+              <button className="rc-show-btn" onClick={() => { setFlipped(true); if (!isMobile) setTipsOpen(true); }}>
                 顯示答案 <span style={{ opacity: 0.5, fontSize: '0.8rem', marginLeft: '6px' }}>[Space]</span>
               </button>
             ) : (
