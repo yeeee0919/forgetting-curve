@@ -519,7 +519,9 @@
     grid-template-columns: repeat(4, 1fr);
     gap: var(--space-sm);
     align-items: stretch;
+    padding-bottom: max(var(--space-md), env(safe-area-inset-bottom));
 }
+
 
 @media (max-width: 420px) {
     .rc-rating-grid {

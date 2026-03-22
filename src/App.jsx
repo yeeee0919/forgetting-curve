@@ -309,7 +309,8 @@ export default function App() {
     const weakCards = cards.filter(c => c.isWeak && !dismissedWeakCards.includes(c.id))
 
     return (
-        <div className="app">
+        <div className={`app ${view === 'review' ? 'hide-tabbar' : ''}`}>
+
             {/* Top Header - Redesigned for unified visual identity */}
             <header className="app-header">
                 <div className="app-header-inner">
@@ -370,45 +371,48 @@ export default function App() {
             </main>
 
             {/* Bottom Tab Bar */}
-            <nav className="tabbar">
-                <button
-                    className={`tabbar-item ${view === 'home' ? 'active' : ''}`}
-                    onClick={() => setView('home')}
-                >
-                    <span className="tabbar-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-                    </span>
-                    首頁
-                </button>
-                <button
-                    className={`tabbar-item ${view === 'review' ? 'active' : ''}`}
-                    onClick={() => setView('review')}
-                >
-                    <span className="tabbar-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="8" width="18" height="14" rx="2" ry="2"></rect><path d="M7 4h14v14"></path></svg>
-                    </span>
-                    複習
-                    {dueCount > 0 && <span className="tabbar-badge">{dueCount}</span>}
-                </button>
-                <button
-                    className={`tabbar-item ${view === 'library' ? 'active' : ''}`}
-                    onClick={() => setView('library')}
-                >
-                    <span className="tabbar-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-                    </span>
-                    卡片庫
-                </button>
-                <button
-                    className={`tabbar-item ${view === 'grammar' ? 'active' : ''}`}
-                    onClick={() => setView('grammar')}
-                >
-                    <span className="tabbar-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
-                    </span>
-                    文法
-                </button>
-            </nav>
+            {view !== 'review' && (
+                <nav className="tabbar">
+                    <button
+                        className={`tabbar-item ${view === 'home' ? 'active' : ''}`}
+                        onClick={() => setView('home')}
+                    >
+                        <span className="tabbar-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                        </span>
+                        首頁
+                    </button>
+                    <button
+                        className={`tabbar-item ${view === 'review' ? 'active' : ''}`}
+                        onClick={() => setView('review')}
+                    >
+                        <span className="tabbar-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="8" width="18" height="14" rx="2" ry="2"></rect><path d="M7 4h14v14"></path></svg>
+                        </span>
+                        複習
+                        {dueCount > 0 && <span className="tabbar-badge">{dueCount}</span>}
+                    </button>
+                    <button
+                        className={`tabbar-item ${view === 'library' ? 'active' : ''}`}
+                        onClick={() => setView('library')}
+                    >
+                        <span className="tabbar-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                        </span>
+                        卡片庫
+                    </button>
+                    <button
+                        className={`tabbar-item ${view === 'grammar' ? 'active' : ''}`}
+                        onClick={() => setView('grammar')}
+                    >
+                        <span className="tabbar-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+                        </span>
+                        文法
+                    </button>
+                </nav>
+            )}
+
 
             {showImport && (
                 <ImportModal

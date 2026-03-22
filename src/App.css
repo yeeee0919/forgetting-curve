@@ -16,9 +16,10 @@
 @media (max-width: 860px) {
     .app {
         padding-left: 0;
-        /* Remove sidebar padding on mobile */
         padding-bottom: 72px;
-        /* Space for bottom tabbar */
+    }
+    .app.hide-tabbar {
+        padding-bottom: 0px;
     }
 }
 
