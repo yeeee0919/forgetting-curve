@@ -362,6 +362,45 @@ export default function ImportModal({ onImport, onClose, importing, error, hasAp
                     .im-error-v4 { font-size: 0.82rem; font-weight: 700; color: var(--again); background: var(--again-bg); padding: 4px 10px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
 
                     .im-code-editor { font-family: 'JetBrains Mono', monospace; background: #1a1a1a; color: #e0e0e0; }
+
+                    @media (max-width: 600px) {
+                        .im-header {
+                            padding: var(--space-sm) var(--space-md) 0;
+                        }
+                        .im-tabs-horizontal {
+                            width: 100%;
+                        }
+                        .im-tab-h {
+                            padding: var(--space-sm) var(--space-md);
+                            font-size: 0.8rem;
+                        }
+                        .im-footer-v5 {
+                            flex-direction: column;
+                            gap: var(--space-sm);
+                            padding: var(--space-md);
+                            height: auto;
+                        }
+                        .im-footer-left, .im-footer-right {
+                            width: 100%;
+                            justify-content: center;
+                        }
+                        .im-external-ai-group {
+                            flex-direction: column;
+                            width: 100%;
+                        }
+                        .im-footer-link-btn {
+                            width: 100%;
+                            justify-content: center;
+                        }
+                        .im-btn-v5 {
+                            flex: 1;
+                        }
+                        .im-textarea-v4 {
+                            font-size: 0.95rem;
+                            padding: var(--space-md);
+                        }
+                    }
+
                 `}</style>
             </div>
         </div>

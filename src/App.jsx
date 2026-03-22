@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { getCards, saveCards, getSettings, saveSettings, generateId } from './services/storage'
 import { initCard, scheduleCard, getDueCards } from './services/srs'
 import { parseTextToCards, parseTextToCardsGemini } from './services/ai'
-import { getInboxWords, deleteInboxWord, clearInbox } from './services/supabase'
+import { getInboxWords, deleteInboxWord, clearInbox, getCloudCards, upsertCloudCards, deleteCloudCard } from './services/supabase'
+
 import ReviewCard from './components/ReviewCard'
 import CardList from './components/CardList'
 import GrammarView from './components/GrammarView'
@@ -25,6 +26,9 @@ export default function App() {
     const [showSettings, setShowSettings] = useState(false)
     const [importing, setImporting] = useState(false)
     const [importError, setImportError] = useState('')
+    const [syncId, setSyncId] = useState(localStorage.getItem('memoflip_sync_id') || '')
+    const [lastSynced, setLastSynced] = useState(null)
+
 
     // 活動紀錄紀錄每天背了幾張卡
     const [activityLog, setActivityLog] = useState(() => {
@@ -49,6 +53,55 @@ export default function App() {
         setSettings(getSettings())
         fetchInboxWords()
     }, [])
+
+    useEffect(() => {
+        if (syncId) {
+            handleSync(syncId)
+        }
+    }, [syncId])
+
+    const handleSync = async (id) => {
+        if (!id) return
+        try {
+            const remoteCards = await getCloudCards(id)
+            if (!remoteCards.length && cards.length > 0) {
+                // 初次同步：將本地推送至雲端
+                await upsertCloudCards(id, cards)
+                setLastSynced(Date.now())
+                return
+            }
+
+            // 合併邏輯：以 updatedAt 為準
+            const localMap = new Map(cards.map(c => [c.id, c]))
+            const remoteMap = new Map(remoteCards.map(c => [c.id, c]))
+            const allIds = new Set([...localMap.keys(), ...remoteMap.keys()])
+
+            const merged = Array.from(allIds).map(cid => {
+                const local = localMap.get(cid)
+                const remote = remoteMap.get(cid)
+                if (!local) return remote
+                if (!remote) return local
+                // 誰比較新就聽誰的
+                return (remote.updatedAt || 0) > (local.updatedAt || 0) ? remote : local
+            })
+
+            setCards(merged)
+            saveCards(merged)
+            setLastSynced(Date.now())
+
+            // 如果本地有比雲端新的，或是雲端沒有的，推送到雲端
+            const toPush = merged.filter(c => {
+                const remote = remoteMap.get(c.id)
+                return !remote || (c.updatedAt || 0) > (remote.updatedAt || 0)
+            })
+            if (toPush.length > 0) {
+                await upsertCloudCards(id, toPush)
+            }
+        } catch (e) {
+            console.error('Sync failed:', e)
+        }
+    }
+
 
     const fetchInboxWords = async () => {
         try {
@@ -79,9 +132,15 @@ export default function App() {
     }
 
     const updateCards = useCallback((newCards) => {
-        setCards(newCards)
-        saveCards(newCards)
-    }, [])
+        const timestamped = newCards.map(c => ({ ...c, updatedAt: Date.now() }))
+        setCards(timestamped)
+        saveCards(timestamped)
+        if (syncId) {
+            // 背景同步
+            upsertCloudCards(syncId, timestamped.filter(c => c.updatedAt >= Date.now() - 1000))
+        }
+    }, [syncId])
+
 
     const dismissWeakCard = (cardId) => {
         setDismissedWeakCards(prev => [...prev, cardId])
@@ -349,10 +408,20 @@ export default function App() {
             {showSettings && (
                 <SettingsModal
                     settings={settings}
-                    onSave={handleSaveSettings}
+                    onSave={(s) => {
+                        setSettings(s)
+                        saveSettings(s)
+                    }}
                     onClose={() => setShowSettings(false)}
                     onExport={handleExport}
                     onRestore={handleRestoreBackup}
+                    syncId={syncId}
+                    onSyncIdChange={(id) => {
+                        setSyncId(id)
+                        localStorage.setItem('memoflip_sync_id', id)
+                    }}
+                    lastSynced={lastSynced}
+                    onManualSync={() => handleSync(syncId)}
                 />
             )}
         </div>

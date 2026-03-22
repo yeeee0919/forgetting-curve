@@ -116,6 +116,14 @@
     transition: transform 0.2s var(--spring-bounce), box-shadow 0.2s ease;
 }
 
+@media (max-width: 600px) {
+    .cl-item {
+        padding: var(--space-md);
+        gap: var(--space-md);
+    }
+}
+
+
 /* Notebook Highlighter Left Edge */
 .cl-item::before {
     content: '';
@@ -160,6 +168,17 @@
     line-height: 1.2;
     -webkit-font-smoothing: antialiased;
 }
+
+@media (max-width: 480px) {
+    .cl-front {
+        font-size: 1.2rem;
+    }
+
+    .cl-back {
+        font-size: 0.95rem !important;
+    }
+}
+
 
 /* Dictionary Phonetic (e.g. /fəˈnetɪk/) */
 .cl-phonetic {

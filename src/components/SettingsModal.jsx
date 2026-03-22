@@ -4,7 +4,7 @@ const LANG_MAP = {
     nl: 'nl', en: 'en', ja: 'ja', de: 'de', fr: 'fr', ko: 'ko', es: 'es',
 }
 
-export default function SettingsModal({ settings, onSave, onClose, onExport, onRestore }) {
+export default function SettingsModal({ settings, onSave, onClose, onExport, onRestore, syncId, onSyncIdChange, lastSynced, onManualSync }) {
     const [key, setKey] = useState(settings.openaiKey || '')
     const [geminiKey, setGeminiKey] = useState(settings.geminiKey || '')
     const [voices, setVoices] = useState([])
@@ -180,18 +180,53 @@ export default function SettingsModal({ settings, onSave, onClose, onExport, onR
                     儲存設定
                 </button>
 
+                {/* 雲端同步 */}
+                <div style={{ marginTop: 'var(--space-xl)', paddingTop: 'var(--space-lg)', borderTop: '2px dashed var(--border-default)' }}>
+                    <h3 style={{ fontSize: '0.95rem', marginBottom: 'var(--space-xs)', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        ☁️ 雲端同步 (跨裝置)
+                    </h3>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: 'var(--space-md)' }}>
+                        輸入相同的同步 ID 即可在電腦與手機間同步字卡。
+                    </p>
+                    <div style={{ display: 'flex', gap: 'var(--space-md)', alignItems: 'center', flexWrap: 'wrap' }}>
+                        <input
+                            type="text"
+                            className="input-v5"
+                            placeholder="輸入自定義同步 ID (例如: my-secret-key)"
+                            value={syncId}
+                            onChange={(e) => onSyncIdChange(e.target.value)}
+                            style={{ flex: 2, minWidth: '200px', height: '40px' }}
+                        />
+                        <button
+                            className="btn-primary"
+                            style={{ flex: 1, height: '40px', whiteSpace: 'nowrap' }}
+                            onClick={onManualSync}
+                            disabled={!syncId}
+                        >
+                            🔄 立即同步
+                        </button>
+                    </div>
+                    {lastSynced && (
+                        <p style={{ fontSize: '0.7rem', color: 'var(--success)', marginTop: '8px' }}>
+                            上次同步時間：{new Date(lastSynced).toLocaleString()}
+                        </p>
+                    )}
+                </div>
+
                 {/* 資料遷移備份 */}
+
                 <div style={{ marginTop: 'var(--space-xl)', paddingTop: 'var(--space-lg)', borderTop: '2px dashed var(--border-default)' }}>
                     <h3 style={{ fontSize: '0.95rem', marginBottom: 'var(--space-md)', color: 'var(--text-primary)' }}>📦 資料備份與還原</h3>
-                    <div style={{ display: 'flex', gap: 'var(--space-md)' }}>
+                    <div style={{ display: 'flex', gap: 'var(--space-md)', flexWrap: 'wrap' }}>
                         <button
                             className="btn-secondary"
-                            style={{ flex: 1, fontSize: '0.85rem', height: '40px' }}
+                            style={{ flex: '1 1 120px', fontSize: '0.85rem', height: '40px' }}
                             onClick={onExport}
                         >
                             📤 匯出備份 (JSON)
                         </button>
-                        <div style={{ flex: 1, position: 'relative' }}>
+                        <div style={{ flex: '1 1 120px', position: 'relative' }}>
+
                             <button
                                 className="btn-secondary"
                                 style={{ width: '100%', fontSize: '0.85rem', height: '40px' }}

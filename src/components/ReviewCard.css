@@ -7,6 +7,15 @@
     width: 100%;
 }
 
+@media (max-width: 860px) {
+    .rc-layout {
+        flex-direction: column;
+        align-items: center;
+        gap: var(--space-md);
+    }
+}
+
+
 .rc-wrap {
     width: 100%;
     max-width: 580px;
@@ -26,6 +35,49 @@
     position: sticky;
     top: 24px;
 }
+
+@media (max-width: 860px) {
+    .rc-left-sidebar {
+        position: relative;
+        top: 0;
+        flex-direction: row;
+        width: 100%;
+        justify-content: space-between;
+        padding: var(--space-sm) var(--space-md);
+        background: var(--bg-surface);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--elevation-1);
+        gap: var(--space-md);
+    }
+
+    .rc-vertical-progress {
+        flex: 1;
+        flex-direction: row !important;
+        justify-content: center;
+    }
+
+    .rc-progress-bar-vertical {
+        width: 100% !important;
+        height: 6px !important;
+        flex-direction: row !important;
+    }
+
+    .rc-progress-fill-vertical {
+        height: 100% !important;
+        transition: width 0.4s ease !important;
+    }
+
+    .rc-progress-fraction {
+        flex-direction: row !important;
+        gap: 4px;
+        min-width: 60px;
+    }
+
+    .rc-progress-divider {
+        margin: 0 2px !important;
+    }
+}
+
 
 .rc-vertical-progress {
     display: flex;
@@ -205,6 +257,21 @@
     line-height: 1.15;
     letter-spacing: -0.02em;
 }
+
+@media (max-width: 480px) {
+    .rc-word {
+        font-size: 2.1rem;
+    }
+
+    .rc-translation {
+        font-size: 1.9rem !important;
+    }
+
+    .rc-card {
+        min-height: 240px !important;
+    }
+}
+
 
 .rc-flip-hint {
     font-size: 0.76rem;
@@ -454,6 +521,14 @@
     align-items: stretch;
 }
 
+@media (max-width: 420px) {
+    .rc-rating-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--space-sm);
+    }
+}
+
+
 /* 動態懸浮 Tooltip（安全版：移除易破圖的 blur，維持獨立 DOM 節點） */
 .rcb-wrap {
     position: relative;
@@ -643,6 +718,16 @@
     overscroll-behavior: contain;
     transition: opacity 0.3s var(--spring-smooth), transform 0.3s var(--spring-smooth);
 }
+
+@media (max-width: 860px) {
+    .rc-sidebar {
+        width: 100%;
+        position: relative;
+        top: 0;
+        max-height: 300px;
+    }
+}
+
 
 /* 專注模式下側欄會被淡化但保留空間，由外層控制 class */
 .rc-sidebar.focus-mode {

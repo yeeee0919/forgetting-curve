@@ -10,8 +10,18 @@
     background: var(--bg-canvas);
     overflow: hidden;
     padding-left: 86px;
-    /* Ensure content doesn't overlap with the left navbar */
+    /* Sidebar width for desktop */
 }
+
+@media (max-width: 860px) {
+    .app {
+        padding-left: 0;
+        /* Remove sidebar padding on mobile */
+        padding-bottom: 72px;
+        /* Space for bottom tabbar */
+    }
+}
+
 
 .app-content {
     flex: 1;
@@ -30,7 +40,7 @@
     padding-bottom: var(--space-xl);
 }
 
-/* ── Side Nav Bar ── */
+/* ── Side Nav Bar / Bottom Tab Bar ── */
 .tabbar {
     position: fixed;
     top: 0;
@@ -38,8 +48,8 @@
     bottom: 0;
     width: 86px;
     background: var(--bg-elevated);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     border-right: 1px solid var(--border-subtle);
     display: flex;
     flex-direction: column;
@@ -49,6 +59,36 @@
     gap: var(--space-md);
     z-index: 1050;
 }
+
+@media (max-width: 860px) {
+    .tabbar {
+        top: auto;
+        right: 0;
+        width: 100%;
+        height: 72px;
+        flex-direction: row;
+        justify-content: space-around;
+        padding-top: 0;
+        padding-bottom: env(safe-area-inset-bottom);
+        border-right: none;
+        border-top: 1px solid var(--border-subtle);
+        box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.03);
+    }
+
+    .tabbar-item {
+        flex: 1;
+        height: 100% !important;
+        border-radius: 0 !important;
+        gap: 2px !important;
+    }
+
+    .tabbar-badge {
+        top: 8px !important;
+        right: 50% !important;
+        transform: translateX(18px);
+    }
+}
+
 
 .tabbar-item {
     display: flex;
@@ -127,6 +167,23 @@
     align-items: center;
     justify-content: space-between;
 }
+
+@media (max-width: 480px) {
+    .logo-text {
+        font-size: 1.1rem !important;
+    }
+
+    .logo-icon svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    .icon-btn {
+        width: 34px !important;
+        height: 34px !important;
+    }
+}
+
 
 .app-logo {
     display: flex;
@@ -216,6 +273,42 @@
     }
 }
 
+@media (max-width: 600px) {
+    .home-greeting {
+        font-size: 1.35rem !important;
+        margin-bottom: var(--space-xs);
+        text-align: center;
+    }
+
+    .home-progress-section {
+        padding: var(--space-md) !important;
+        gap: var(--space-md) !important;
+        flex-direction: column !important;
+        text-align: center;
+        align-items: center !important;
+    }
+
+    .progress-ring-wrap {
+        width: 80px !important;
+        height: 80px !important;
+    }
+
+
+    .progress-ring-svg {
+        width: 80px !important;
+        height: 80px !important;
+    }
+
+    .progress-ring-num {
+        font-size: 1.2rem !important;
+    }
+
+    .home-progress-title {
+        font-size: 0.9rem !important;
+    }
+}
+
+
 .home-main {
     display: flex;
     flex-direction: column;
@@ -288,6 +381,18 @@
     gap: var(--space-sm);
     align-items: start;
 }
+
+@media (max-width: 480px) {
+    .sticky-notes-container {
+        grid-template-columns: 1fr;
+    }
+
+    .sticky-note {
+        transform: none !important;
+        rotate: 0deg !important;
+    }
+}
+
 
 .sticky-note {
     background: #FFFBCC;
@@ -500,6 +605,21 @@
     display: flex;
     gap: var(--space-md);
 }
+
+@media (max-width: 480px) {
+    .stats-row {
+        gap: var(--space-sm);
+    }
+
+    .stat-num {
+        font-size: 1.5rem !important;
+    }
+
+    .stat-label {
+        font-size: 0.65rem !important;
+    }
+}
+
 
 .stat-card {
     flex: 1;
