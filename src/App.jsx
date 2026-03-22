@@ -18,7 +18,19 @@ function getGreeting() {
     return { text: '晚安', emoji: '🌙' }
 }
 
+function useIsMobile() {
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 650)
+    useEffect(() => {
+        const handler = () => setIsMobile(window.innerWidth < 650)
+        window.addEventListener('resize', handler)
+        return () => window.removeEventListener('resize', handler)
+    }, [])
+    return isMobile
+}
+
 export default function App() {
+    const isMobile = useIsMobile()
+
     const [cards, setCards] = useState([])
     const [settings, setSettings] = useState({ openaiKey: '' })
     const [view, setView] = useState('home')
@@ -334,7 +346,9 @@ export default function App() {
                         dismissWeakCard={dismissWeakCard}
                         clearAllWeakCards={clearAllWeakCards}
                         activityLog={activityLog}
+                        isMobile={isMobile}
                     />
+
                 )}
                 {view === 'review' && (
                     <ReviewCard
@@ -343,7 +357,9 @@ export default function App() {
                         onDone={() => setView('home')}
                         onDelete={handleDelete}
                         onUpdateNote={handleUpdateNote}
+                        isMobile={isMobile}
                     />
+
                 )}
                 {view === 'library' && (
                     <CardList cards={cards} onDelete={handleDelete} />
@@ -453,7 +469,8 @@ function ProgressRing({ value, max }) {
 }
 
 
-function HomePage({ totalCards, dueCount, learnedCount, onStartReview, onImport, inboxWords = [], onDeleteInboxWord, onClearInbox, weakCards = [], dismissWeakCard, clearAllWeakCards, activityLog = {} }) {
+function HomePage({ totalCards, dueCount, learnedCount, onStartReview, onImport, inboxWords = [], onDeleteInboxWord, onClearInbox, weakCards = [], dismissWeakCard, clearAllWeakCards, activityLog = {}, isMobile }) {
+
     const { text, emoji } = getGreeting()
 
     return (
@@ -527,7 +544,7 @@ function HomePage({ totalCards, dueCount, learnedCount, onStartReview, onImport,
                 </div>
             </div >
 
-            {weakCards.length > 0 && (
+            {!isMobile && weakCards.length > 0 && (
                 <div className="home-col weak-cards">
                     <div className="sticky-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <h3 className="sticky-title" style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)' }}>
@@ -557,7 +574,7 @@ function HomePage({ totalCards, dueCount, learnedCount, onStartReview, onImport,
                 </div>
             )}
 
-            {inboxWords.length > 0 && (
+            {!isMobile && inboxWords.length > 0 && (
                 <div className="home-col inbox-list">
                     <div className="sticky-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <h3 className="sticky-title" style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)' }}>
@@ -600,6 +617,7 @@ function HomePage({ totalCards, dueCount, learnedCount, onStartReview, onImport,
                     </div>
                 </div>
             )}
+
         </div >
     )
 }

@@ -83,7 +83,7 @@ const RATINGS = [
   },
 ]
 
-export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdateNote }) {
+export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdateNote, isMobile }) {
   const [sessionCards, setSessionCards] = useState(() => {
     // 每次進入複習頁面時，將預計複習的卡片進行隨機打亂 (Fisher-Yates)
     const shuffled = [...dueCards]
@@ -528,70 +528,74 @@ export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdat
       </div>
 
       {/* ── 弱點單字側欄 ── */}
-      <div className="rc-sidebar">
-        <div className="rc-sidebar-title" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-          完全忘了
-          {failedCards.length > 0 && (
-            <span className="rc-sidebar-count">{failedCards.length}</span>
+      {!isMobile && (
+        <div className="rc-sidebar">
+          <div className="rc-sidebar-title" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            完全忘了
+            {failedCards.length > 0 && (
+              <span className="rc-sidebar-count">{failedCards.length}</span>
+            )}
+          </div>
+          {failedCards.length === 0 ? (
+            <p className="rc-sidebar-empty">按「完全不記得」的字<br />會剛好出現在這裡</p>
+          ) : (
+            failedCards.map(c => (
+              <div key={c.id} className="rc-sidebar-item">
+                <div className="rc-sidebar-front">{c.front}</div>
+                <div className="rc-sidebar-back">{c.back}</div>
+              </div>
+            ))
           )}
         </div>
-        {failedCards.length === 0 ? (
-          <p className="rc-sidebar-empty">按「完全不記得」的字<br />會剛好出現在這裡</p>
-        ) : (
-          failedCards.map(c => (
-            <div key={c.id} className="rc-sidebar-item">
-              <div className="rc-sidebar-front">{c.front}</div>
-              <div className="rc-sidebar-back">{c.back}</div>
-            </div>
-          ))
-        )}
-      </div>
-
+      )}
 
       {/* ── 蕃茄鐘計時器 (右下角浮動) ── */}
-      <div className={`pomodoro-widget ${pomodoroMode}`}>
-        {pomodoroMode === 'idle' && (
-          <>
-            <div className="pomodoro-label">🍅 計時</div>
-            <div className="pomodoro-presets">
-              {POMODORO_PRESETS.map(min => (
-                <button
-                  key={min}
-                  className="pomodoro-preset-btn"
-                  onClick={() => startPomodoro(min)}
-                >
-                  {min}m
-                </button>
-              ))}
-            </div>
-          </>
-        )}
-        {(pomodoroMode === 'running' || pomodoroMode === 'done') && (
-          <>
-            <div className="pomodoro-ring-wrap">
-              <svg className="pomodoro-ring" viewBox="0 0 48 48">
-                <circle cx="24" cy="24" r="20" className="pomodoro-ring-bg" />
-                <circle
-                  cx="24" cy="24" r="20"
-                  className="pomodoro-ring-fill"
-                  strokeDasharray={`${2 * Math.PI * 20}`}
-                  strokeDashoffset={`${2 * Math.PI * 20 * (pomodoroMode === 'done' ? 0 : pomodoroLeft / pomodoroTotal)}`}
-                />
-              </svg>
-              <span className="pomodoro-time">
-                {pomodoroMode === 'done' ? '✅' : formatTime(pomodoroLeft)}
-              </span>
-            </div>
-            {pomodoroMode === 'done' && (
-              <div className="pomodoro-done-msg">時間到！</div>
-            )}
-            <button className="pomodoro-reset-btn" onClick={resetPomodoro} title="重設">
-              ↺
-            </button>
-          </>
-        )}
-      </div>
+      {!isMobile && (
+        <div className={`pomodoro-widget ${pomodoroMode}`}>
+          {pomodoroMode === 'idle' && (
+            <>
+              <div className="pomodoro-label">🍅 計時</div>
+              <div className="pomodoro-presets">
+                {POMODORO_PRESETS.map(min => (
+                  <button
+                    key={min}
+                    className="pomodoro-preset-btn"
+                    onClick={() => startPomodoro(min)}
+                  >
+                    {min}m
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+          {(pomodoroMode === 'running' || pomodoroMode === 'done') && (
+            <>
+              <div className="pomodoro-ring-wrap">
+                <svg className="pomodoro-ring" viewBox="0 0 48 48">
+                  <circle cx="24" cy="24" r="20" className="pomodoro-ring-bg" />
+                  <circle
+                    cx="24" cy="24" r="20"
+                    className="pomodoro-ring-fill"
+                    strokeDasharray={`${2 * Math.PI * 20}`}
+                    strokeDashoffset={`${2 * Math.PI * 20 * (pomodoroMode === 'done' ? 0 : pomodoroLeft / pomodoroTotal)}`}
+                  />
+                </svg>
+                <span className="pomodoro-time">
+                  {pomodoroMode === 'done' ? '✅' : formatTime(pomodoroLeft)}
+                </span>
+              </div>
+              {pomodoroMode === 'done' && (
+                <div className="pomodoro-done-msg">時間到！</div>
+              )}
+              <button className="pomodoro-reset-btn" onClick={resetPomodoro} title="重設">
+                ↺
+              </button>
+            </>
+          )}
+        </div>
+      )}
+
     </div>
   )
 }

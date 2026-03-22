@@ -299,6 +299,20 @@
         height: 80px !important;
     }
 
+    .weak-cards, .inbox-list {
+        display: none !important;
+    }
+
+    .home-layout {
+        padding-bottom: 100px;
+    }
+
+    .home-main {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+
     .progress-ring-num {
         font-size: 1.2rem !important;
     }
