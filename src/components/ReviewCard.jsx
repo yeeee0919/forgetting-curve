@@ -9,6 +9,12 @@ const LANG_MAP = {
 
 let cachedVoices = []
 
+if (typeof window !== 'undefined' && window.speechSynthesis) {
+  window.speechSynthesis.onvoiceschanged = () => {
+    cachedVoices = window.speechSynthesis.getVoices()
+  }
+}
+
 // 產生安全且一致的語音
 async function speak(text, lang) {
   if (!text || !window.speechSynthesis) return
@@ -27,20 +33,31 @@ async function speak(text, lang) {
     utterance.rate = 0.9  // 放慢語速讓發音更清晰
 
     // 尋找最高品質/最適合的語音 (跨平台支援)
-    // 加入快取機制，避免 Safari 每次呼叫 getVoices 造成記憶體洩漏
     if (cachedVoices.length === 0) {
       cachedVoices = window.speechSynthesis.getVoices()
     }
     const voices = cachedVoices
 
     if (voices.length > 0) {
-      // 優先選擇 Apple 內建的高品質語音或 Google 語音
-      const preferredVoices = voices.filter(v => v.lang.startsWith(code) && (v.name.includes('Premium') || v.name.includes('Google')))
-      if (preferredVoices.length > 0) {
-        utterance.voice = preferredVoices[0]
-      } else {
-        const anyLangVoice = voices.find(v => v.lang.startsWith(code.split('-')[0]))
-        if (anyLangVoice) utterance.voice = anyLangVoice
+      // 尋找符合目標語言的語音，先嘗試完全符合 locale (例如 en-US)，否則退避到前綴 (例如 en)
+      const exactVoices = voices.filter(v => v.lang === code || v.lang.replace('_', '-') === code)
+      const prefixVoices = voices.filter(v => v.lang.startsWith(code.split('-')[0]))
+      
+      const targetVoices = exactVoices.length > 0 ? exactVoices : prefixVoices
+      
+      // 優先選擇高品質語音 (支援 iOS 的 Premium/Enhanced/Siri 或 PC 的 Google)
+      const bestVoice = targetVoices.find(v => 
+        v.name.includes('Premium') || 
+        v.name.includes('Enhanced') || 
+        v.name.includes('Google') ||
+        v.name.includes('Siri')
+      )
+
+      if (bestVoice) {
+        utterance.voice = bestVoice
+      } else if (targetVoices.length > 0) {
+        // 沒有高品質語音，就使用該語言的第一個預設語音
+        utterance.voice = targetVoices[0]
       }
     }
 
