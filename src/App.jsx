@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { getCards, saveCards, getSettings, saveSettings, generateId, getSessionState, saveSessionState } from './services/storage'
-import { initCard, scheduleCard, buildSessionSequence, decompressCards, migrateCards, getStatusLabel } from './services/srs'
+import { initCard, scheduleCard, buildSessionSequence, migrateCards, getStatusLabel } from './services/srs'
 import { parseTextToCards, parseTextToCardsGemini } from './services/ai'
 import { getInboxWords, deleteInboxWord, clearInbox, getCloudCards, upsertCloudCards, deleteCloudCard } from './services/supabase'
 
@@ -41,7 +41,6 @@ export default function App() {
     const [syncId, setSyncId] = useState(localStorage.getItem('memoflip_sync_id') || '')
     const [lastSynced, setLastSynced] = useState(null)
     const [sessionState, setSessionState] = useState(getSessionState())
-    const [decompressedMsg, setDecompressedMsg] = useState('')
 
 
     // 活動紀錄紀錄每天背了幾張卡
@@ -75,16 +74,7 @@ export default function App() {
         fetchInboxWords()
     }, [])
 
-    useEffect(() => {
-        if (cards.length > 0) {
-            // 目前只對 Review 卡片減壓
-            const { updatedCards, decompressedCount } = decompressCards(cards, 100)
-            if (decompressedCount > 0) {
-                updateCards(updatedCards)
-                setDecompressedMsg(`為了保護大腦不超載，已為你啟動「減壓模式」，${decompressedCount} 個較熟的單字已平滑展延至明日。`)
-            }
-        }
-    }, [])
+    // 移除舊的減壓模式，改由三層緩衝區 (Buffer) 進行流量控制
 
     useEffect(() => {
         if (syncId) {
@@ -413,7 +403,6 @@ export default function App() {
                         activityLog={activityLog}
                         isMobile={isMobile}
                         sessionSize={sessionState.sessionSize}
-                        decompressedMsg={decompressedMsg}
                         hasActiveSession={!!sessionState.activeSession}
                     />
 
@@ -544,37 +533,16 @@ function ProgressRing({ value, max }) {
     )
 }
 
-
-function HomePage({ totalCards, stats, bufferCapacity, dueCount, onStartReview, onImport, inboxWords = [], onDeleteInboxWord, onClearInbox, weakCards = [], dismissWeakCard, clearAllWeakCards, activityLog = {}, isMobile, sessionSize, decompressedMsg, hasActiveSession }) {
+function HomePage({ totalCards, stats, bufferCapacity, dueCount, onStartReview, onImport, inboxWords = [], onDeleteInboxWord, onClearInbox, weakCards = [], dismissWeakCard, clearAllWeakCards, activityLog = {}, isMobile, sessionSize, hasActiveSession }) {
 
     const { text, emoji } = getGreeting()
 
     return (
         <div className="home-layout">
             <div className="home-main">
-
                 <h1 className="home-greeting">
                     {emoji} {text}！
                 </h1>
-
-                {decompressedMsg && (
-                    <div className="decompressed-banner" style={{ 
-                        background: 'linear-gradient(90deg, #10B98120, transparent)', 
-                        borderLeft: '4px solid #10B981', 
-                        padding: '12px 16px', 
-                        borderRadius: '0 8px 8px 0', 
-                        fontSize: '0.85rem', 
-                        color: 'var(--text-secondary)',
-                        marginBottom: '16px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        lineHeight: 1.5
-                    }}>
-                        <span style={{ fontSize: '1.2rem' }}>🧘</span>
-                        <span>{decompressedMsg}</span>
-                    </div>
-                )}
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', background: 'var(--surface)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border)', justifyContent: 'space-between' }}>
