@@ -592,7 +592,7 @@ function HomePage({ totalCards, stats, bufferCapacity, dueCount, onStartReview, 
                     { (dueCount > 0 || stats.pool > 0 || stats.buffer > 0 || hasActiveSession) ? (
                         <button className="btn-primary large" onClick={onStartReview} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="8" width="18" height="14" rx="2" ry="2"></rect><path d="M7 4h14v14"></path></svg>
-                            {hasActiveSession ? '繼續未完成的複習' : `開始複習（每次 30 張）`}
+                            {hasActiveSession ? '繼續未完成的複習' : `開始複習（每次 ${sessionSize || 30} 張）`}
                         </button>
                     ) : (
                         <div className="done-msg">
