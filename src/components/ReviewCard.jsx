@@ -230,13 +230,18 @@ export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdat
     let nextFailedCards = failedCards;
 
     if (rating === RATING.AGAIN) {
-      if (!failedCards.find(c => c.id === card.id)) {
+      if (!failedCards.find(c => c.id.split('_retry_')[0] === card.id.split('_retry_')[0])) {
           nextFailedCards = [...failedCards, card]
           setFailedCards(nextFailedCards)
       }
-      nextSessionCards = [...sessionCards, { ...card, id: card.id + '_retry_' + sessionCards.length }]
-      // 複製一份新的卡片（給予新 ID，以免 React Key 重複造成崩潰與堆疊異常)
-      setSessionCards(nextSessionCards)
+      
+      // 【防護機制】：防止無限堆疊造成沒有盡頭的感受
+      // 限制同一個單字在同一輪中，最多只加入 Retry 排隊 1 次。
+      // 若它已經是 Retry 階段再次錯，就放它過去（SRS演算法已更新），留給下一個 Session 去挑戰
+      if (!card.id.includes('_retry_')) {
+          nextSessionCards = [...sessionCards, { ...card, id: card.id + '_retry_' + sessionCards.length }]
+          setSessionCards(nextSessionCards)
+      }
     }
 
     const nextIndex = index + 1;
@@ -337,14 +342,30 @@ export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdat
       {/* ── 新的左側進度與控制區 ── */}
       <div className="rc-left-sidebar">
         <div className="rc-vertical-progress">
-          <div className="rc-progress-fraction">
-            <span className="rc-progress-current">{index + 1}</span>
-            <span className="rc-progress-divider">/</span>
-            <span className="rc-progress-total">{sessionCards.length}</span>
-          </div>
-          <div className="rc-progress-bar-vertical">
-            <div className="rc-progress-fill-vertical" style={{ height: `${Math.max(0, Math.min(100, (index / sessionCards.length) * 100))}%` }} />
-          </div>
+          {(() => {
+            const baseCount = sessionCards.filter(c => !c.id.includes('_retry_')).length;
+            const displayIndex = index < baseCount ? index + 1 : baseCount;
+            const inRetry = index >= baseCount;
+            const percent = (displayIndex / baseCount) * 100;
+
+            return (
+              <>
+                <div className="rc-progress-fraction">
+                  <span className="rc-progress-current">{displayIndex}</span>
+                  <span className="rc-progress-divider">/</span>
+                  <span className="rc-progress-total">{baseCount}</span>
+                </div>
+                {inRetry && (
+                  <div style={{ fontSize: '0.7rem', color: 'var(--again)', fontWeight: 'bold', marginTop: '4px', textAlign: 'center' }}>
+                    錯題 {index - baseCount + 1}/{sessionCards.length - baseCount}
+                  </div>
+                )}
+                <div className="rc-progress-bar-vertical" style={{ marginTop: '8px' }}>
+                  <div className="rc-progress-fill-vertical" style={{ height: `${Math.max(0, Math.min(100, percent))}%` }} />
+                </div>
+              </>
+            );
+          })()}
         </div>
 
         <button
