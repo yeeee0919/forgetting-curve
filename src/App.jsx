@@ -64,7 +64,7 @@ export default function App() {
     useEffect(() => {
         let loaded = getCards()
         // Data Migration for Three-Layer Architecture
-        const { migrated, updated } = migrateCards(loaded)
+        const { migrated, updated } = migrateCards(loaded, sessionState.bufferCapacity || 100)
         if (updated) {
             saveCards(migrated)
             loaded = migrated
@@ -584,7 +584,7 @@ function HomePage({ totalCards, stats, bufferCapacity, dueCount, onStartReview, 
 
                 {dueCount > 0 && (
                     <div style={{ textAlign: 'center', marginBottom: '16px', color: 'var(--again)', fontWeight: 600, fontSize: '0.95rem' }}>
-                        🔥 緊迫度計算：今日排隊序列已預備 {dueCount} 個單字需要立即處理！
+                        🔥 任務就緒：大腦緩衝區已準備好 {sessionSize || 30} 個高優先級單字，開始衝刺！
                     </div>
                 )}
 

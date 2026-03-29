@@ -160,7 +160,7 @@ export function previewLabel(card, rating) {
 /**
  * 初始化遷移舊資料，符合 3 天畢業新制與 NEW 狀態
  */
-export function migrateCards(cards) {
+export function migrateCards(cards, bufferCapacity = 100) {
     let updated = false;
     const migrated = cards.map(c => {
         let newStatus = c.status;
@@ -174,6 +174,26 @@ export function migrateCards(cards) {
         if (c.status !== newStatus) updated = true;
         return { ...c, status: newStatus };
     });
+
+    // 自動修剪緩衝區 (Buffer Pruning)
+    // 如果背誦區超載，會優先把「從未背過」的新字退回總量池
+    const bufferCards = migrated.filter(c => c.status === STATUS.LEARNING || c.status === STATUS.RELEARNING);
+    if (bufferCards.length > bufferCapacity) {
+        // 找出沒有練習過的字，準備降級
+        const unstartedCards = bufferCards.filter(c => !c.repetitions || c.repetitions === 0);
+        let excessCount = bufferCards.length - bufferCapacity;
+
+        for (let i = unstartedCards.length - 1; i >= 0 && excessCount > 0; i--) {
+            const cardToDemote = unstartedCards[i];
+            const index = migrated.findIndex(c => c.id === cardToDemote.id);
+            if (index !== -1) {
+                migrated[index].status = STATUS.NEW;
+                excessCount--;
+                updated = true;
+            }
+        }
+    }
+
     return { migrated, updated };
 }
 
