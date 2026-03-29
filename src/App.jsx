@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
-import { getCards, saveCards, getSettings, saveSettings, generateId } from './services/storage'
-import { initCard, scheduleCard, getDueCards } from './services/srs'
+import { getCards, saveCards, getSettings, saveSettings, generateId, getSessionState, saveSessionState } from './services/storage'
+import { initCard, scheduleCard, getDueCards, decompressCards } from './services/srs'
 import { parseTextToCards, parseTextToCardsGemini } from './services/ai'
 import { getInboxWords, deleteInboxWord, clearInbox, getCloudCards, upsertCloudCards, deleteCloudCard } from './services/supabase'
 
@@ -40,6 +40,8 @@ export default function App() {
     const [importError, setImportError] = useState('')
     const [syncId, setSyncId] = useState(localStorage.getItem('memoflip_sync_id') || '')
     const [lastSynced, setLastSynced] = useState(null)
+    const [sessionState, setSessionState] = useState(getSessionState())
+    const [decompressedMsg, setDecompressedMsg] = useState('')
 
 
     // 活動紀錄紀錄每天背了幾張卡
@@ -64,6 +66,16 @@ export default function App() {
         setCards(getCards())
         setSettings(getSettings())
         fetchInboxWords()
+    }, [])
+
+    useEffect(() => {
+        if (cards.length > 0) {
+            const { updatedCards, decompressedCount } = decompressCards(cards, 100)
+            if (decompressedCount > 0) {
+                updateCards(updatedCards)
+                setDecompressedMsg(`為了保護大腦不超載，已為你啟動「減壓模式」，${decompressedCount} 個較熟的單字已平滑展延至明日。`)
+            }
+        }
     }, [])
 
     useEffect(() => {
@@ -217,6 +229,12 @@ export default function App() {
         })
         const existingFronts = new Set(cards.map(c => c.front.toLowerCase().trim()))
         const brandNew = newCards.filter(c => !existingFronts.has(c.front.toLowerCase().trim()))
+        const newTotal = merged.length + brandNew.length
+        
+        // 負載預警
+        if (dueCards.length + brandNew.length > 150) {
+            alert(`【負荷預警】你目前將有超過 150 張卡片待複習，建議這批單字分 3 天分批排入，以免負擔過重而產生放棄感！\n目前將為你照常匯入，但我們強烈建議控制每日新字數量。`)
+        }
         updateCards([...merged, ...brandNew])
         return { added: brandNew.length, updated }
     }
@@ -308,6 +326,39 @@ export default function App() {
     const dueCount = dueCards.length
     const weakCards = cards.filter(c => c.isWeak && !dismissedWeakCards.includes(c.id))
 
+    // 當 ReviewCard 結束，計算正確率與判定
+    const handleSessionDone = (results) => {
+        // results 是 [ 1, 3, 4, 3, 2 ... ] 對應的評分
+        // > 90% 表示 Good (3) 或 Easy (4) 的比例
+        const total = results.length
+        if (total === 0) {
+            setView('home')
+            return
+        }
+
+        const successCount = results.filter(r => r === 3 || r === 4).length
+        const accuracy = successCount / total
+
+        let newSize = sessionState.sessionSize
+        let nextHistory = [...sessionState.history, accuracy].slice(-3) // keep last 3
+
+        if (accuracy < 0.7 && newSize > 20) {
+             alert('這批單字似乎稍微有點挑戰度 🧗‍♂️，大腦負載有點重了。\n下一輪起，系統將暫時為你調降為「一次 20 張」，保護心流不中斷！💪')
+             newSize = 20
+             nextHistory = []
+        } else if (nextHistory.length === 3 && nextHistory.every(a => a >= 0.9) && newSize < 40) {
+             if (window.confirm('你已經連續 3 輪拿到 90% 以上的高正確率 🌟！狀態極佳！\n要挑戰進入「加速模式（一次 40 張）」嗎？')) {
+                 newSize = 40
+                 nextHistory = []
+             }
+        }
+
+        const newState = { activeSession: null, history: nextHistory, sessionSize: newSize }
+        setSessionState(newState)
+        saveSessionState(newState)
+        setView('home')
+    }
+
     return (
         <div className={`app ${view === 'review' ? 'hide-tabbar' : ''}`}>
 
@@ -348,6 +399,9 @@ export default function App() {
                         clearAllWeakCards={clearAllWeakCards}
                         activityLog={activityLog}
                         isMobile={isMobile}
+                        sessionSize={sessionState.sessionSize}
+                        decompressedMsg={decompressedMsg}
+                        hasActiveSession={!!sessionState.activeSession}
                     />
 
                 )}
@@ -355,9 +409,14 @@ export default function App() {
                     <ReviewCard
                         dueCards={dueCards}
                         onRate={handleRate}
-                        onDone={() => setView('home')}
+                        onDone={handleSessionDone}
                         onDelete={handleDelete}
                         onUpdateNote={handleUpdateNote}
+                        sessionState={sessionState}
+                        updateSession={(newState) => { 
+                            setSessionState(newState)
+                            saveSessionState(newState)
+                        }}
                         isMobile={isMobile}
                     />
 
@@ -473,7 +532,7 @@ function ProgressRing({ value, max }) {
 }
 
 
-function HomePage({ totalCards, dueCount, learnedCount, onStartReview, onImport, inboxWords = [], onDeleteInboxWord, onClearInbox, weakCards = [], dismissWeakCard, clearAllWeakCards, activityLog = {}, isMobile }) {
+function HomePage({ totalCards, dueCount, learnedCount, onStartReview, onImport, inboxWords = [], onDeleteInboxWord, onClearInbox, weakCards = [], dismissWeakCard, clearAllWeakCards, activityLog = {}, isMobile, sessionSize, decompressedMsg, hasActiveSession }) {
 
     const { text, emoji } = getGreeting()
 
@@ -484,6 +543,25 @@ function HomePage({ totalCards, dueCount, learnedCount, onStartReview, onImport,
                 <h1 className="home-greeting">
                     {emoji} {text}！
                 </h1>
+
+                {decompressedMsg && (
+                    <div className="decompressed-banner" style={{ 
+                        background: 'linear-gradient(90deg, #10B98120, transparent)', 
+                        borderLeft: '4px solid #10B981', 
+                        padding: '12px 16px', 
+                        borderRadius: '0 8px 8px 0', 
+                        fontSize: '0.85rem', 
+                        color: 'var(--text-secondary)',
+                        marginBottom: '16px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        lineHeight: 1.5
+                    }}>
+                        <span style={{ fontSize: '1.2rem' }}>🧘</span>
+                        <span>{decompressedMsg}</span>
+                    </div>
+                )}
 
                 <div className="home-progress-section">
                     <ProgressRing value={dueCount} max={Math.max(dueCount, totalCards)} />
@@ -524,7 +602,7 @@ function HomePage({ totalCards, dueCount, learnedCount, onStartReview, onImport,
                     {dueCount > 0 ? (
                         <button className="btn-primary large" onClick={onStartReview} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="8" width="18" height="14" rx="2" ry="2"></rect><path d="M7 4h14v14"></path></svg>
-                            開始複習（{dueCount} 張）
+                            {hasActiveSession ? '繼續未完成的複習' : `開始複習（每次 ${Math.min(dueCount, sessionSize)} 張）`}
                         </button>
                     ) : (
                         <div className="done-msg">

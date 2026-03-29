@@ -100,20 +100,22 @@ const RATINGS = [
   },
 ]
 
-export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdateNote, isMobile }) {
+export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdateNote, sessionState, updateSession, isMobile }) {
   const [sessionCards, setSessionCards] = useState(() => {
+    if (sessionState?.activeSession) return sessionState.activeSession.cards
+
     // 每次進入複習頁面時，將預計複習的卡片進行隨機打亂 (Fisher-Yates)
     const shuffled = [...dueCards]
     for (let i = shuffled.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
-    return shuffled
+    return shuffled.slice(0, sessionState?.sessionSize || 30)
   })
-  const [index, setIndex] = useState(0)
+  const [index, setIndex] = useState(() => sessionState?.activeSession?.index || 0)
   const [flipped, setFlipped] = useState(false)
-  const [results, setResults] = useState([])
-  const [failedCards, setFailedCards] = useState([])
+  const [results, setResults] = useState(() => sessionState?.activeSession?.results || [])
+  const [failedCards, setFailedCards] = useState(() => sessionState?.activeSession?.failedCards || [])
   const [tipsOpen, setTipsOpen] = useState(false)
 
 
@@ -219,13 +221,19 @@ export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdat
   const handleRate = (rating) => {
     // 立即通知上層狀態更新
     onRate(card.id, rating)
-    setResults(r => [...r, rating])
+    const nextResults = [...results, rating]
+    setResults(nextResults)
     setFlipped(false)
     setTipsOpen(false)
 
     let nextSessionCards = sessionCards;
+    let nextFailedCards = failedCards;
+
     if (rating === RATING.AGAIN) {
-      setFailedCards(prev => prev.find(c => c.id === card.id) ? prev : [...prev, card])
+      if (!failedCards.find(c => c.id === card.id)) {
+          nextFailedCards = [...failedCards, card]
+          setFailedCards(nextFailedCards)
+      }
       nextSessionCards = [...sessionCards, { ...card, id: card.id + '_retry_' + sessionCards.length }]
       // 複製一份新的卡片（給予新 ID，以免 React Key 重複造成崩潰與堆疊異常)
       setSessionCards(nextSessionCards)
@@ -233,6 +241,19 @@ export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdat
 
     const nextIndex = index + 1;
     setIndex(nextIndex)
+
+    // Sync 中斷保護存檔
+    if (updateSession) {
+      updateSession({
+        ...sessionState,
+        activeSession: {
+          cards: nextSessionCards,
+          index: nextIndex,
+          results: nextResults,
+          failedCards: nextFailedCards
+        }
+      })
+    }
 
     // 同步點擊觸發：完美迴避 Safari/iOS 自動播放阻擋
     if (autoPlay && nextIndex < nextSessionCards.length) {
@@ -302,7 +323,7 @@ export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdat
             )
           })}
         </div>
-        <button className="btn-primary" onClick={onDone}>回到首頁</button>
+        <button className="btn-primary" onClick={() => onDone(results)}>回到首頁</button>
       </div>
     )
   }

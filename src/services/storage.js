@@ -55,3 +55,27 @@ export function saveSettings(settings) {
 export function generateId() {
     return `card_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`
 }
+
+const SESSION_KEY = 'memoflip_session_state'
+
+export function getSessionState() {
+    try {
+        const raw = localStorage.getItem(SESSION_KEY)
+        const parsed = raw ? JSON.parse(raw) : {}
+        return {
+            activeSession: parsed.activeSession || null,
+            history: parsed.history || [],
+            sessionSize: parsed.sessionSize || 30
+        }
+    } catch {
+        return { activeSession: null, history: [], sessionSize: 30 }
+    }
+}
+
+export function saveSessionState(state) {
+    try {
+        localStorage.setItem(SESSION_KEY, JSON.stringify(state))
+    } catch (e) {
+        console.error('Failed to save session state:', e)
+    }
+}

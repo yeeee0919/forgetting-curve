@@ -151,10 +151,57 @@ export function previewLabel(card, rating) {
 
 /**
  * 取得「今天到期」的卡片（包含學習/重學中的）
+ * 並依優先級排序：重學(紅) > 學習(橘) > 複習(藍)
  */
 export function getDueCards(cards) {
     const now = Date.now()
-    return cards.filter(c => c.dueDate <= now)
+    let due = cards.filter(c => c.dueDate <= now)
+
+    const p = { [STATUS.RELEARNING]: 1, [STATUS.LEARNING]: 2, [STATUS.REVIEW]: 3 }
+    due.sort((a, b) => {
+        const pa = p[a.status || STATUS.LEARNING] || 3
+        const pb = p[b.status || STATUS.LEARNING] || 3
+        if (pa !== pb) return pa - pb
+        return a.dueDate - b.dueDate
+    })
+
+    return due
+}
+
+/**
+ * 減壓模式 (Decompression Mode)
+ * 當到期卡片超過上限 (例如 100 張)，將多餘的 `REVIEW` 藍色卡片
+ * 的 dueDate 平滑展延至明天，降低用戶今日的認知負荷。
+ */
+export function decompressCards(cards, threshold = 100) {
+    const due = getDueCards(cards)
+    if (due.length <= threshold) return { updatedCards: cards, decompressedCount: 0 }
+
+    // 找出多餘的、優先級最低的 REVIEW 卡片來延後
+    const reviewCards = due.filter(c => c.status === STATUS.REVIEW)
+    const excess = due.length - threshold
+
+    if (excess <= 0 || reviewCards.length === 0) return { updatedCards: cards, decompressedCount: 0 }
+
+    // 最少保留 0 張，最多延展 excess 張或全部 reviewCards
+    const toDelayCount = Math.min(excess, reviewCards.length)
+    // 拿最後面的來延期（通常是 dueDate 比較遠的，或是沒那麼緊急的）
+    const toDelay = reviewCards.slice(-toDelayCount)
+    const toDelayIds = new Set(toDelay.map(c => c.id))
+
+    const now = Date.now()
+    const DAY = 24 * 60 * 60 * 1000
+
+    const updated = cards.map(c => {
+        if (toDelayIds.has(c.id)) {
+            // 平滑打散到明天 (加上 12~24 小時的隨機)
+            const delay = DAY * 0.5 + Math.random() * DAY * 0.5
+            return { ...c, dueDate: now + delay }
+        }
+        return c
+    })
+
+    return { updatedCards: updated, decompressedCount: toDelayCount }
 }
 
 /**
