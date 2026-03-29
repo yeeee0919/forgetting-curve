@@ -12,9 +12,10 @@ export const RATING = {
 }
 
 export const STATUS = {
-    LEARNING: 'learning',   // 新卡，正在建立印象
-    REVIEW: 'review',     // 已畢業，進入間隔擴展
-    RELEARNING: 'relearning', // 複習時忘記，重學
+    NEW: 'new',           // 總量池：尚未開始學習的新字
+    LEARNING: 'learning',   // 背誦區：新卡，正在建立印象
+    REVIEW: 'review',     // 熟練區：已畢業(間隔>=3天)
+    RELEARNING: 'relearning', // 背誦區：複習時忘記，重學
 }
 
 const MIN = 60 * 1000
@@ -43,7 +44,7 @@ export function initCard() {
         easeFactor: 2.5,
         repetitions: 0,
         dueDate: Date.now(),
-        status: STATUS.LEARNING,
+        status: STATUS.NEW,
         step: 0,   // 目前在哪一個學習/重學階梯
     }
 }
@@ -60,9 +61,9 @@ export function scheduleCard(card, rating) {
     if (step === undefined) step = 0
 
     // ─────────────────────────────
-    // 📖 學習階段：新卡畢業前
+    // 📖 學習階段：新卡畢業前 (或者剛剛從 NEW 啟動)
     // ─────────────────────────────
-    if (status === STATUS.LEARNING) {
+    if (status === STATUS.LEARNING || status === STATUS.NEW) {
         if (rating === RATING.AGAIN) {
             // 重來：退回第一步
             return _make(LEARNING_STEPS[0], easeFactor, 0, now, STATUS.LEARNING, 0)
@@ -133,6 +134,13 @@ export function scheduleCard(card, rating) {
 }
 
 function _make(interval, easeFactor, repetitions, now, status, step) {
+    // 【核心邏輯整合】：無論是誰，只要 Interval >= 3 天，一律強制畢業到「熟練區」
+    if (interval >= 3 * DAY) {
+        status = STATUS.REVIEW;
+    } else if (status === STATUS.REVIEW && interval < 3 * DAY) {
+        // 因答錯被懲罰跌破 3 天門檻，退回「背誦區」
+        status = STATUS.RELEARNING;
+    }
     return { interval, easeFactor, repetitions, dueDate: now + interval, status, step }
 }
 
@@ -150,65 +158,76 @@ export function previewLabel(card, rating) {
 }
 
 /**
- * 取得「今天到期」的卡片（包含學習/重學中的）
- * 並依優先級排序：重學(紅) > 學習(橘) > 複習(藍)
+ * 初始化遷移舊資料，符合 3 天畢業新制與 NEW 狀態
  */
-export function getDueCards(cards) {
-    const now = Date.now()
-    let due = cards.filter(c => c.dueDate <= now)
+export function migrateCards(cards) {
+    let updated = false;
+    const migrated = cards.map(c => {
+        let newStatus = c.status;
+        if (!c.status) newStatus = c.repetitions > 0 ? STATUS.LEARNING : STATUS.NEW;
+        
+        if (newStatus === STATUS.NEW && c.repetitions > 0) newStatus = STATUS.LEARNING;
 
-    const p = { [STATUS.RELEARNING]: 1, [STATUS.LEARNING]: 2, [STATUS.REVIEW]: 3 }
-    due.sort((a, b) => {
-        const pa = p[a.status || STATUS.LEARNING] || 3
-        const pb = p[b.status || STATUS.LEARNING] || 3
-        if (pa !== pb) return pa - pb
-        return a.dueDate - b.dueDate
-    })
+        if (c.interval >= 3 * DAY) newStatus = STATUS.REVIEW;
+        else if (newStatus === STATUS.REVIEW) newStatus = STATUS.RELEARNING;
 
-    return due
+        if (c.status !== newStatus) updated = true;
+        return { ...c, status: newStatus };
+    });
+    return { migrated, updated };
 }
 
 /**
- * 減壓模式 (Decompression Mode)
- * 當到期卡片超過上限 (例如 100 張)，將多餘的 `REVIEW` 藍色卡片
- * 的 dueDate 平滑展延至明天，降低用戶今日的認知負荷。
+ * 【漏斗控制：Session 排序】
+ * 用遺忘曲線的緊迫度，嚴格填滿 30 個位置。
  */
-export function decompressCards(cards, threshold = 100) {
-    const due = getDueCards(cards)
-    if (due.length <= threshold) return { updatedCards: cards, decompressedCount: 0 }
+export function buildSessionSequence(cards, learningCapacity = 100, sessionSize = 30) {
+    const now = Date.now();
+    
+    const pool = cards.filter(c => c.status === STATUS.NEW); 
+    const buffer = cards.filter(c => c.status === STATUS.LEARNING || c.status === STATUS.RELEARNING);
+    const mastered = cards.filter(c => c.status === STATUS.REVIEW);
 
-    // 找出多餘的、優先級最低的 REVIEW 卡片來延後
-    const reviewCards = due.filter(c => c.status === STATUS.REVIEW)
-    const excess = due.length - threshold
+    const bufferCount = buffer.length;
+    const availableSlots = Math.max(0, learningCapacity - bufferCount);
 
-    if (excess <= 0 || reviewCards.length === 0) return { updatedCards: cards, decompressedCount: 0 }
+    // P0: 熟練區到期 (防止遺忘)
+    const p0 = mastered.filter(c => c.dueDate <= now).sort((a, b) => a.dueDate - b.dueDate);
+    
+    // P1: 背誦區急迫 (短期記憶鞏固)
+    const p1 = buffer.filter(c => c.status === STATUS.RELEARNING && c.dueDate <= now).sort((a, b) => a.dueDate - b.dueDate);
+    
+    // P2: 背誦區常規 (推進學習)
+    const p2 = buffer.filter(c => c.status === STATUS.LEARNING && c.dueDate <= now).sort((a, b) => a.dueDate - b.dueDate);
 
-    // 最少保留 0 張，最多延展 excess 張或全部 reviewCards
-    const toDelayCount = Math.min(excess, reviewCards.length)
-    // 拿最後面的來延期（通常是 dueDate 比較遠的，或是沒那麼緊急的）
-    const toDelay = reviewCards.slice(-toDelayCount)
-    const toDelayIds = new Set(toDelay.map(c => c.id))
-
-    const now = Date.now()
-    const DAY = 24 * 60 * 60 * 1000
-
-    const updated = cards.map(c => {
-        if (toDelayIds.has(c.id)) {
-            // 平滑打散到明天 (加上 12~24 小時的隨機)
-            const delay = DAY * 0.5 + Math.random() * DAY * 0.5
-            return { ...c, dueDate: now + delay }
+    // 依序填滿 Session
+    let session = [...p0, ...p1, ...p2];
+    
+    // P3: 總量池補充新字
+    let newCardsToAdd = 0;
+    if (session.length < sessionSize && availableSlots > 0) {
+        newCardsToAdd = Math.min(sessionSize - session.length, availableSlots, pool.length);
+        const p3 = pool.slice(0, newCardsToAdd);
+        session = [...session, ...p3];
+    }
+    
+    return {
+        sessionCards: session.slice(0, sessionSize),
+        stats: {
+            pool: pool.length - newCardsToAdd, // 預估抽走後的剩餘量
+            buffer: bufferCount + newCardsToAdd, // 背誦區加新字後的水位
+            mastered: mastered.length,
+            dueCount: p0.length + p1.length + p2.length // 今天真的該複習的舊卡量
         }
-        return c
-    })
-
-    return { updatedCards: updated, decompressedCount: toDelayCount }
+    };
 }
 
 /**
  * 取得卡片狀態標籤（用於 UI 顯示）
  */
 export function getStatusLabel(card) {
-    if (!card.status || card.status === STATUS.LEARNING) return { label: '學習中', color: '#ffab40' }
+    if (card.status === STATUS.NEW) return { label: '未學習', color: '#9e9e9e' }
+    if (!card.status || card.status === STATUS.LEARNING) return { label: '背誦區', color: '#ffab40' }
     if (card.status === STATUS.RELEARNING) return { label: '重學中', color: '#ff5252' }
-    return { label: '複習', color: '#40c4ff' }
+    return { label: '已熟練', color: '#40c4ff' }
 }

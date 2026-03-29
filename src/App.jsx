@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { getCards, saveCards, getSettings, saveSettings, generateId, getSessionState, saveSessionState } from './services/storage'
-import { initCard, scheduleCard, getDueCards, decompressCards } from './services/srs'
+import { initCard, scheduleCard, buildSessionSequence, decompressCards, migrateCards, getStatusLabel } from './services/srs'
 import { parseTextToCards, parseTextToCardsGemini } from './services/ai'
 import { getInboxWords, deleteInboxWord, clearInbox, getCloudCards, upsertCloudCards, deleteCloudCard } from './services/supabase'
 
@@ -63,13 +63,21 @@ export default function App() {
     const [inboxWords, setInboxWords] = useState([])
 
     useEffect(() => {
-        setCards(getCards())
+        let loaded = getCards()
+        // Data Migration for Three-Layer Architecture
+        const { migrated, updated } = migrateCards(loaded)
+        if (updated) {
+            saveCards(migrated)
+            loaded = migrated
+        }
+        setCards(loaded)
         setSettings(getSettings())
         fetchInboxWords()
     }, [])
 
     useEffect(() => {
         if (cards.length > 0) {
+            // 目前只對 Review 卡片減壓
             const { updatedCards, decompressedCount } = decompressCards(cards, 100)
             if (decompressedCount > 0) {
                 updateCards(updatedCards)
@@ -322,8 +330,10 @@ export default function App() {
         setDismissedWeakCards([])
     }
 
-    const dueCards = getDueCards(cards)
-    const dueCount = dueCards.length
+    const sequence = buildSessionSequence(cards, sessionState.bufferCapacity || 100, sessionState.sessionSize)
+    const dueCards = sequence.sessionCards
+    const dueCount = sequence.stats.dueCount
+    const stats = sequence.stats
     const weakCards = cards.filter(c => c.isWeak && !dismissedWeakCards.includes(c.id))
 
     // 當 ReviewCard 結束，計算正確率與判定
@@ -340,20 +350,22 @@ export default function App() {
         const accuracy = successCount / total
 
         let newSize = sessionState.sessionSize
+        let newCapacity = sessionState.bufferCapacity || 100
         let nextHistory = [...sessionState.history, accuracy].slice(-3) // keep last 3
 
         if (accuracy < 0.7 && newSize > 20) {
              alert('這批單字似乎稍微有點挑戰度 🧗‍♂️，大腦負載有點重了。\n下一輪起，系統將暫時為你調降為「一次 20 張」，保護心流不中斷！💪')
              newSize = 20
              nextHistory = []
-        } else if (nextHistory.length === 3 && nextHistory.every(a => a >= 0.9) && newSize < 40) {
-             if (window.confirm('你已經連續 3 輪拿到 90% 以上的高正確率 🌟！狀態極佳！\n要挑戰進入「加速模式（一次 40 張）」嗎？')) {
+        } else if (nextHistory.length === 3 && nextHistory.every(a => a >= 0.9)) {
+             if (window.confirm('你已經連續 3 輪拿到 90% 以上的高正確率 🌟！狀態極佳！\n要挑戰進入「加速模式（一次 40 張）」並且把「背誦區容量擴增到 120」嗎？解鎖更多新單字！')) {
                  newSize = 40
+                 newCapacity = 120
                  nextHistory = []
              }
         }
 
-        const newState = { activeSession: null, history: nextHistory, sessionSize: newSize }
+        const newState = { activeSession: null, history: nextHistory, sessionSize: newSize, bufferCapacity: newCapacity }
         setSessionState(newState)
         saveSessionState(newState)
         setView('home')
@@ -387,8 +399,9 @@ export default function App() {
                 {view === 'home' && (
                     <HomePage
                         totalCards={cards.length}
+                        stats={stats}
+                        bufferCapacity={sessionState.bufferCapacity || 100}
                         dueCount={dueCount}
-                        learnedCount={cards.filter(c => c.status === 'review').length}
                         onStartReview={() => setView('review')}
                         onImport={() => setShowImport(true)}
                         inboxWords={inboxWords}
@@ -532,7 +545,7 @@ function ProgressRing({ value, max }) {
 }
 
 
-function HomePage({ totalCards, dueCount, learnedCount, onStartReview, onImport, inboxWords = [], onDeleteInboxWord, onClearInbox, weakCards = [], dismissWeakCard, clearAllWeakCards, activityLog = {}, isMobile, sessionSize, decompressedMsg, hasActiveSession }) {
+function HomePage({ totalCards, stats, bufferCapacity, dueCount, onStartReview, onImport, inboxWords = [], onDeleteInboxWord, onClearInbox, weakCards = [], dismissWeakCard, clearAllWeakCards, activityLog = {}, isMobile, sessionSize, decompressedMsg, hasActiveSession }) {
 
     const { text, emoji } = getGreeting()
 
@@ -563,53 +576,62 @@ function HomePage({ totalCards, dueCount, learnedCount, onStartReview, onImport,
                     </div>
                 )}
 
-                <div className="home-progress-section">
-                    <ProgressRing value={dueCount} max={Math.max(dueCount, totalCards)} />
-                    <div className="home-progress-info">
-                        <div className="home-progress-title">
-                            {dueCount > 0 ? `今天還有 ${dueCount} 張要複習` : (
-                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                                    今日任務完成！<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--good)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                                </span>
-                            )}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', background: 'var(--surface)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border)', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                            <div style={{ fontSize: '1.8rem' }}>📥</div>
+                            <div>
+                                <div style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)' }}>總量池 (The Pool)</div>
+                                <div style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)' }}>尚未背誦的新單字</div>
+                            </div>
                         </div>
-                        <div className="home-progress-sub">
-                            共 {totalCards} 張卡片
+                        <div style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--text-secondary)' }}>{stats.pool}</div>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', background: 'var(--surface)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border)', justifyContent: 'space-between', position: 'relative', overflow: 'hidden' }}>
+                        <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: `${Math.min(100, (stats.buffer / bufferCapacity) * 100)}%`, background: 'var(--primary)', opacity: 0.08, zIndex: 0 }}></div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', zIndex: 1 }}>
+                            <div style={{ fontSize: '1.8rem' }}>🧠</div>
+                            <div>
+                                <div style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)' }}>背誦區 (Buffer)</div>
+                                <div style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)' }}>{bufferCapacity - stats.buffer > 0 ? `再畢業 ${100 - (100 - (bufferCapacity - stats.buffer))} 個解鎖新字！` : '大腦滿載中，專注消化舊字！'}</div>
+                            </div>
                         </div>
+                        <div style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--primary)', zIndex: 1 }}>
+                            {stats.buffer} <span style={{ fontSize: '1rem', opacity: 0.6 }}>/ {bufferCapacity}</span>
+                        </div>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', background: 'var(--surface)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border)', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                            <div style={{ fontSize: '1.8rem' }}>🏆</div>
+                            <div>
+                                <div style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)' }}>已熟練 (Mastered)</div>
+                                <div style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)' }}>間隔大於 3 天已畢業</div>
+                            </div>
+                        </div>
+                        <div style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--good)' }}>{stats.mastered}</div>
                     </div>
                 </div>
 
-                <div className="stats-row">
-                    <div className="stat-card">
-                        <span className="stat-num">{totalCards}</span>
-                        <span className="stat-label">總卡片</span>
+                {dueCount > 0 && (
+                    <div style={{ textAlign: 'center', marginBottom: '16px', color: 'var(--again)', fontWeight: 600, fontSize: '0.95rem' }}>
+                        🔥 緊迫度計算：今日排隊序列已預備 {dueCount} 個單字需要立即處理！
                     </div>
-                    <div className="stat-card">
-                        <span className="stat-num" style={{ color: dueCount > 0 ? 'var(--again)' : 'var(--good)' }}>
-                            {dueCount}
-                        </span>
-                        <span className="stat-label">待複習</span>
-                    </div>
-                    <div className="stat-card">
-                        <span className="stat-num" style={{ color: 'var(--primary)' }}>
-                            {learnedCount}
-                        </span>
-                        <span className="stat-label">已掌握</span>
-                    </div>
-                </div>
+                )}
 
                 <div className="home-actions">
-                    {dueCount > 0 ? (
+                    { (dueCount > 0 || stats.pool > 0 || stats.buffer > 0 || hasActiveSession) ? (
                         <button className="btn-primary large" onClick={onStartReview} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="8" width="18" height="14" rx="2" ry="2"></rect><path d="M7 4h14v14"></path></svg>
-                            {hasActiveSession ? '繼續未完成的複習' : `開始複習（每次 ${Math.min(dueCount, sessionSize)} 張）`}
+                            {hasActiveSession ? '繼續未完成的複習' : `開始複習（每次 30 張）`}
                         </button>
                     ) : (
                         <div className="done-msg">
                             <span style={{ color: 'var(--good)' }}>
                                 <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
                             </span>
-                            <p>今天的複習完成了！</p>
+                            <p>今天的複習與新單字都完成了！</p>
                             <small>明天再來繼續加強</small>
                         </div>
                     )}

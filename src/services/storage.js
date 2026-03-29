@@ -65,10 +65,11 @@ export function getSessionState() {
         return {
             activeSession: parsed.activeSession || null,
             history: parsed.history || [],
-            sessionSize: parsed.sessionSize || 30
+            sessionSize: parsed.sessionSize || 30,
+            bufferCapacity: parsed.bufferCapacity || 100
         }
     } catch {
-        return { activeSession: null, history: [], sessionSize: 30 }
+        return { activeSession: null, history: [], sessionSize: 30, bufferCapacity: 100 }
     }
 }
 
