@@ -451,7 +451,7 @@ export default function App() {
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="8" width="18" height="14" rx="2" ry="2"></rect><path d="M7 4h14v14"></path></svg>
                         </span>
                         複習
-                        {dueCount > 0 && <span className="tabbar-badge">{dueCount}</span>}
+                        {dueCount > 0 && <span className="tabbar-badge">{Math.min(dueCount, sessionState.sessionSize || 30)}</span>}
                     </button>
                     <button
                         className={`tabbar-item ${view === 'library' ? 'active' : ''}`}

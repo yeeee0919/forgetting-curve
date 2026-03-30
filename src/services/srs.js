@@ -175,14 +175,15 @@ export function migrateCards(cards, bufferCapacity = 100) {
         return { ...c, status: newStatus };
     });
 
-    // 自動修剪緩衝區 (Buffer Pruning)
-    // 如果背誦區超載，會優先把「從未背過」的新字退回總量池
-    const bufferCards = migrated.filter(c => c.status === STATUS.LEARNING || c.status === STATUS.RELEARNING);
+    // 自動修剪緩衝區 (Buffer Pruning) - 嚴格執行 100 個名額制
+    // 如果背誦區超載，會優先把「從未背過」的新字退回總量池；
+    // 若還是超載，則把「最不急迫（到期日最遠）」的字退回總量池。
+    let bufferCards = migrated.filter(c => c.status === STATUS.LEARNING || c.status === STATUS.RELEARNING);
     if (bufferCards.length > bufferCapacity) {
-        // 找出沒有練習過的字，準備降級
-        const unstartedCards = bufferCards.filter(c => !c.repetitions || c.repetitions === 0);
         let excessCount = bufferCards.length - bufferCapacity;
-
+        
+        // 第一波：針對從未練習過的 (repetitions = 0)
+        const unstartedCards = bufferCards.filter(c => !c.repetitions || c.repetitions === 0);
         for (let i = unstartedCards.length - 1; i >= 0 && excessCount > 0; i--) {
             const cardToDemote = unstartedCards[i];
             const index = migrated.findIndex(c => c.id === cardToDemote.id);
@@ -191,6 +192,19 @@ export function migrateCards(cards, bufferCapacity = 100) {
                 excessCount--;
                 updated = true;
             }
+        }
+
+        // 第二波：如果名額還是超載，根據 dueDate 排序，把最晚到期的踢出去
+        if (excessCount > 0) {
+            const remainingBuffer = migrated.filter(c => c.status === STATUS.LEARNING || c.status === STATUS.RELEARNING);
+            const toDemote = remainingBuffer.sort((a, b) => b.dueDate - a.dueDate).slice(0, excessCount);
+            toDemote.forEach(card => {
+                const index = migrated.findIndex(c => c.id === card.id);
+                if (index !== -1) {
+                    migrated[index].status = STATUS.NEW;
+                    updated = true;
+                }
+            });
         }
     }
 
