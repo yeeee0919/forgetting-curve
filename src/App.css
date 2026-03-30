@@ -929,3 +929,115 @@
 .btn-inbox:active {
     transform: translateY(0);
 }
+
+/* ── Funnel Visualization ── */
+.funnel-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin: 24px 0;
+    width: 100%;
+}
+
+.funnel-layer {
+    position: relative;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: transform 0.2s ease, filter 0.2s ease;
+    border: 1px solid var(--border-subtle);
+    overflow: hidden;
+}
+
+.funnel-layer:hover {
+    filter: brightness(1.05);
+    transform: translateY(-2px);
+}
+
+.funnel-layer.pool {
+    width: 100%;
+    background: var(--bg-surface);
+    border-radius: 16px 16px 8px 8px;
+    border-bottom: none;
+}
+
+.funnel-layer.buffer {
+    width: 92%;
+    background: var(--bg-surface);
+    border-radius: 8px;
+    border-top: none;
+    border-bottom: none;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+}
+
+.funnel-layer.mastered {
+    width: 80%;
+    background: var(--bg-surface);
+    border-radius: 8px 8px 24px 24px;
+    border-top: none;
+}
+
+.funnel-label-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.funnel-icon {
+    font-size: 1.8rem;
+}
+
+.funnel-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.funnel-subtitle {
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+}
+
+.funnel-number {
+    font-size: 1.5rem;
+    font-weight: 800;
+}
+
+.funnel-buffer-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    width: 100%;
+}
+
+.funnel-track {
+    background: rgba(255, 255, 255, 0.03);
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    text-align: center;
+}
+
+.funnel-track-label {
+    font-size: 0.65rem;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 2px;
+}
+
+.funnel-track-val {
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.funnel-connector {
+    width: 2px;
+    height: 12px;
+    background: var(--border-subtle);
+    opacity: 0.5;
+}

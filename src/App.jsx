@@ -544,54 +544,61 @@ function HomePage({ totalCards, stats, bufferCapacity, dueCount, onStartReview, 
                     {emoji} {text}！
                 </h1>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', background: 'var(--surface)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border)', justifyContent: 'space-between' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                            <div style={{ fontSize: '1.8rem' }}>📥</div>
+                <div className="funnel-container">
+                    {/* Layer 1: Pool */}
+                    <div className="funnel-layer pool">
+                        <div className="funnel-label-group">
+                            <div className="funnel-icon">📥</div>
                             <div>
-                                <div style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)' }}>總量池 (The Pool)</div>
-                                <div style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)' }}>尚未背誦的新單字</div>
+                                <div className="funnel-title">總量池 (The Pool)</div>
+                                <div className="funnel-subtitle">尚未開始的新進度</div>
                             </div>
                         </div>
-                        <div style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--text-secondary)' }}>{stats.pool}</div>
+                        <div className="funnel-number" style={{ color: 'var(--text-secondary)' }}>{stats.pool}</div>
                     </div>
 
-                    <div style={{ background: 'var(--surface)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border)', position: 'relative', overflow: 'hidden' }}>
+                    <div className="funnel-connector"></div>
+
+                    {/* Layer 2: Buffer */}
+                    <div className="funnel-layer buffer">
                         <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: `${Math.min(100, (stats.buffer / bufferCapacity) * 100)}%`, background: 'var(--primary)', opacity: 0.08, zIndex: 0 }}></div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', zIndex: 1, position: 'relative' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                <div style={{ fontSize: '1.5rem' }}>🧠</div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', zIndex: 1, position: 'relative' }}>
+                            <div className="funnel-label-group">
+                                <div className="funnel-icon">🧠</div>
                                 <div>
-                                    <div style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)' }}>背誦區 (Buffer)</div>
-                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>總上限 {bufferCapacity} 個單字</div>
+                                    <div className="funnel-title">大腦緩衝區 (Buffer)</div>
+                                    <div className="funnel-subtitle">{stats.buffer >= bufferCapacity ? '容量滿載' : `剩餘 ${bufferCapacity - stats.buffer} 個餘裕`}</div>
                                 </div>
                             </div>
-                            <div style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--primary)' }}>
-                                {stats.buffer} <span style={{ fontSize: '0.9rem', opacity: 0.6 }}>/ {bufferCapacity}</span>
+                            <div className="funnel-number" style={{ color: 'var(--primary)' }}>
+                                {stats.buffer}<span style={{ fontSize: '0.9rem', opacity: 0.5, fontWeight: 600 }}>/{bufferCapacity}</span>
                             </div>
                         </div>
                         
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', zIndex: 1, position: 'relative' }}>
-                            <div style={{ background: 'rgba(255,255,255,0.03)', padding: '8px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                <div style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>新詞背誦</div>
-                                <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)' }}>{stats.learning}</div>
+                        <div className="funnel-buffer-split" style={{ zIndex: 1, position: 'relative' }}>
+                            <div className="funnel-track">
+                                <div className="funnel-track-label">新詞背誦</div>
+                                <div className="funnel-track-val" style={{ color: 'var(--text-primary)' }}>{stats.learning}</div>
                             </div>
-                            <div style={{ background: 'rgba(255,255,255,0.03)', padding: '8px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                <div style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>掉落重學</div>
-                                <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--again)' }}>{stats.relearning}</div>
+                            <div className="funnel-track">
+                                <div className="funnel-track-label">記憶修復</div>
+                                <div className="funnel-track-val" style={{ color: 'var(--again)' }}>{stats.relearning}</div>
                             </div>
                         </div>
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', background: 'var(--surface)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border)', justifyContent: 'space-between' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                            <div style={{ fontSize: '1.8rem' }}>🏆</div>
+                    <div className="funnel-connector"></div>
+
+                    {/* Layer 3: Mastered */}
+                    <div className="funnel-layer mastered">
+                        <div className="funnel-label-group">
+                            <div className="funnel-icon">🏆</div>
                             <div>
-                                <div style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)' }}>已熟練 (Mastered)</div>
-                                <div style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)' }}>間隔大於 3 天已畢業</div>
+                                <div className="funnel-title">已熟練 (Mastered)</div>
+                                <div className="funnel-subtitle">進入長期記憶池</div>
                             </div>
                         </div>
-                        <div style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--good)' }}>{stats.mastered}</div>
+                        <div className="funnel-number" style={{ color: 'var(--good)' }}>{stats.mastered}</div>
                     </div>
                 </div>
 
