@@ -556,17 +556,30 @@ function HomePage({ totalCards, stats, bufferCapacity, dueCount, onStartReview, 
                         <div style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--text-secondary)' }}>{stats.pool}</div>
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', background: 'var(--surface)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border)', justifyContent: 'space-between', position: 'relative', overflow: 'hidden' }}>
+                    <div style={{ background: 'var(--surface)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border)', position: 'relative', overflow: 'hidden' }}>
                         <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: `${Math.min(100, (stats.buffer / bufferCapacity) * 100)}%`, background: 'var(--primary)', opacity: 0.08, zIndex: 0 }}></div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', zIndex: 1 }}>
-                            <div style={{ fontSize: '1.8rem' }}>🧠</div>
-                            <div>
-                                <div style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)' }}>背誦區 (Buffer)</div>
-                                <div style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)' }}>{bufferCapacity - stats.buffer > 0 ? `再畢業 ${100 - (100 - (bufferCapacity - stats.buffer))} 個解鎖新字！` : '大腦滿載中，專注消化舊字！'}</div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', zIndex: 1, position: 'relative' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <div style={{ fontSize: '1.5rem' }}>🧠</div>
+                                <div>
+                                    <div style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)' }}>背誦區 (Buffer)</div>
+                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>總上限 {bufferCapacity} 個單字</div>
+                                </div>
+                            </div>
+                            <div style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--primary)' }}>
+                                {stats.buffer} <span style={{ fontSize: '0.9rem', opacity: 0.6 }}>/ {bufferCapacity}</span>
                             </div>
                         </div>
-                        <div style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--primary)', zIndex: 1 }}>
-                            {stats.buffer} <span style={{ fontSize: '1rem', opacity: 0.6 }}>/ {bufferCapacity}</span>
+                        
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', zIndex: 1, position: 'relative' }}>
+                            <div style={{ background: 'rgba(255,255,255,0.03)', padding: '8px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                <div style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>新詞背誦</div>
+                                <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)' }}>{stats.learning}</div>
+                            </div>
+                            <div style={{ background: 'rgba(255,255,255,0.03)', padding: '8px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                <div style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>掉落重學</div>
+                                <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--again)' }}>{stats.relearning}</div>
+                            </div>
                         </div>
                     </div>
 

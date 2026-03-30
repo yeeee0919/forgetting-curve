@@ -160,7 +160,7 @@ export function previewLabel(card, rating) {
 /**
  * 初始化遷移舊資料，符合 3 天畢業新制與 NEW 狀態
  */
-export function migrateCards(cards, bufferCapacity = 100) {
+export function migrateCards(cards, bufferCapacity = 50) {
     let updated = false;
     const migrated = cards.map(c => {
         let newStatus = c.status;
@@ -175,7 +175,7 @@ export function migrateCards(cards, bufferCapacity = 100) {
         return { ...c, status: newStatus };
     });
 
-    // 自動修剪緩衝區 (Buffer Pruning) - 嚴格執行 100 個名額制
+    // 自動修剪緩衝區 (Buffer Pruning) - 嚴格執行 50 個名額制
     // 如果背誦區超載，會優先把「從未背過」的新字退回總量池；
     // 若還是超載，則把「最不急迫（到期日最遠）」的字退回總量池。
     let bufferCards = migrated.filter(c => c.status === STATUS.LEARNING || c.status === STATUS.RELEARNING);
@@ -215,11 +215,13 @@ export function migrateCards(cards, bufferCapacity = 100) {
  * 【漏斗控制：Session 排序】
  * 用遺忘曲線的緊迫度，嚴格填滿 30 個位置。
  */
-export function buildSessionSequence(cards, learningCapacity = 100, sessionSize = 30) {
+export function buildSessionSequence(cards, learningCapacity = 50, sessionSize = 30) {
     const now = Date.now();
     
     const pool = cards.filter(c => c.status === STATUS.NEW); 
     const buffer = cards.filter(c => c.status === STATUS.LEARNING || c.status === STATUS.RELEARNING);
+    const learningBuffer = cards.filter(c => c.status === STATUS.LEARNING);
+    const relearningBuffer = cards.filter(c => c.status === STATUS.RELEARNING);
     const mastered = cards.filter(c => c.status === STATUS.REVIEW);
 
     const bufferCount = buffer.length;
@@ -229,10 +231,10 @@ export function buildSessionSequence(cards, learningCapacity = 100, sessionSize 
     const p0 = mastered.filter(c => c.dueDate <= now).sort((a, b) => a.dueDate - b.dueDate);
     
     // P1: 背誦區急迫 (短期記憶鞏固)
-    const p1 = buffer.filter(c => c.status === STATUS.RELEARNING && c.dueDate <= now).sort((a, b) => a.dueDate - b.dueDate);
+    const p1 = relearningBuffer.filter(c => c.dueDate <= now).sort((a, b) => a.dueDate - b.dueDate);
     
     // P2: 背誦區常規 (推進學習)
-    const p2 = buffer.filter(c => c.status === STATUS.LEARNING && c.dueDate <= now).sort((a, b) => a.dueDate - b.dueDate);
+    const p2 = learningBuffer.filter(c => c.dueDate <= now).sort((a, b) => a.dueDate - b.dueDate);
 
     // 依序填滿 Session
     let session = [...p0, ...p1, ...p2];
@@ -250,6 +252,8 @@ export function buildSessionSequence(cards, learningCapacity = 100, sessionSize 
         stats: {
             pool: pool.length - newCardsToAdd, // 預估抽走後的剩餘量
             buffer: bufferCount + newCardsToAdd, // 背誦區加新字後的水位
+            learning: learningBuffer.length + newCardsToAdd,
+            relearning: relearningBuffer.length,
             mastered: mastered.length,
             dueCount: p0.length + p1.length + p2.length // 今天真的該複習的舊卡量
         }
