@@ -313,6 +313,7 @@ export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdat
         </div>
         <h2 className="rc-done-title">本輪複習完成！</h2>
         <p className="rc-done-sub">共複習了 {results.length} 張</p>
+        
         <div className="rc-done-stats">
           {RATINGS.map(r => {
             const count = results.filter(x => x === r.id).length
@@ -325,6 +326,24 @@ export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdat
             )
           })}
         </div>
+
+        {failedCards.length > 0 && (
+          <div className="rc-done-failed" style={{ marginTop: '24px', marginBottom: '24px', width: '100%', maxWidth: '400px' }}>
+            <h3 style={{ fontSize: '1rem', color: 'var(--again)', marginBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+              需要加強的單字 ({failedCards.length})
+            </h3>
+            <div style={{ display: 'grid', gap: '8px', textAlign: 'left', maxHeight: '250px', overflowY: 'auto', paddingRight: '4px' }}>
+              {failedCards.map(c => (
+                <div key={c.id} style={{ padding: '12px', background: 'var(--again-bg)', borderRadius: '8px', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+                  <div style={{ fontWeight: '700', color: 'var(--again)', marginBottom: '4px' }}>{c.front}</div>
+                  <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{c.back}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <button className="btn-primary" onClick={() => onDone(results)}>回到首頁</button>
       </div>
     )
