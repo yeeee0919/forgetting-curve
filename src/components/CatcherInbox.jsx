@@ -83,6 +83,38 @@ export default function CatcherInbox({ settings, onNeedKey, onImportDirect }) {
         }
     }
 
+    const directImportItem = async (item) => {
+        setProcessingId(`direct_${item.id}`)
+        setError('')
+
+        try {
+            const newCard = {
+                id: generateId(),
+                front: item.word,
+                back: item.translation || '',
+                phonetic: '',
+                part_of_speech: '',
+                example_1: item.context_sentence || '',
+                example_trans_1: '',
+                example_2: '',
+                example_trans_2: '',
+                language: 'nl',
+                tips: '來自擴充功能 (無 AI 鍊金)',
+                createdAt: Date.now(),
+                ...initCard(),
+            }
+
+            onImportDirect([newCard])
+            await supabase.from('temp_inbox').delete().eq('id', item.id)
+            setInboxItems(prev => prev.filter(i => i.id !== item.id))
+
+        } catch (err) {
+            setError(`[${item.word}] 直接收錄失敗: ${err.message}`)
+        } finally {
+            setProcessingId(null)
+        }
+    }
+
     return (
         <div className="inbox-view">
             <div className="inbox-header">
@@ -111,6 +143,9 @@ export default function CatcherInbox({ settings, onNeedKey, onImportDirect }) {
                         <div key={item.id} className="inbox-item">
                             <div className="inbox-content">
                                 <div className="inbox-word">{item.word}</div>
+                                {item.translation && (
+                                    <div className="inbox-translation">👉 {item.translation}</div>
+                                )}
                                 {item.context_sentence && (
                                     <div className="inbox-context">"{item.context_sentence}"</div>
                                 )}
@@ -118,18 +153,34 @@ export default function CatcherInbox({ settings, onNeedKey, onImportDirect }) {
                             <div className="inbox-actions">
                                 <button
                                     className="inbox-transform-btn"
+                                    onClick={() => directImportItem(item)}
+                                    disabled={processingId !== null}
+                                >
+                                    {processingId === `direct_${item.id}` ? (
+                                        <>
+                                            <svg className="spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>
+                                            收錄中
+                                        </>
+                                    ) : (
+                                        <>
+                                            ⚡ 快速收錄
+                                        </>
+                                    )}
+                                </button>
+                                <button
+                                    className="inbox-transform-btn ai-btn"
                                     onClick={() => transformItem(item)}
                                     disabled={processingId !== null}
+                                    title="耗費 API 進行：詞性、例句、記憶口訣生成"
                                 >
                                     {processingId === item.id ? (
                                         <>
                                             <svg className="spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>
-                                            鍊金中...
+                                            鍊金中
                                         </>
                                     ) : (
                                         <>
-                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path><path d="M5 3v4"></path><path d="M19 17v4"></path><path d="M3 5h4"></path><path d="M17 19h4"></path></svg>
-                                            轉為閃卡
+                                            🤖 AI 鍊金
                                         </>
                                     )}
                                 </button>
@@ -138,7 +189,7 @@ export default function CatcherInbox({ settings, onNeedKey, onImportDirect }) {
                                     onClick={() => handleDelete(item.id)}
                                     disabled={processingId !== null}
                                 >
-                                    刪除拋棄
+                                    拋棄
                                 </button>
                             </div>
                         </div>
