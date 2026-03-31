@@ -134,13 +134,8 @@ export function scheduleCard(card, rating) {
 }
 
 function _make(interval, easeFactor, repetitions, now, status, step) {
-    // 【核心邏輯整合】：無論是誰，只要 Interval >= 3 天，一律強制畢業到「熟練區」
-    if (interval >= 3 * DAY) {
-        status = STATUS.REVIEW;
-    } else if (status === STATUS.REVIEW && interval < 3 * DAY) {
-        // 因答錯被懲罰跌破 3 天門檻，退回「背誦區」
-        status = STATUS.RELEARNING;
-    }
+    // 演算法階段維護：只要順利畢業，就在 REVIEW 階段接受 SM-2 算式的複利成長
+    // 取消強制的 RELEARNING 降級，否則會導致「間隔被砍半」的無限平移 Bug
     return { interval, easeFactor, repetitions, dueDate: now + interval, status, step }
 }
 
@@ -168,8 +163,15 @@ export function migrateCards(cards, bufferCapacity = 50) {
         
         if (newStatus === STATUS.NEW && c.repetitions > 0) newStatus = STATUS.LEARNING;
 
-        if (c.interval >= 3 * DAY) newStatus = STATUS.REVIEW;
-        else if (newStatus === STATUS.REVIEW) newStatus = STATUS.RELEARNING;
+        // 【極為重要的重構與資料修復】：
+        // 先前的錯誤邏輯會把 interval < 3 天的熟練詞降級為 RELEARNING，導致無窮 1 天迴圈。
+        // 所以這裡要實作「自我修復 (Self-Healing)」機制：
+        // 如果這個單字目前被標為 RELEARNING (記憶修復)，但是它的 interval >= 1 天，
+        // 在正常的演算法中，剛進入重學區的字間隔只會是 10 分鐘，不可能有 1 天以上的間隔！
+        // 證明這張卡片是被錯誤降級的「熟練卡 (REVIEW)」，大赦送還給 REVIEW 繼續翻倍！
+        if (newStatus === STATUS.RELEARNING && c.interval >= 1 * DAY) {
+            newStatus = STATUS.REVIEW;
+        }
 
         if (c.status !== newStatus) updated = true;
         return { ...c, status: newStatus };
