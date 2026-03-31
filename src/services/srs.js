@@ -183,7 +183,7 @@ export function migrateCards(cards, bufferCapacity = 50) {
         let excessCount = bufferCards.length - bufferCapacity;
         
         // 第一波：針對從未練習過的 (repetitions = 0)
-        const unstartedCards = bufferCards.filter(c => !c.repetitions || c.repetitions === 0);
+        const unstartedCards = bufferCards.filter(c => c.status === STATUS.LEARNING && (!c.repetitions || c.repetitions === 0));
         for (let i = unstartedCards.length - 1; i >= 0 && excessCount > 0; i--) {
             const cardToDemote = unstartedCards[i];
             const index = migrated.findIndex(c => c.id === cardToDemote.id);
@@ -194,10 +194,11 @@ export function migrateCards(cards, bufferCapacity = 50) {
             }
         }
 
-        // 第二波：如果名額還是超載，根據 dueDate 排序，把最晚到期的踢出去
+        // 第二波：如果名額還是超載，根據 dueDate 排序，把最晚到期的「新詞 (LEARNING)」踢出去
+        // 絕對不踢除「記憶修復 (RELEARNING)」的單字，以免打斷複習節奏
         if (excessCount > 0) {
-            const remainingBuffer = migrated.filter(c => c.status === STATUS.LEARNING || c.status === STATUS.RELEARNING);
-            const toDemote = remainingBuffer.sort((a, b) => b.dueDate - a.dueDate).slice(0, excessCount);
+            const remainingLearning = migrated.filter(c => c.status === STATUS.LEARNING);
+            const toDemote = remainingLearning.sort((a, b) => b.dueDate - a.dueDate).slice(0, excessCount);
             toDemote.forEach(card => {
                 const index = migrated.findIndex(c => c.id === card.id);
                 if (index !== -1) {

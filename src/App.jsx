@@ -64,7 +64,7 @@ export default function App() {
     useEffect(() => {
         let loaded = getCards()
         // Data Migration for Three-Layer Architecture
-        const { migrated, updated } = migrateCards(loaded, sessionState.bufferCapacity || 100)
+        const { migrated, updated } = migrateCards(loaded, sessionState.bufferCapacity || 50)
         if (updated) {
             saveCards(migrated)
             loaded = migrated
@@ -320,7 +320,7 @@ export default function App() {
         setDismissedWeakCards([])
     }
 
-    const sequence = buildSessionSequence(cards, sessionState.bufferCapacity || 100, sessionState.sessionSize)
+    const sequence = buildSessionSequence(cards, sessionState.bufferCapacity || 50, sessionState.sessionSize)
     const dueCards = sequence.sessionCards
     const dueCount = sequence.stats.dueCount
     const stats = sequence.stats
@@ -340,7 +340,7 @@ export default function App() {
         const accuracy = successCount / total
 
         let newSize = sessionState.sessionSize
-        let newCapacity = sessionState.bufferCapacity || 100
+        let newCapacity = sessionState.bufferCapacity || 50
         let nextHistory = [...sessionState.history, accuracy].slice(-3) // keep last 3
 
         if (accuracy < 0.7 && newSize > 20) {
@@ -390,7 +390,7 @@ export default function App() {
                     <HomePage
                         totalCards={cards.length}
                         stats={stats}
-                        bufferCapacity={sessionState.bufferCapacity || 100}
+                        bufferCapacity={sessionState.bufferCapacity || 50}
                         dueCount={dueCount}
                         onStartReview={() => setView('review')}
                         onImport={() => setShowImport(true)}
