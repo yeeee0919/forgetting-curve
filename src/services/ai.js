@@ -28,15 +28,15 @@ const SYSTEM_PROMPT = `你是一位精通語言學、認知心理學與記憶法
 {
   "cards": [
     {
-      "front": "inspecteren",
-      "back": "檢查、視察",
-      "phonetic": "/ɪnˈspɛktərən/",
-      "example_1": "De dokter inspecteert de wond.",
-      "example_trans_1": "醫生檢查傷口。",
-      "example_2": "De politie zal de plaats delict grondig inspecteren.",
-      "example_trans_2": "警方將徹底視察犯罪現場。",
+      "front": "uiterlijk",
+      "back": "外表/外觀 (名詞)、最晚/遲遲 (副詞)",
+      "phonetic": "/ˈœy.tər.lək/",
+      "example_1": "Ze besteedt veel tijd aan haar uiterlijk.",
+      "example_trans_1": "她花很多時間在她的外表上。",
+      "example_2": "De betaling moet uiterlijk vrijdag binnen zijn.",
+      "example_trans_2": "款項最晚必須在星期五收到。",
       "language": "nl",
-      "tips": "【字源分析】：inspect（看）+ eren（動詞後綴）→ 進行看的動作。【生動聯想】：想像一隻「鷹（in）」戴著「斯佩克特（spect）」黑框眼鏡，仔細飛進去「檢查」每一個角落。"
+      "tips": "【字源分析】：uit (外面) + erlijk (結尾) → 從外在展現出來的 → 外表、最晚的極限。【生動聯想】：想像你「最晚」出門前，都要精心打扮「外表」。"
     }
   ]
 }`
@@ -178,14 +178,14 @@ const ALCHEMIST_SYSTEM_PROMPT = `你是一位精通語言學、認知心理學�
 
 範例輸出：
 {
-  "front": "inspecteren",
-  "back": "檢查、視察",
-  "phonetic": "/ɪnˈspɛktərən/",
-  "part_of_speech": "v.",
-  "example_1": "De dokter inspecteert de wond.",
-  "example_trans_1": "醫生檢查傷口。",
-  "example_2": "De politie zal de auto grondig inspecteren.",
-  "example_trans_2": "警方將徹底視察汽車。",
+  "front": "uiterlijk",
+  "back": "最晚/遲遲 (副詞)、外表/外觀 (名詞、形容詞)",
+  "phonetic": "/ˈœy.tər.lək/",
+  "part_of_speech": "adv. / n. / adj.",
+  "example_1": "Je moet de afspraak uiterlijk vrijdag bevestigen.",
+  "example_trans_1": "你最晚必須在星期五確認預約。",
+  "example_2": "Hij beoordeelt mensen nooit op hun uiterlijk.",
+  "example_trans_2": "他從不以外表來評價人。",
   "language": "nl",
   "tips": "【字源分析】：in(進入) + spect(看) + eren(動詞字尾) → 仔細看進去 → 檢查。\\n【生動聯想】：想像一隻「鷹(in)」戴著「斯佩克特(spect)」黑框眼鏡在檢查。"
 }`
