@@ -187,7 +187,7 @@ const ALCHEMIST_SYSTEM_PROMPT = `你是一位精通語言學、認知心理學�
   "example_2": "Hij beoordeelt mensen nooit op hun uiterlijk.",
   "example_trans_2": "他從不以外表來評價人。",
   "language": "nl",
-  "tips": "【字源分析】：in(進入) + spect(看) + eren(動詞字尾) → 仔細看進去 → 檢查。\\n【生動聯想】：想像一隻「鷹(in)」戴著「斯佩克特(spect)」黑框眼鏡在檢查。"
+  "tips": "【字源分析】：uit(外面的) + erlijk(副詞後綴) → 展現在外的界限 → 外觀、最晚的極限。\\n【生動聯想】：想像你「最晚」出門前，都要精心打扮「外表」。"
 }`
 
 /**
