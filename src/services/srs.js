@@ -253,12 +253,12 @@ export function buildSessionSequence(cards, learningCapacity = 50, sessionSize =
     return {
         sessionCards: session.slice(0, sessionSize),
         stats: {
-            pool: pool.length - newCardsToAdd, // 預估抽走後的剩餘量
-            buffer: bufferCount + newCardsToAdd, // 背誦區加新字後的水位
-            learning: learningBuffer.length + newCardsToAdd,
+            pool: pool.length, // 顯示目前的總量池數量
+            buffer: bufferCount, // 顯示目前緩衝區的水位
+            learning: learningBuffer.length,
             relearning: relearningBuffer.length,
             mastered: mastered.length,
-            dueCount: p0.length + p1.length + p2.length // 今天真的該複習的舊卡量
+            dueCount: p0.length + p1.length + p2.length // 真的該複習的總量
         }
     };
 }

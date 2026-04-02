@@ -604,7 +604,7 @@ function HomePage({ totalCards, stats, bufferCapacity, dueCount, onStartReview, 
 
                 {dueCount > 0 && (
                     <div style={{ textAlign: 'center', marginBottom: '16px', color: 'var(--again)', fontWeight: 600, fontSize: '0.95rem' }}>
-                        🔥 任務就緒：大腦緩衝區已準備好 {sessionSize || 30} 個高優先級單字，開始衝刺！
+                        🔥 任務就緒：大腦緩衝區目前有 {dueCount} 個複習任務，先衝刺 {dueCards.length} 個吧！
                     </div>
                 )}
 
