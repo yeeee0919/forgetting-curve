@@ -45,7 +45,8 @@ export function initCard() {
         repetitions: 0,
         dueDate: Date.now(),
         status: STATUS.NEW,
-        step: 0,   // 目前在哪一個學習/重學階梯
+        step: 0,         // 目前在哪一個學習/重學階梯
+        lastReviewInterval: 0, // 進重學前的最後 REVIEW 間隔（用於重學後正確折損）
     }
 }
 
@@ -93,24 +94,25 @@ export function scheduleCard(card, rating) {
     if (status === STATUS.REVIEW) {
         if (rating === RATING.AGAIN) {
             // 忘記：進入重學，降低易度係數
+            // 記住這次的 REVIEW 間隔，重學成功後用來做折損計算
             const newEF = Math.max(1.3, easeFactor - 0.2)
-            return _make(RELEARNING_STEPS[0], newEF, 0, now, STATUS.RELEARNING, 0)
+            return { ..._make(RELEARNING_STEPS[0], newEF, 0, now, STATUS.RELEARNING, 0), lastReviewInterval: interval }
         }
         if (rating === RATING.HARD) {
-            // 困難：間隔 × 1.2，降低易度係數
+            // 困難：間隔 × 1.2，降低易度係數，且至少推進 1 天
             const newEF = Math.max(1.3, easeFactor - 0.15)
-            const i = fuzz(Math.max(interval + DAY, Math.round(interval * 1.2)))
+            const i = fuzz(Math.max(1 * DAY, Math.max(interval + DAY, Math.round(interval * 1.2))))
             return _make(i, newEF, repetitions + 1, now, STATUS.REVIEW, 0)
         }
         if (rating === RATING.GOOD) {
-            // 良好：間隔 × 易度係數（SM-2 核心）
-            const i = fuzz(Math.round(interval * easeFactor))
+            // 良好：間隔 × 易度係數（SM-2 核心），且至少 1 天
+            const i = fuzz(Math.max(1 * DAY, Math.round(interval * easeFactor)))
             return _make(i, easeFactor, repetitions + 1, now, STATUS.REVIEW, 0)
         }
         if (rating === RATING.EASY) {
-            // 輕鬆：間隔 × 易度係數 × 1.3，提升易度
+            // 輕鬆：間隔 × 易度係數 × 1.3，提升易度，且至少 1 天
             const newEF = Math.min(4.0, easeFactor + 0.15)
-            const i = fuzz(Math.round(interval * newEF * 1.3))
+            const i = fuzz(Math.max(1 * DAY, Math.round(interval * newEF * 1.3)))
             return _make(i, newEF, repetitions + 1, now, STATUS.REVIEW, 0)
         }
     }
@@ -120,13 +122,16 @@ export function scheduleCard(card, rating) {
     // ─────────────────────────────
     if (status === STATUS.RELEARNING) {
         if (rating === RATING.AGAIN || rating === RATING.HARD) {
-            // 再次失敗：重回重學起點
-            return _make(RELEARNING_STEPS[0], easeFactor, 0, now, STATUS.RELEARNING, 0)
+            // 再次失敗：重回重學起點（保留 lastReviewInterval）
+            return { ..._make(RELEARNING_STEPS[0], easeFactor, 0, now, STATUS.RELEARNING, 0), lastReviewInterval: card.lastReviewInterval || 0 }
         }
-        // Good / Easy：重學成功，回到複習，間隔至少 1 天
-        const i = fuzz(Math.max(1 * DAY, Math.round(card.interval * 0.5)))
+        // Good / Easy：重學成功，回到複習
+        // 正確折損：拿進重學前的 REVIEW 間隔乘以 0.5（而非重學步驟的 10 分鐘）
+        // 最少 1 天，且不超過原本間隔（防止錯誤暴增）
+        const baseInterval = card.lastReviewInterval || 1 * DAY
+        const i = fuzz(Math.max(1 * DAY, Math.round(baseInterval * 0.5)))
         const newEF = rating === RATING.EASY ? Math.min(4.0, easeFactor + 0.1) : easeFactor
-        return _make(i, newEF, 1, now, STATUS.REVIEW, 0)
+        return _make(i, newEF, repetitions + 1, now, STATUS.REVIEW, 0)
     }
 
     // fallback
