@@ -579,17 +579,11 @@ function HomePage({ totalCards, stats, bufferCapacity, dueCount, onStartReview, 
                         <div className="funnel-buffer-split" style={{ zIndex: 1, position: 'relative' }}>
                             <div className="funnel-track">
                                 <div className="funnel-track-label">新詞背誦</div>
-                                <div className="funnel-track-val" style={{ color: 'var(--text-primary)' }}>
-                                    {stats.learning}
-                                    {stats.learningDue > 0 && <span style={{ color: 'var(--again)', fontWeight: 700, marginLeft: 4 }}>({stats.learningDue} 到期)</span>}
-                                </div>
+                                <div className="funnel-track-val" style={{ color: 'var(--text-primary)' }}>{stats.learning}</div>
                             </div>
                             <div className="funnel-track">
                                 <div className="funnel-track-label">記憶修復</div>
-                                <div className="funnel-track-val" style={{ color: 'var(--again)' }}>
-                                    {stats.relearning}
-                                    {stats.relearningDue > 0 && <span style={{ fontWeight: 700, marginLeft: 4 }}>({stats.relearningDue} 到期)</span>}
-                                </div>
+                                <div className="funnel-track-val" style={{ color: 'var(--again)' }}>{stats.relearning}</div>
                             </div>
                         </div>
                     </div>
