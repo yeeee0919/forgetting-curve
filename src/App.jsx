@@ -403,6 +403,7 @@ export default function App() {
                         activityLog={activityLog}
                         isMobile={isMobile}
                         sessionSize={sessionState.sessionSize}
+                        dueCards={dueCards}
                         hasActiveSession={!!sessionState.activeSession}
                     />
 
@@ -533,7 +534,7 @@ function ProgressRing({ value, max }) {
     )
 }
 
-function HomePage({ totalCards, stats, bufferCapacity, dueCount, onStartReview, onImport, inboxWords = [], onDeleteInboxWord, onClearInbox, weakCards = [], dismissWeakCard, clearAllWeakCards, activityLog = {}, isMobile, sessionSize, hasActiveSession }) {
+function HomePage({ totalCards, stats, bufferCapacity, dueCount, onStartReview, onImport, inboxWords = [], onDeleteInboxWord, onClearInbox, weakCards = [], dismissWeakCard, clearAllWeakCards, activityLog = {}, isMobile, sessionSize, dueCards = [], hasActiveSession }) {
 
     const { text, emoji } = getGreeting()
 
