@@ -579,11 +579,17 @@ function HomePage({ totalCards, stats, bufferCapacity, dueCount, onStartReview, 
                         <div className="funnel-buffer-split" style={{ zIndex: 1, position: 'relative' }}>
                             <div className="funnel-track">
                                 <div className="funnel-track-label">新詞背誦</div>
-                                <div className="funnel-track-val" style={{ color: 'var(--text-primary)' }}>{stats.learning}</div>
+                                <div className="funnel-track-val" style={{ color: 'var(--text-primary)' }}>
+                                    {stats.learning}
+                                    {stats.learningDue > 0 && <span style={{ color: 'var(--again)', fontWeight: 700, marginLeft: 4 }}>({stats.learningDue} 到期)</span>}
+                                </div>
                             </div>
                             <div className="funnel-track">
                                 <div className="funnel-track-label">記憶修復</div>
-                                <div className="funnel-track-val" style={{ color: 'var(--again)' }}>{stats.relearning}</div>
+                                <div className="funnel-track-val" style={{ color: 'var(--again)' }}>
+                                    {stats.relearning}
+                                    {stats.relearningDue > 0 && <span style={{ fontWeight: 700, marginLeft: 4 }}>({stats.relearningDue} 到期)</span>}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -596,10 +602,22 @@ function HomePage({ totalCards, stats, bufferCapacity, dueCount, onStartReview, 
                             <div className="funnel-icon">🏆</div>
                             <div>
                                 <div className="funnel-title">已熟練 (Mastered)</div>
-                                <div className="funnel-subtitle">進入長期記憶池</div>
+                                <div className="funnel-subtitle">
+                                    {stats.masteredDue > 0
+                                        ? <span style={{ color: 'var(--again)', fontWeight: 600 }}>⚡ {stats.masteredDue} 張今日到期複習</span>
+                                        : '全部在休息，暫無到期卡片'
+                                    }
+                                </div>
                             </div>
                         </div>
-                        <div className="funnel-number" style={{ color: 'var(--good)' }}>{stats.mastered}</div>
+                        <div style={{ textAlign: 'right' }}>
+                            <div className="funnel-number" style={{ color: 'var(--good)' }}>{stats.mastered}</div>
+                            {stats.masteredDue > 0 && (
+                                <div style={{ fontSize: '0.8rem', color: 'var(--again)', fontWeight: 700 }}>
+                                    {stats.masteredDue} 到期
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
 

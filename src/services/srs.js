@@ -261,8 +261,11 @@ export function buildSessionSequence(cards, learningCapacity = 50, sessionSize =
             pool: pool.length, // 顯示目前的總量池數量
             buffer: bufferCount, // 顯示目前緩衝區的水位
             learning: learningBuffer.length,
+            learningDue: p2.length,        // 新詞中今天到期的數量
             relearning: relearningBuffer.length,
+            relearningDue: p1.length,      // 記憶修復中今天到期的數量
             mastered: mastered.length,
+            masteredDue: p0.length,        // 已熟練但今天需複習的數量
             dueCount: p0.length + p1.length + p2.length // 真的該複習的總量
         }
     };
