@@ -1,0 +1,1049 @@
+# 請將你的表格資料（Time, Subtitle, Machine Translation）直接貼在下一行開始：
+
+
+Time	Subtitle	Machine Translation
+0s	***	***
+9s	Dit is het antwoordapparaat van Broodjeszaak Berenlekker	這是貝倫萊克三明治店的答錄機留言。
+13s	Op dit moment is niemand aanwezig	目前在場無人。
+15s	Op maandag tot en met donderdag zijn wij open van 9 uur tot 5	我們週一至週四上午9點至下午5點營業。
+20s	Vrijdag zijn we van half 9 tot half 1 open	週五我們的營業時間為8:30至12:30。
+24s	Spreek uw naam en telefoonnummer in	請提供您的姓名和電話號碼
+27s	dan bellen wij u zo snel mogelijk terug	我們會盡快回電給您。
+30s	U kunt uw vraag ook per e-mail opsturen naar info.berenlekker.nl	您也可以透過電子郵件將問題發送至 info.berenlekker.nl
+34s	Wij mailen u dan zo snel mogelijk terug.	我們會盡快回覆您的郵件。
+37s	Heeft u vragen over onze prijzen?	您對我們的價格有任何疑問嗎？
+40s	Kijk dan op www.berenlekker.nl	然後造訪 www.berenlekker.nl
+42s	Ook vindt u daar informatie over bestellingen.	您還可以在那裡找到有關訂單的資訊。
+49s	Goedemorgen.	早安.
+50s	Dag. Ik zoek keelsnoepjes.	天。我在找潤喉糖。
+53s	Ik moet veel hoesten. Mijn keel kriebelt en doet pijn.	我咳嗽得很厲害。我喉嚨癢癢的，而且有點痛。
+56s	Dan kunt u beter een hoestdrankje of tabletjes nemen.	那你最好服用止咳糖漿或止咳藥片。
+1:00	En veel thee met honing drinken.	多喝加蜂蜜的茶。
+1:03	Oké. Dan doe maar tabletjes.	好的。那就吃藥片吧。
+1:06	Hoestdrank vind ik vies.	我覺得止咳糖漿很噁心。
+1:07	Dat is goed.	美好的。
+1:09	Dat kost 8,25 euro.	那要8.25歐元。
+1:12	Ik heb alleen 50 euro. Is dat erg?	我只有50歐元。那很糟糕嗎？
+1:15	Nee hoor. Ik heb wel wisselgeld.	不，我有零錢。
+1:18	Dan krijgt u nog terug.	然後你會拿回來的。
+1:20	40 en 1,75 euro.	40 和 1.75 歐元。
+1:26	Alsjeblieft.	請。
+1:26	Dank u wel.	謝謝。
+1:27	Oké Nabil.	好的，納比爾。
+1:30	Wat handige informatie voor als je materiaal wilt bestellen.	訂購材料時的一些實用資訊。
+1:34	Zoals pennen.	就像鋼筆一樣。
+1:35	De afdeling inkoop doet de bestelling.	採購部門下訂單。
+1:37	Inkoop zit op de tweede verdieping.	採購處在二樓。
+1:41	Kamer 2.3.	2.3 室
+1:43	Naast verkoop in 2.2.	除了 2.2 版的銷售額之外。
+1:45	Je kijkt zo naar binnen vanuit de kantine.	從食堂可以直接看到裡面。
+1:48	Als je iets wil bestellen.	如果你想訂購什麼東西。
+1:49	Vul je dit formulier in.	請填寫此表格。
+1:51	Dat lever je dan in bij inkoop.	然後將其提交給採購部門。
+1:54	Als de bestelling binnen is.	訂單到達時。
+1:56	Hoor je dat van inkoop.	你是從購買管道聽說的嗎？
+1:58	Meestal bellen ze even.	他們通常會打個簡短的電話。
+2:00	Of ze sturen een mailtje.	或者他們會發送電子郵件。
+2:01	En als het een klein pakket is.	如果包裹很小的話。
+2:04	Leggen ze dat meteen in je postvak.	他們會立刻把郵件投遞到你的信箱裡。
+2:12	Goedemiddag.	午安.
+2:13	Dit is het journaal van 1 uur.	這是下午一點的新聞。
+2:16	De basiszorgverzekering wordt duurder in Nederland.	在荷蘭，基本醫療保險的費用越來越高。
+2:19	Inwoners gaan ongeveer 150 euro per persoon meer betalen per jaar.	居民每年每人將多支付約 150 歐元。
+2:25	Dat is berekend met gegevens van de vier grootste zorgverzekeraars.	這是根據四家最大健康保險公司的數據計算出來的。
+2:30	CZ, Zilveren Kruis, Mensis en VGZ.	CZ、Zilveren Kruis、Mensis 和 VGZ。
+2:35	CZ verhoogt de prijzen het meest.	CZ漲價幅度最大。
+2:38	Met 11%.	佔11%。
+2:39	En Mensis het minst.	而門西斯最不重要。
+2:42	Met 6%.	佔6%。
+2:43	Sommige aanvullende verzekeringen stijgen zelfs wel met 50%.	一些補充保險的保費甚至上漲了50%。
+2:49	Bij de vier grote zorgverzekeraars wordt deze verzekering 200 euro duurder per jaar.	在四大健康保險公司，這項保險每年將貴 200 歐元。
+2:56	Dat is meer dan vorig jaar.	這比去年要多。
+2:58	Toen betaalden we gemiddeld 75 euro meer.	那時候，我們平均要多付75歐元。
+3:02	Nou, je eerste dag.	嗯，這是你的第一天。
+3:05	Een belangrijke regel is dat de telefoon altijd voorgaat.	一個重要的原則是：手機永遠放在第一位。
+3:10	Dus ook al ben je nog zo druk, maakt niet uit.	所以無論你有多忙，都沒關係。
+3:13	Je neemt hem altijd op.	你總是會把它錄下來。
+3:14	Als iemand de directeur wil spreken, dan verbind je niet meteen door.	如果有人想和導演通話，你不能立刻幫他們接通。
+3:20	Je kijkt dan eerst in zijn agenda.	你先查看他的日程。
+3:23	Ook vraag je waar het over gaat.	你還問它講的是什麼。
+3:25	Als hij dan tijd heeft, dan toets je een 1.	如果他有時間，就按1。
+3:28	Als er iemand belt voor de afdeling inkoop, die kun je dan meteen door verbinden.	如果有人打電話找採購部門，您可以立即幫他們接通。
+3:33	Je toetst dan de 4.	然後按下 4。
+3:35	Als Evelien pauze heeft, dan moet je ook voor haar de telefoon doen, opnemen en zo.	當伊芙琳休息的時候，你也得幫她接電話、拿電話什麼的。
+3:43	Dan schrijf je de naam op van de beller en dan zeg je dat Evelien terugbelt.	然後你記下來電者的姓名，並告訴對方伊芙琳會回電。
+3:48	Vergeet ook niet het telefoonnummer.	別忘了寫上電話號碼。
+3:49	Olaf, mag ik iets vragen?	奧拉夫，我可以問你個問題嗎？
+3:57	Natuurlijk.	自然。
+3:58	Volgende les, maandag, moeten we die opdracht inleveren.	下週一上課的時候，我們必須交那份作業。
+4:03	Maar ik ga dit weekend weg, dus dat lukt me niet.	但我這週末就要走了，所以去不了。
+4:06	Mag ik de opdracht ook vrijdag inleveren?	我周五也可以交作業嗎？
+4:10	Dat is wel wat laat.	有點晚了。
+4:12	Woensdag anders?	週三的情況有所不同嗎？
+4:15	Ja, dat lukt ook wel.	是的，那樣也可以。
+4:17	Oké, mooi.	好的，不錯。
+4:18	Wil je de opdracht dan mailen?	那您想透過電子郵件提交作業嗎？
+4:21	Op woensdag werk ik thuis.	我星期三在家辦公。
+4:24	Ik kan hem dus niet op school uit mijn postvakje halen.	所以我沒辦法從學校的信箱收到。
+4:27	En met de post naar mijn huis sturen duurt wel lang.	而且郵寄到我家需要很長時間。
+4:31	Oké.	好的。
+4:33	Goedemiddag.	午安.
+4:34	Hallo, ik heb een probleem.	你好，我遇到一個問題。
+4:37	Ik heb geen pinpas meer.	我不再持有金融卡。
+4:39	Wat is er met uw pinpas gebeurd?	你的金融卡怎麼了？
+4:41	Is hij gestolen of niet meer geldig?	是被偷的還是已經過期了？
+4:43	Nee, ik ben hem kwijt.	不，我把它弄丟了。
+4:45	Oh, wanneer is dat gebeurd?	哦，那是什麼時候發生的？
+4:47	Gisteren ging ik boodschappen doen, maar toen was hij weg.	昨天我去超市買東西，但他不在家。
+4:52	Ik denk dus de dag voor gisteren.	所以我想應該是前天。
+4:56	Maar ik kon pas vandaag hierheen komen.	但我今天只能來這裡。
+4:59	Oké, heeft u uw pinpas al geblokkeerd?	好的，你已經掛失你的金融卡了嗎？
+5:02	Dan krijgt u per post een nieuwe.	然後您將收到郵寄的新文件。
+5:04	Ja, heb ik gedaan.	是的，我做了。
+5:06	Goed.	好的。
+5:07	Dan is alles geregeld.	然後一切就安排妥當了。
+5:09	U kunt weer geld opnemen als u uw nieuwe pas heeft.	拿到新卡後，就可以再提款了。
+5:12	Hey, Johan.	嘿，約翰。
+5:22	Ken jij nog iemand die hier wil komen werken?	你認識其他想來這裡工作的人嗎？
+5:25	Wat voor iemand?	什麼樣的人？
+5:26	Nou ja, oud of jong.	無論老少。
+5:28	Maakt niet uit.	沒關係。
+5:29	En hij hoeft ook geen ervaring te hebben.	而且他也不需要任何經驗。
+5:32	Iemand die vroeg op kan staan.	能早起的人。
+5:34	Nou, mijn neef Lars misschien.	嗯，也許是我表弟拉爾斯。
+5:36	Hoe vroeg moet hij dan beginnen?	那他得提前多久開始呢？
+5:38	Nou ja, ik begin altijd al om vijf uur.	反正我總是五點開始工作。
+5:41	Maar dat hoeft Lars nog niet hoor.	但拉爾斯現在還不必這麼做。
+5:43	Hij moet dan om zes uur.	他必須在六點鐘到那裡。
+5:46	En dan is hij rond twaalf uur klaar.	然後他大約十二點鐘就結束了。
+5:49	Of heel soms om één uur.	或者在極少數情況下，在一點鐘。
+5:51	Ik zal hem eens vragen.	我去問他。
+5:54	Laat hem maar even bellen naar Esther.	讓他打個電話給艾絲特就行了。
+5:58	Gisteren was het de drukste dag van het jaar op Schiphol Airport.	昨天是史基浦機場今年最繁忙的一天。
+6:03	Er waren 1300 vluchten.	共有1300個航班。
+6:06	Er waren ruim 170.000 passagiers op Schiphol.	史基浦機場有超過17萬名旅客。
+6:10	Tegenover 180.000 op de drukste dag vorige zomer.	相比之下，去年夏天最繁忙的一天接待了 18 萬人。
+6:14	Schiphol heeft extra personeel ingezet.	史基浦機場已增派人手。
+6:17	Daarom waren de rijen voor het inchecken niet langer dan normaal.	因此，辦理登機手續的隊伍並沒有比平常更長。
+6:21	Ook de rij bij de paspoortcontrole was niet langer.	護照檢查處的隊伍也不再排隊了。
+6:25	Alleen op de parkeerplaats was het lastig om een plek te vinden.	唯一困難的地方就是停車場停車位不好找。
+6:30	Alle reizigers kregen gisteren wel gratis ijs.	昨天所有旅客都獲得了免費冰淇淋。
+6:34	Iisfabrikant Ola bestond 20 jaar en trakteerde.	冰淇淋製造商 Ola 慶祝成立 20 週年，並款待了所有人。
+6:38	Een hele fijne traktatie op zo'n warme dag.	在這樣炎熱的日子裡，這真是一份令人愉悅的禮物。
+6:47	Gefeliciteerd met je nieuwe baan.	恭喜你找到新工作。
+6:49	Wel jammer dat je weggaat.	你要離開真是太可惜了。
+6:52	Jeroen gaat jou vervangen.	傑倫將取代你。
+6:54	Volgende week leg je het werk aan hem uit.	下週你要向他解釋這項工作。
+6:57	Dan kun je deze week je eigen werk eerst afmaken.	這樣你這週就可以先完成自己的工作了。
+7:00	Voordat je weggaat moet je alles opruimen.	離開前，請務必把所有東西都收拾乾淨。
+7:03	Petra, kan je daarmee helpen?	佩特拉，你能幫忙嗎？
+7:06	Je mag je werkkleding gewoon meenemen trouwens.	對了，你直接帶工作服就行了。
+7:09	Maar natuurlijk moet je wel je sleutel inleveren.	當然，你必須交出鑰匙。
+7:14	Dat moet op je laatste dag bij Irene.	你必須在艾琳餐廳的最後一天做這件事。
+7:17	Heb je het al gehoord?	你聽說了嗎？
+7:19	Anna stopt met werken hier.	安娜要辭掉這裡的工作了。
+7:21	Huh?	嗯？
+7:23	Nee?	不？
+7:24	Waarom?	為什麼？
+7:25	Ze gaat verhuizen.	她要搬家了。
+7:27	Nu moet ze een nieuwe baan zoeken.	現在她不得不另找一份工作了。
+7:29	Oh.	哦。
+7:30	Wat jammer.	真丟臉。
+7:33	Anna werkt altijd zo snel.	安娜工作總是很快。
+7:34	Dat klopt.	這是正確的。
+7:35	En ik vind haar ook heel vriendelijk.	而且我覺得她非常友善。
+7:37	Ja.	是的。
+7:38	Dat vind ik ook.	我也這麼認為。
+7:41	Maar ze komt wel vaak te laat.	但她常常遲到。
+7:43	Dat vind ik niet netjes.	我覺得這樣不太禮貌。
+7:45	Ja.	是的。
+7:46	Dat is waar.	這是真的。
+7:47	Maar het is jammer dat ze weggaat.	但她要離開，真是太可惜了。
+7:49	Ja.	是的。
+7:50	Zeker.	當然。
+7:52	Ik vind het ook niet leuk.	我也不喜歡。
+7:56	Ja.	是的。
+7:57	En dan nu het weerbericht voor de komende dagen.	接下來是未來幾天的天氣預報。
+8:00	In het hele land koud en regenachtig weer.	全國各地天氣寒冷多雨。
+8:03	Met vooral regen- en onweersbuien in het noorden van het land.	該國北部地區主要以降雨和雷暴天氣為主。
+8:09	Maximum temperatuur ongeveer 13 graden.	最高溫度約13度。
+8:12	Wat koud is voor deze tijd van het jaar.	這個季節來說，這溫度確實有點冷。
+8:14	S'nachts kan het afkoelen tot 4 à 5 graden.	夜間氣溫會降至4至5度。
+8:19	Op sommige plaatsen kan het zelfs een paar graden vriezen.	有些地方甚至可能會降到冰點以下。
+8:23	De verwachting voor het weekend is...	週末天氣預報如下…
+8:25	Ehm...	嗯…
+8:26	Iets beter.	好多了。
+8:28	In het zuiden van het land wordt het dan in de middag warmer dan 20 graden.	該國南部地區下午氣溫將升至20度以上。
+8:33	Op zondag kan het wel in de avond op verschillende plaatsen gaan regenen.	週日晚上，部分地區可能會下雨。
+8:36	Informatie over nieuwe cursussen.	新課程資訊。
+8:45	Volgende week starten de nieuwe cursussen.	新課程下週開始。
+8:49	De cursus Nederlands 3 zit bijna vol.	荷蘭語3級課程幾乎報滿了。
+8:53	Er zijn nog twee plaatsen.	還有兩個空位。
+8:56	Komt u om 1 uur naar lokaal 15 als u deze cursus wilt volgen.	如果你想選修這門課，請在下午1點到15號房間來。
+9:02	Voor Nederlands 2 maken we een nieuwe groep.	我們正在為荷蘭語2建立一個新群組。
+9:05	Daar zijn nog voldoende plaatsen.	還有很多空位。
+9:08	U kunt zich hiervoor inschrijven om half 2 in lokaal 5.	您可以在下午 1:30 在 5 號房間登記。
+9:14	Einde bericht.	訊息結束。
+9:15	Nou, het is wel onhandig hè, dat onze straat is afgesloten.	哎，我們這條街被封鎖了，真是太不方便了，不是嗎？
+9:22	Ja, dat wel.	是的，沒錯。
+9:23	Maar ja, het is wel goed dat ze de weg weer helemaal mooi maken.	不過，他們把這條路重新美化，這的確是好事。
+9:27	Er zaten zoveel gaten in.	它上面有很多洞。
+9:29	Ja, maar er komt nog steeds geen nieuwe verlichting.	是的，但是仍然沒有新的照明設備。
+9:33	En ook, ze maken niet eens nieuwe parkeerplaatsen.	而且，他們甚至沒有新建停車位。
+9:36	Nou ja, ik vind het maar niks hoor.	嗯，我不太喜歡它。
+9:37	Al dat gedoe.	真是麻煩死了。
+9:38	Gelukkig is het maar tijdelijk.	幸運的是，這只是暫時的。
+9:41	Volgende week gaat de straat weer open.	這條街將於下週重新開放。
+9:43	Nee joh.	決不。
+9:44	Die straat blijft dicht tot eind volgende maand.	那條街道將一直封閉到下個月底。
+9:46	Hé?	嘿？
+9:47	Maar dat duurt nog zes weken.	但這還需要六週。
+9:50	Dat is wel lang zeg.	不得不說，這確實很長。
+9:52	Ja.	是的。
+9:52	Hé Roman, ja, had een bericht gestuurd waar het gemeentehuis precies was.	嘿，羅曼，是的，我發了一條訊息詢問市政廳的具體位置。
+10:01	Nou, je bent er niet, dus ja, ik spreek het wel even in.	你不在，所以，嗯，我就錄下來吧。
+10:05	Oké, vanaf jouw huis.	好的，在家操作。
+10:08	Eerst moet je linksaf.	首先，你必須左轉。
+10:09	En dan bij de Groene Brug ga je naar rechts.	然後到了綠橋，向右轉。
+10:13	Dan een stukje rechtdoor.	然後向前直走一小段距離。
+10:15	En bij de supermarkt ga je rechtsaf.	到超市後，向右轉。
+10:17	Je weet wel hè?	你知道的，對吧？
+10:19	Dan zie je aan de rechterkant een groot gebouw.	然後你會看到右邊有一棟大樓。
+10:21	Dat is het nog niet.	還沒到那一步。
+10:23	En daarachter staat een blauw gebouw.	在那棟大樓的後面，矗立著一棟藍色的建築。
+10:25	Dat is hem wel.	就是那個。
+10:27	En daar is links een parkeerplaats voor bezoekers.	左側設有訪客停車場。
+10:31	Maar je kunt ook rechts de parkeergarage inrijden.	但你也可以開車進入右側的停車場。
+10:36	Of aan de overkant van de weg parkeren.	或把車停在馬路對面。
+10:38	Maar die parkeerplaats voor bezoekers, die is wel het handigste denk ik.	但我認為，訪客停車場是最方便的。
+10:44	Hé, hallo Roberto.	嘿，你好，羅伯托。
+10:46	Met Peter van Doorn.	與彼得·範·多恩合作。
+10:48	Ik, eh, morgen kom je bij mij werken op de bouw.	呃，明天你要來建築工地跟我一起上班。
+10:51	Op, eh, daar achter het station.	呃，就在車站後面那邊。
+10:53	Hm?	嗯？
+10:54	Morgen.	明天。
+10:55	Mario, die woont vlak bij jou.	馬裡奧，他住得離你很近。
+10:57	Die haalt jou daar morgen thuis op om, eh, kwart over zeven.	他明天早上七點一刻會到你家接你。
+11:01	Je moet ook nog even, eh, wat dingetjes ophalen.	你還需要盡快，呃，拿幾樣東西。
+11:04	Ja, kleding bedoel ik dan.	是的，我是指衣服。
+11:06	Bij Ron in het magazijn.	在 Ron 的倉庫裡。
+11:08	Daar kan je je werkkleding krijgen.	你可以在那裡買到工作服。
+11:11	En, eh, werkschoenen.	還有，呃，工作鞋。
+11:13	Die hebben we niet in het magazijn.	我們倉庫裡沒有那種東西。
+11:15	Werkschoenen neem je dus zelf mee.	所以你需要自備工作鞋。
+11:18	Oké.	好的。
+11:19	Eh, Leroy heeft nog een helm en een veiligheidsbril voor jou.	呃，勒羅伊還留頭盔和護目鏡給你。
+11:24	Eh, oh wacht even.	呃，哦，等一下。
+11:25	Ik zie Leroy straks nog.	我稍後會見到勒羅伊。
+11:27	Dan, eh, neem ik je helm en je bril wel voor je mee.	然後，呃，我會幫你拿頭盔和護目鏡。
+11:30	Oké?	好的？
+11:31	Tot morgen.	明天見。
+11:35	Tjee.	哎呀。
+11:37	Wordt een drukke tijd, hè, met al die examens.	考試那麼多，這段時間一定會很忙吧。
+11:40	Vijf in totaal.	總共五個。
+11:41	Hm, ja.	嗯，是的。
+11:43	Volgende week hebben we alleen al drie examens.	下週我們就要考三門。
+11:46	En de week daarna twee.	接下來一週又添了兩例。
+11:49	Ik weet echt niet hoe ik dat allemaal moet leren.	我真的不知道該怎麼學這些東西。
+11:52	Nou, weet je, zorg dat je eerst een goede planning maakt.	嗯，你知道，一定要先訂定一個好計畫。
+11:56	Dat helpt voor mij altijd heel goed.	那對我的幫助總是很大。
+11:58	Ja, dat is misschien wel handig, ja.	是的，那或許有用。
+12:01	En als ik je dan nog een tip mag geven, dan ga gewoon leren in de bus en in de trein.	如果我能再給你一個建議，那就是在公車上和火車上學習。
+12:07	Ik bedoel, die tijd ben je toch aan het wachten.	我的意思是，反正你也在等那個時候。
+12:09	Dan kan je heel veel extra doen.	這樣你就可以做很多其他事情了。
+12:11	Vooral als je zo vaak vertraging hebt.	尤其是在經常出現延誤的情況下。
+12:13	Ja.	是的。
+12:13	Dat is de goede, zeg.	那是好的那一個。
+12:17	Dat ga ik doen.	我打算這麼做。
+12:21	Oh, John, is hij weer kapot?	哦，約翰，它又壞了嗎？
+12:23	Hij zit waarschijnlijk in papier vast.	他可能被困在紙張裡了。
+12:27	Je zet hem eerst op pauze.	你先把它暫停了。
+12:30	En dan kijk je waar het probleem zit.	然後你再看看問題出在哪裡。
+12:32	En dat zie je hier op het plaatje.	你可以在圖片中看到這一點。
+12:34	Dan open je de klep.	然後打開蓋子。
+12:36	En dat papier, dat haal je dan uit.	然後把那張紙拿出來。
+12:41	Zo, hier.	就在這裡。
+12:43	En ja, nu moet hij het weer doen.	是的，現在他得再來一次。
+12:45	Je drukt op de groene knop.	你按下綠色按鈕。
+12:47	En ja hoor, nu doet hij het weer.	果然，現在又能用了。
+12:50	Als het je niet lukt, hoef je zelf niet zo lang te proberen.	如果你不成功，你就不必自己嘗試那麼久。
+12:52	Dan kan je altijd even iemand bellen.	那你隨時可以打個電話給某人。
+12:54	Van de technische dienst.	來自技術部門。
+12:56	Want ja, ik weet wel veel.	因為，嗯，我的確知道很多。
+12:58	Maar niet alles.	但並非所有內容。
+12:59	Ja, Gerrit's hier van Snackbar de Hoek.	是的，Gerrit 從 Snackbar de Hoek 來了。
+13:04	Ik wil even wat bestellen.	我只是想點東西。
+13:06	Ik wil graag zes dozen patat.	我要六盒薯條。
+13:08	Niet van die dikke, die moet ik zelf dan nog snijden.	不是那種厚厚的；我得自己動手切。
+13:10	Maar van die Franse, zeg maar, die dunne.	但那些法國的，或者說，那些薄薄的。
+13:13	Een honderd frikandellen.	一百個炸肉丸。
+13:14	En tweehonderd kroketten.	還有兩百個炸丸子。
+13:16	En even kijken.	我們來看看。
+13:18	Ook dertig flessen mayonaise.	還有三十瓶蛋黃醬。
+13:20	En twintig ketchup.	還有二十份番茄醬。
+13:22	En graag tien dozen cola blikjes.	再來十箱可樂罐裝飲料。
+13:24	Maar dan niet van die zwarte, maar die grijze cola light.	但不是黑色的，而是灰色的健怡可樂。
+13:27	En ja, bestelling gewoon naar de snackbar sturen.	是的，直接把訂單發到小點心就行了。
+13:31	Maar de rekening wel naar mijn postadres sturen graag.	但請把帳單寄到我的郵寄地址。
+13:34	Niet zoals de vorige keer naar mijn huisadres.	這次沒有像上次那樣寄到我家地址。
+13:37	Want dat is veranderd.	因為情況已經改變了。
+13:38	Dat was het.	事情就是這樣。
+13:40	Bedankt.	謝謝。
+13:43	Dag.	天。
+13:45	Hai Roxana.	你好，羅克薩娜。
+13:47	Ik heb een vraagje.	我有個問題想問一下。
+13:49	Ik moet vandaag opeens werken.	我今天突然要上班了。
+13:51	Een collega is ziek.	一位同事生病了。
+13:54	Dus nu zit ik met Ashley.	所以現在我只能和艾許莉待在一起了。
+13:55	Ze kan om twaalf uur bij Maaike een boterham eten.	她可以在中午十二點去Maaike's吃個三明治。
+14:01	Dus ja, dat is al geregeld.	是的，這件事已經安排好了。
+14:05	Kan Ashley dan na school met Lina spelen?	那麼艾希莉放學後可以和莉娜一起玩嗎？
+14:09	En dat jij op Ashley kan passen.	而且你可以照顧好艾許莉。
+14:12	Dan kom ik Ashley om vijf uur ophalen.	那我五點來接艾希莉。
+14:15	Normaal moet ik tot half zes werken.	我通常要工作到五點過五分。
+14:17	Maar ik mag vandaag een uurtje eerder weg.	但我今天可以提早一小時離開。
+14:21	Kan dat dan vanmiddag?	那麼，今天下午可以完成嗎？
+14:23	Anders kan ik het ook nog aan Pia vragen, hoor.	不然的話，我還可以問問皮婭，你知道的。
+14:32	Goedemorgen, Jamal.	早上好，賈馬爾。
+14:34	Ik zou vandaag om negen uur in de winkel zijn.	我今天早上九點應該到店裡。
+14:38	Maar het wordt later.	但時間已經不早了。
+14:40	Half twaalf.	十一點半。
+14:41	Dus wil je wat doorgeven?	你想傳遞些什麼嗎？
+14:44	Nou, vandaag komt Myrthe voor het eerst.	嗯，米爾特今天第一次來。
+14:47	Dus help haar allemaal een beetje mee.	所以大家，幫幫她吧。
+14:50	Ze komt om tien uur.	她十點鐘到。
+14:53	Laat jij Myrthe zien waar alles staat en zo.	能帶米爾特看看東西都放在哪裡嗎？
+14:56	En vraag dan aan Emma of ze wil uitleggen hoe de kassa werkt.	然後問艾瑪是否願意解釋一下收銀機的工作原理。
+15:00	En René sluit vandaag af.	雷內今天的演講到此結束。
+15:03	Om zes uur.	六點鐘。
+15:04	Dus ja, dan kan René Myrthe meteen laten zien hoe dat moet.	所以，是的，雷內可以立即向米爾特展示如何做到這一點。
+15:09	Afsluiten.	阻止。
+15:09	Bedankt alvast.	提前致謝。
+15:11	En tot straks.	再見。
+15:14	Nou, Amir.	嗯，阿米爾。
+15:17	Dit is de kantine.	這是食堂。
+15:19	Die eten we altijd.	我們經常吃那個。
+15:20	Vanaf half twaalf kun je hier broodjes kopen.	從上午11點半開始，你可以在這裡買到三明治。
+15:26	Maar ja, voor twaalf uur luncht er eigenlijk niemand.	但話說回來，其實也沒人會在十二點前吃午餐。
+15:30	De meeste collega's gaan pas om half één eten.	大多數同事要到十二點半才吃飯。
+15:35	En dan tot één uur ongeveer.	然後一直持續到大約一點鐘。
+15:39	Goed.	好的。
+15:41	Als je koffie wilt.	如果你想喝咖啡。
+15:43	Die kun je hier pakken.	你可以在這裡買到。
+15:46	Oké.	好的。
+15:47	En als de koffie op is, moet je één van de secretaresses roepen.	如果咖啡喝完了，你就得打電話給秘書。
+15:51	Zij vullen de koffie bij.	他們正在續咖啡。
+15:53	Hun kantoortje is hier op de begane grond, vlak bij de ingang.	他們的小辦公室就在一樓入口旁。
+15:58	En...	和...
+15:58	Ja.	是的。
+16:00	Ze maken ook de vaatwasser leeg.	他們還會清空洗碗機。
+16:02	Als die vol is.	如果滿了的話。
+16:03	Nadat je hebt geluncht, moet je wel even je tafel schoonvegen.	午餐結束後，請務必將桌子擦乾淨。
+16:08	Dat is wel zo netjes.	這只是禮貌而已。
+16:10	Verder hoef je niks schoon te maken hoor.	除此之外，你不需要清潔任何東西。
+16:13	Nou, ehm...	嗯…
+16:15	Dit was dus de kantine.	這就是食堂。
+16:17	Dan laat ik je nu je werkplek zien.	接下來我將帶您參觀您的工作區域。
+16:19	Die is helemaal bovenin.	那個在最上面。
+16:22	Op de tweede verdieping.	在二樓。
+16:24	Dan lopen we meteen even langs de eerste verdieping.	那我們就順便去一樓看看。
+16:27	Daar is mijn kantoortje.	那是我的小辦公室。
+16:29	Dan weet je ook meteen waar dat is.	這樣你就能立刻知道它在哪裡了。
+16:32	Goed.	好的。
+16:33	Ga je mee?	你一起來嗎？
+16:33	Hoi Helen, met Sergio.	嗨，海倫，我是塞爾吉奧。
+16:42	Zeg, ik bel even over maandag.	我大概週一會打電話。
+16:46	Over die excursie naar Amsterdam.	關於那次阿姆斯特丹之旅。
+16:49	Goed, eh...	對，呃…
+16:50	We gaan om half acht met de bus naar Amsterdam.	我們七點半搭巴士去阿姆斯特丹。
+16:54	We moeten om, ja...	是的，我們必須改變方向…
+16:55	al om kwart over zeven bij het cursuscentrum zijn.	請在七點一刻前到達課程中心。
+17:00	We zijn rond half negen in Amsterdam, geloof ik.	我想我們大概八點半左右會到阿姆斯特丹。
+17:04	Het wordt vast leuk.	肯定會很有趣。
+17:06	Smiddags gaan we naar het Rijksmuseum.	下午我們要去國立博物館。
+17:09	Daar heb ik echt zin in.	我非常期待。
+17:12	Maar eerst gaan we een wandeling maken door de stad.	但首先，我們要去城裡散步。
+17:15	Dan gaan we ook naar de grachten.	然後我們也會去運河邊。
+17:17	En kunnen we naar alle boten kijken.	我們可以看看所有的船。
+17:20	Eh...	呃…
+17:21	Wat moet je nog meer weten?	您還需要了解什麼？
+17:24	Oh ja, we krijgen een boekje mee.	哦，是的，我們會收到一本小冊子。
+17:26	Met opdrachten.	有作業。
+17:28	Die moeten we maken in Amsterdam.	我們需要在阿姆斯特丹製作這些。
+17:31	Wij hebben al een boekje gekregen.	我們已經收到一本小冊子。
+17:33	Maar jij en Nora nog niet.	但你和諾拉之間還沒有。
+17:36	Jullie waren niet in de les vandaag.	你今天沒來上課。
+17:39	Dus, eh...	所以，呃…
+17:40	Jullie krijgen hem nog.	你還是會收到的。
+17:41	Van onze docent.	來自我們的老師。
+17:43	Nou, dat was het wel.	差不多就是這樣了。
+17:45	Tot maandag.	週一見。
+17:46	Doei.	再見。
+17:51	Hier, Rico.	里科，給你。
+17:52	Je schrijfopdracht.	你的寫作作業。
+17:54	Oké.	好的。
+17:55	Dank je wel.	謝謝。
+17:56	Ja.	是的。
+17:57	Je hebt bijna geen fouten gemaakt met de volgorde van de woorden.	你的字詞順序幾乎沒有出錯。
+18:01	Heel goed.	非常好。
+18:03	Soms maak je nog een foutje met de werkwoorden.	有時你還是會犯動詞使用錯誤。
+18:06	Maar die hoef je ook nog niet allemaal te kennen.	但你現在不必全部都知道。
+18:09	Alleen, eh...	只是，呃…
+18:11	Ja.	是的。
+18:11	Niet alle woorden zijn goed geschreven.	並非所有單字拼字都正確。
+18:15	Kijk.	看。
+18:16	Er zitten nog best veel spelfouten in.	裡面仍然有很多拼字錯誤。
+18:19	Ja.	是的。
+18:20	Ik zie het.	我看到了。
+18:22	Oh.	哦。
+18:23	Ik kon ook niet alle woorden vinden in mijn...	我也沒能在我的……中找到所有的單字。
+18:27	Mijn woordenboek.	我的字典。
+18:28	Oké.	好的。
+18:29	Eh...	呃…
+18:30	Misschien kan iemand je brief nog eens doorlezen.	或許有人可以再讀一遍你的信。
+18:34	Als hij af is.	完成後。
+18:36	Heb je dat aan iemand gevraagd?	你問過別人這個問題嗎？
+18:38	Eh...	呃…
+18:39	Nee.	不。
+18:39	Oké.	好的。
+18:41	Nou, je kunt de volgende keer je brief aan een medecursist geven.	下次你可以把信交給同學。
+18:47	Eh...	呃…
+18:49	Aan Melvin bijvoorbeeld.	例如對梅爾文來說。
+18:51	Of iemand anders.	或其他人。
+18:53	Die kan er dan nog fouten uithalen.	即使這樣，他仍然可以找出錯誤。
+18:55	Hm.	嗯。
+18:56	Oké.	好的。
+18:57	Ja.	是的。
+18:58	En voor Melvin is dat ook een goede extra oefening.	對梅爾文來說，這也是一個很好的額外鍛鍊。
+19:02	Ja.	是的。
+19:03	Dat is een goed idee.	這是個好主意。
+19:05	Goed.	好的。
+19:05	Oké.	好的。
+19:07	Dan zie ik jullie de volgende lesje.	那我們下節課見。
+19:09	Oké.	好的。
+19:10	Tot donderdag.	週四見。
+19:11	Tot donderdag.	週四見。
+19:12	Tot ziens.	再見。
+19:13	Goedenavond en hartelijk welkom bij Regio Nieuws.	晚上好，熱烈歡迎來到 Regio Nieuws。
+19:19	Eerst, nieuws uit Barendrecht.	首先是來自巴倫德雷赫特的訊息。
+19:22	Daar is gisteren een bijzondere bioscoop geopend.	昨天那裡新開了一家特色電影院。
+19:26	Bioscoop Gloop heeft in totaal negen zalen.	Cinema Gloop 共有九個放映廳。
+19:29	De bioscoop heeft zes gewone zalen, twee 3D-zalen en een aparte kinderzaal.	該影院有六個普通放映廳、兩個 3D 放映廳和一個獨立的兒童放映廳。
+19:35	Gloop is de eerste bioscoop in Nederland met zo'n zaal.	Gloop 是荷蘭第一家擁有這種螢幕的電影院。
+19:39	De zaal is speciaal gemaakt voor kinderen en hun ouders.	這間房間是專門為兒童及其父母設計的。
+19:45	Dat kun je zien aan de vrolijke kleuren en de speciale stoelen.	從明快的色彩和特別的椅子就能看出來。
+19:49	En natuurlijk aan de films die in de zaal draaien.	當然還有戲院裡正在上映的電影。
+19:53	Bioscoop Gloop heeft tijdelijk een speciale openingsactie.	Cinema Gloop 正在進行限時開幕特惠活動。
+19:57	In het weekend betalen kinderen nu 4 euro voor een kaartje en volwassenen 6 euro.	週末，兒童票價為 4 歐元，成人票價為 6 歐元。
+20:02	Door de weeks zijn de kaartjes nu ook goedkoper.	現在工作日的票價也更便宜了。
+20:05	Van maandag tot en met donderdag zijn kaartjes voor kinderen maar 3 euro en voor volwassenen 5 euro.	週一至週四，兒童票價僅需 3 歐元，成人票價僅需 5 歐元。
+20:13	De openingsactie duurt tot zondag 6 maart.	開業促銷活動持續至3月6日星期日。
+20:18	En nu nieuws uit Maasdam.	現在播報馬斯丹的消息。
+20:21	Kan ik u helpen?	我可以幫你嗎？
+20:23	Ik heb een zoon gekregen.	我有一個兒子。
+20:25	Gisteren.	昨天。
+20:26	Gefeliciteerd.	恭喜。
+20:27	U wilt dus aangifte doen van de geboorte.	所以你想登記出生資料。
+20:30	Mag ik u legitimatiebewijs?	我可以看一下您的身分證件嗎？
+20:33	Nee, vergeten.	不，忘了。
+20:34	Vergeten.	忘記。
+20:35	Ach, kan gebeuren.	唉，這種事難免發生。
+20:38	U kunt tot 2 dagen na de geboorte aangifte doen.	您可以在嬰兒出生後 2 天內進行登記。
+20:41	Dus het mag morgen ook nog.	所以你明天也可以做。
+20:43	Want vanmiddag zijn we gesloten.	因為我們今天下午休息。
+20:46	Bent u getrouwd?	你結婚了嗎？
+20:47	Ja.	是的。
+20:48	Dan moet u ook het trouwboekje meenemen.	那你還必須帶上結婚證書。
+20:50	Morgen zijn we tot 12 uur open.	明天我們營業到中午12點。
+20:53	U kunt op internet een afspraak maken.	您可以在線預約。
+20:56	Dan hoeft u niet zo lang te wachten.	這樣你就不用等那麼久了。
+20:58	Kan dat niet meteen hier aan de balie?	難道不能就在櫃檯這裡辦理嗎？
+21:01	Helaas.	很遺憾。
+21:01	Alleen online.	僅限線上。
+21:04	Oké.	好的。
+21:04	Welkom bij de cursus Sneltypen.	歡迎參加速寫課程。
+21:08	U luistert naar les 1.	您正在收聽第一課。
+21:11	In les 1 leert u het toetsenbord kennen.	第一課，你將了解鍵盤。
+21:14	In de volgende lessen leert u typen met tien vingers,	在接下來的課程中，你將學習用十根手指打字。
+21:18	woorden en zinnen typen en tot slot snel typen.	輸入單字和句子，最後快速打字。
+21:21	Aan het eind van de cursus is er een toets.	課程結束時會有一次考試。
+21:25	In de blauwe map leest u de uitleg van elke les.	藍色資料夾裡有每堂課的說明。
+21:29	Hierbij horen opdrachten.	這包括作業。
+21:32	Deze staan in de rode map.	這些都在紅色資料夾裡。
+21:34	Het is belangrijk dat u deze opdrachten maakt.	完成這些作業非常重要。
+21:37	U levert de opdrachten elke week op vrijdag in bij de docent via e-mail.	你每週五透過電子郵件向老師提交作業。
+21:43	U krijgt de opdrachten dan dinsdag terug.	您將於週二收到作業。
+21:47	U kunt uw docent bellen als u vragen heeft.	如有任何問題，可以致電老師。
+21:50	Dat kan elke donderdag tussen 1 en 4.	你可以在每週四下午 1 點到 4 點之間這樣做。
+21:54	En dan het weer voor morgen.	然後是明天的天氣預報。
+21:58	Morgenochtend zit de zon achter donkere wolken.	明天早上太陽將被烏雲遮住。
+22:02	Er vallen zware buien in heel het land.	全國各地普降暴雨。
+22:05	Het wordt dan maar 13, 14 graden.	那時氣溫只有13或14度。
+22:09	In het binnenland is er weinig wind.	內陸地區幾乎沒有風。
+22:12	Aan de kust waait het iets harder.	沿海地區的風力稍大。
+22:15	Smiddags wordt het weer beter.	下午天氣會好轉。
+22:17	Het wordt droger en vooral in het zuiden en oosten zal de zon veel schijnen.	天氣會變得更加乾燥，陽光會更加強烈，尤其是在南部和東部地區。
+22:25	Af en toe zal het nog een beetje regenen.	偶爾還會下點小雨。
+22:28	De temperatuur stijgt naar ongeveer 18 graden.	氣溫升至約18度。
+22:33	Heerlijk herfst weer dus.	真是個宜人的秋日天氣。
+22:35	Dan het weer voor de komende dagen.	接下來是未來幾天的天氣預報。
+22:39	Donderdag, vrijdag en zaterdag regent het niet.	星期四、星期五和星期六不會下雨。
+22:44	De zon zal af en toe schijnen.	太陽偶爾會露臉。
+22:46	De temperatuur blijft laag.	氣溫依然很低。
+22:49	Maar prima voor de herfst.	但很適合秋天。
+22:52	Vrijdag is er minder wind.	週五風力會減弱。
+22:55	Het kan dan wel wat...	或許有點…
+22:57	Hallo Adam, met Carola.	你好亞當，我是卡羅拉。
+23:04	Even over dit weekend.	簡單說一下這個週末的狀況。
+23:07	Jij wilde vrijnemen, hè?	你想休息一段時間，對吧？
+23:10	Ja, dat gaat helaas niet.	是的，很遺憾，這不可能。
+23:13	Sorry, Laura is nog steeds ziek.	抱歉，勞拉仍然生病。
+23:18	En ja, nu heeft Paul ook al griep.	是的，現在保羅也得了流感。
+23:23	Ze kunnen dus allebei niet werken dit weekend.	所以他們兩個這個週末都不能上班。
+23:27	Ik weet dat je bijna nooit vrij vraagt.	我知道你幾乎從不請假。
+23:31	Maar ja, ik heb je echt nodig.	是的，我真的需要你。
+23:35	Ja, in de keuken komt het wel goed.	是的，放在廚房裡沒問題。
+23:40	Maar in het restaurant, daar hebben we te weinig mensen.	但是餐廳裡人手太少了。
+23:46	De receptie vertelde wel dat het dit weekend niet zo druk wordt.	前台說這週末不會太忙。
+23:51	Dus misschien kun je wel wat eerder weg.	所以或許你可以早點出發。
+23:56	Is dat ook goed?	這樣也可以嗎？
+23:56	Ik hoop dat je ons wilt helpen.	希望您能幫助我們。
+24:00	Laat je iets horen?	你會聯絡我們嗎？
+24:03	Ik werk vanavond niet.	我今晚不上班。
+24:05	Dus je kunt niet bellen naar het hotel.	所以你不能打電話給飯店。
+24:10	Stuur me maar een bericht.	給我發條訊息就行了。
+24:13	Je hebt mijn mobiele nummer, hè?	你有我的手機號碼吧？
+24:16	Goed.	好的。
+24:17	Super bedankt, Adam.	非常感謝，亞當。
+24:19	Ha, Nika, met Marcus.	哈，妮卡，我是馬庫斯。
+24:25	Ik bel even over onze groepsopdracht.	我打電話是想問我們小組的作業。
+24:28	Die moeten we dus volgende week maandag inleveren.	所以我們必須在下週一交。
+24:32	Ik heb vraag één dinsdag al gemaakt.	我星期二已經做過第一個問題了。
+24:34	En jij zou dan de derde vraag nog thuis doen.	然後你可以在家完成第三個問題。
+24:37	Oh, en de vierde, toch?	哦，還有第四個，對吧？
+24:39	Dan vraag twee, die zouden we samen doen.	接下來是第二個問題，我們將一起回答。
+24:42	Zullen we vrijdag of zaterdag afspreken?	我們週五還是週六見面比較適合？
+24:45	Ja, het liefst zaterdag.	是的，最好是星期六。
+24:46	De school is dan dicht.	那時學校已經停課了。
+24:47	Maar het kan ook wel bij mij thuis.	但也可以在我家。
+24:50	Dan kunnen we daarna nog even naar de stad.	之後我們可以去鎮上逛逛。
+24:51	Oké?	好的？
+24:52	Ik, ja, ik hoor het wel.	是的，我會知道的。
+24:55	Bel je even terug.	我稍後會回你電話。
+24:56	Volgende week is alweer de laatste les, hè?	下週就是最後一堂課了，對吧？
+25:00	Klopt, ja.	沒錯，是的。
+25:02	Misschien kunnen we dan wat leuks gaan doen.	或許我們可以做點有趣的事。
+25:04	Met z'n drieën?	我們三個？
+25:05	Hmm, ja.	嗯，是的。
+25:07	Ja, goed idee.	是的，好主意。
+25:09	Maar, wat dan?	但是，接下來呢？
+25:11	Nou, we kunnen iets gaan eten.	我們可以去吃點東西。
+25:13	Na de les, of zo.	下課後之類的。
+25:17	Hmm, ik weet het niet.	嗯，我不知道。
+25:20	We zijn vaak pas laat klaar s'avonds.	我們經常要到深夜才能完成工作。
+25:22	Oké.	好的。
+25:24	Ja, je hebt wel gelijk.	是的你是對的。
+25:26	Misschien voor de les dan?	或許是為了上課？
+25:28	Dan kunnen we even wat drinken.	然後我們可以去喝一杯。
+25:29	Ja, dat is denk ik beter.	是的，我覺得這樣比較好。
+25:33	We gaan trouwens tijdens de laatste les naar het fotomuseum, hè?	對了，我們最後一堂課要去攝影博物館，對吧？
+25:38	Zullen we daar in de buurt afspreken dan?	那我們就在附近碰面吧？
+25:40	Ja, slim.	是的，聰明。
+25:41	Dan hoeven we niet de hele stad door te fietsen.	這樣我們就不用騎車穿過整個城市了。
+25:44	Eh, hoe zit dat eigenlijk met die kaartjes voor het museum?	呃，那這些博物館門票到底該怎麼用​​呢？
+25:49	Moeten we die zelf bestellen?	我們需要自己訂購嗎？
+25:51	Nee, hoeft niet.	不，沒有必要。
+25:53	Onze docent bestelt die kaartjes.	那些票是我們老師訂的。
+25:55	Ah, mooi.	啊，不錯。
+25:55	Maar je moet de docent nog wel terugbetalen, hè?	但你還是得還錢給老師，對吧？
+25:59	Volgende week.	下週。
+26:00	Oké.	好的。
+26:01	Het kostte acht euro, toch?	花了八歐元，對吧？
+26:04	Ja, klopt.	這是正確的。
+26:05	Normaal is het twaalf euro.	通常是十二歐元。
+26:07	Maar wij krijgen vier euro korting.	但我們能享受四歐元的折扣。
+26:10	Omdat we met onze cursusgroep komen.	因為我們是和班級一起來的。
+26:12	Oh, kijk.	哦，瞧。
+26:13	Dat scheelt weer.	這樣可以省去我們一些麻煩。
+26:16	Hallo?	你好？
+26:17	Met Birgit?	和比爾吉特一起？
+26:19	Hé, Birgit.	嘿，比爾吉特。
+26:20	Met Stijn.	與斯泰恩一起。
+26:21	Zeg, ik heb morgenochtend een afspraak bij het ziekenhuis.	嗨，我明天上午在醫院有個預約。
+26:27	Om half negen.	八點半。
+26:29	Dat gaat wel even duren.	那需要一段時間。
+26:31	Dus ik kan pas rond tien uur in de winkel zijn.	所以我只能在十點左右到店裡。
+26:35	Dus, eh, kun jij de winkel openen morgen?	所以，呃，你們明天可以開門營業嗎？
+26:40	Om negen uur?	九點鐘？
+26:42	Ja, hoor.	當然。
+26:44	Fijn.	美好的。
+26:45	Je kunt gewoon met jouw sleutel naar binnen.	你直接用鑰匙進去就好了。
+26:48	En, belangrijk, je moet ook het alarm uitzetten.	而且，非常重要的一點是，你還必須關閉警報。
+26:52	De code is, eh, 222.	代碼是，呃，222。
+26:57	Je moet trouwens eerst op de oranje knop drukken, hè?	對了，你得先按下橘色按鈕，對吧？
+27:02	Daarna toets je pas de code in.	只有在這種情況下才能輸入代碼。
+27:04	En, eh, dan druk je op het sterretje.	然後，呃，你按星號。
+27:08	Oké.	好的。
+27:10	Goed.	好的。
+27:11	Eh, daarna moet je de kassa openen.	呃，之後你需要打開收銀機。
+27:15	De sleutel ligt in het keukentje.	鑰匙在小廚房。
+27:17	In de bovenste la, weet je wel?	你知道，就在最上面的抽屜裡？
+27:20	En, eh, vergeet ook niet om het reclamebord buiten te zetten.	還有，別忘了把廣告看板也放在外面。
+27:25	Dat staat in de gang.	那是在走廊上。
+27:27	Voor het magazijn.	在倉庫前面。
+27:29	Nou, eh, dat was het wel.	嗯，大概就是這樣。
+27:32	Ik hoop dat het lukt.	我希望一切順利。
+27:34	Tot morgen.	明天見。
+27:35	Is goed.	很好。
+27:37	Doei.	再見。
+27:37	In het ziekenhuis in Amsterdam-Zuid is een waterleiding kapot gegaan.	阿姆斯特丹南區一家醫院的水管爆裂。
+27:43	Het ziekenhuis heeft daar veel last van.	醫院因此遭受了極大的損失。
+27:46	De begane grond van het ziekenhuis is helemaal overstroomd.	醫院一樓完全淹水了。
+27:50	Alles staat onder water.	一切都在水下。
+27:52	Gelukkig lagen er geen patiënten.	幸好沒有病人。
+27:54	Alle patiënten op de eerste verdieping zijn wel naar een andere plek gebracht.	一樓所有病人都已轉移到其他地方。
+28:00	Zij slapen nu op de tweede verdieping.	他們現在睡在二樓。
+28:03	Volgens het ziekenhuis zijn de patiënten niet in gevaar geweest.	醫院方面表示，患者沒有生命危險。
+28:08	De waterleiding is waarschijnlijk pas donderdag gemaakt.	水管可能直到週四才修好。
+28:12	Dat is later dan de gemeente zei.	這比市政當局所說的時間還要晚。
+28:15	Vanmorgen zei de gemeente dat het maar tot dinsdag zou duren.	今天上午，市政府表示，這項措施只會持續到週二。
+28:19	Vanaf vrijdag is het hele ziekenhuis weer open.	從週五開始，整個醫院將重新開放。
+28:22	Ook het verkeer heeft last van het water.	水災也影響了交通。
+28:26	Er rijden voorlopig geen bussen naar het ziekenhuis.	目前，沒有公車開往醫院。
+28:29	Dat komt doordat ook de weg onder water staat.	那是因為道路也被淹沒了。
+28:33	Kom dus ook niet met de tram.	所以也別坐電車來。
+28:35	U kunt het beste vanaf treinstation Zuid naar het ziekenhuis lopen.	從南站步行到醫院是最佳選擇。
+28:39	Nou, het contract is getekend.	合約已經簽訂了。
+28:43	Gefeliciteerd met jullie nieuwe woning.	恭喜您喬遷新居。
+28:46	Dan heb ik nu de sleutels voor jullie.	那我現在把鑰匙給你了。
+28:48	Kijk, dit zijn jullie sleutels.	看，這是你的鑰匙。
+28:51	Deze zijn voor jullie voordeur.	這些就在你家門口。
+28:53	Daar krijg je er vier van.	你會得到四個。
+28:55	En deze drie sleutels zijn voor de hoofdingang van de flat.	這三把鑰匙是公寓大樓正門的鑰匙。
+28:58	En deze twee kleine sleutels zijn voor de brievenbus.	這兩把小鑰匙是用來打開信箱的。
+29:03	Oké, dan...	好吧…
+29:04	Jullie krijgen ook nog één sleutel voor de fietsenstalling.	您還將收到一把自行車存放處的鑰匙。
+29:08	Die is aan de achterkant van het flatgebouw.	那是在公寓大樓的後面。
+29:11	En, oh ja, die werkt ook voor de parkeergarage.	哦，對了，這也適用於停車場。
+29:15	Die is helemaal beneden in het gebouw.	那是整棟大樓的最底層。
+29:18	In de kelder, hè?	在地下室，對吧？
+29:20	Je kunt je auto ook aan de voorkant op straat parkeren.	您也可以將車停在前面的街道上。
+29:24	Maar dat is minder veilig.	但這樣做安全性較低。
+29:27	Goed.	好的。
+29:28	Is het tot zover duidelijk?	目前為止都清楚了嗎？
+29:30	Ja hoor.	當然。
+29:31	Mooi.	好的。
+29:32	Dan zijn we bijna klaar.	這樣我們就差不多完成了。
+29:34	Jullie hebben de borgen al betaald, hè?	你已經支付了訂金，對吧？
+29:36	Ja.	是的。
+29:37	Goed.	好的。
+29:38	Dan de administratiekosten nog.	另外還有行政成本。
+29:40	Die moeten jullie binnen één maand betalen.	你必須在一個月內支付這筆款項。
+29:44	Dus daar heb je nog even de tijd voor.	所以你還有時間做這件事。
+29:47	Wat wel snel moet, is je inschrijven bij de gemeente.	需要盡快完成的是向市政當局登記。
+29:52	Dat moeten jullie binnen vijf dagen doen.	你必須在五天內完成這件事。
+29:55	Vergeet dat niet.	別忘了這一點。
+29:57	Goed.	好的。
+29:58	Dat was alles.	就這些了。
+29:59	Veel plezier in jullie woning.	好好享受你的家。
+30:00	Ehm, wat hebben we gedaan?	嗯，我們做了什麼？
+30:04	O ja.	哦是的。
+30:05	Eerst heeft meneer Verhoef het huiswerk over salarissen besproken.	首先，Verhoef 先生討論了有關薪資的作業。
+30:09	Ik mail je de antwoorden wel.	我會把答案用電子郵件寄給你。
+30:11	En, ehm, toen hebben we wat uit het boek gedaan.	然後，嗯，我們照著書裡的內容做了一些事。
+30:15	O ja.	哦是的。
+30:16	Voor de volgende keer moet je opdracht vijf en zes maken.	下次你需要完成第五項和第六項作業。
+30:20	Die gaan over rekeningen betalen.	這些都是關於支付賬單的。
+30:22	Opdracht acht hebben we tijdens de les gedaan.	我們在課堂上完成了第八項作業。
+30:25	Dat was een gesprek.	那是一次對話。
+30:26	We gaan de volgende les weer gesprekken doen.	我們下一節課還要繼續進行對話練習。
+30:30	We kregen daar vandaag tips voor.	我們今天收到了這方面的線索。
+30:33	Daar moeten we thuis mee oefenen.	我們需要在家練習一下。
+30:35	Zullen we dat samen doen?	我們一起做這件事好嗎？
+30:38	Hallo.	你好。
+30:39	Hallo.	你好。
+30:39	Welkom.	歡迎。
+30:40	Hallo.	你好。
+30:41	Ja, jullie gaan helpen bij het Koningsdag ontbijt.	是的，你要幫忙準備國王節早餐。
+30:46	Op vrijdag 27 april.	4月27日，星期五。
+30:49	Het begint om half negen.	八點半開始。
+30:52	Dan ontbijten we dus met de hele klas op school.	然後我們就和全班同學一起在學校吃早餐。
+30:55	Daarna, om, ehm, ja, om half tien gaan we naar buiten.	然後，嗯，是的，九點半，我們出去。
+31:03	Naar het sportveld.	前往運動場。
+31:05	Daarbij helpen al andere ouders.	其他家長已經在幫忙了。
+31:08	Oké.	好的。
+31:09	Dus de kinderen komen om half negen.	孩子們八點半到。
+31:12	Hoe laat moeten we alles klaarzetten?	我們需要幾點把所有東西都準備好？
+31:15	Nou, ehm, dat duurt wel een half uur, denk ik.	嗯，我想大概要半小時。
+31:19	Ja.	是的。
+31:20	Dan zijn wij er om acht uur.	那我們八點到。
+31:22	Goed.	好的。
+31:23	Oh, trouwens.	哦，對了。
+31:25	Moeten wij ook boodschappen doen voor het ontbijt?	我們還需要去買早餐食材嗎？
+31:28	Eh, even kijken.	嗯，讓我想想。
+31:30	Nee.	不。
+31:31	Nee hoor.	不。
+31:32	Dat doet de moeder van Giovanni.	喬瓦尼的母親就是這麼做的。
+31:34	Die heeft een grote auto.	他有一輛大車。
+31:36	Mooi.	好的。
+31:37	En na het ontbijt, wat gaan de kinderen dan doen?	早餐後，孩子們要做什麼呢？
+31:43	Eh, eerst gaan we dansen op een heel leuk lied.	呃，首先我們要伴著一首非常優美的歌跳舞。
+31:48	En daarna doen we allerlei spellen.	之後，我們玩各種各樣的遊戲。
+31:52	En aan het eind van de dag is er een wedstrijd.	最終，比賽還是會結束。
+31:56	Dan gaan de kinderen hun fiets versieren.	然後孩子們要去裝飾他們的自行車。
+31:58	En de mooiste fiets wint een prijs.	最漂亮的自行車將獲得獎品。
+32:00	Het wordt vast een leuke dag.	這一定會是充滿樂趣的一天。
+32:04	De boeren in Nederland staken.	荷蘭農民舉行了罷工。
+32:07	De prijs van de melk wordt lager, omdat boeren steeds meer melk produceren.	牛奶價格下降是因為農民生產的牛奶越來越多。
+32:13	De boeren werken graag hard, maar krijgen nu dus steeds minder geld.	農民喜歡辛勤工作，但現在他們的收入卻越來越少。
+32:18	In Frankrijk en België staken de boeren ook.	在法國和比利時，農民也舉行了罷工。
+32:22	Ook die boeren willen meer geld voor hun melk.	這些農民也希望牛奶能賣個好價錢。
+32:25	In Frankrijk hebben boeren de wegen naar supermarkten geblokkeerd.	在法國，農民封鎖了通往超市的道路。
+32:29	Ook in België komen de boeren in actie.	比利時的農民也在採取行動。
+32:34	Zij steken hooi in brand.	他們點燃了乾草。
+32:36	Dat doen ze op grote wegen en in de steden.	他們在主要道路和城市裡都這樣做。
+32:40	In Nederland gaan de boeren met grote borden de straat op.	在荷蘭，農民走上街頭，舉著大型標語牌。
+32:45	In veel Nederlandse steden was het de laatste twee dagen onrustig.	過去兩天，荷蘭許多城市都出現了騷亂。
+32:49	De eerste Nederlandse boeren begonnen vijf dagen geleden al met staken.	荷蘭農民早在五天前就開始罷工了。
+32:54	En ze gaan door tot er iets verandert.	他們會一直這樣做，直到情況改變為止。
+32:56	In België en Frankrijk duren de stakingen nu al acht dagen.	在比利時和法國，罷工已經持續了八天。
+33:02	Daar is ook nog niets veranderd.	那裡的情況也還沒有任何改變。
+33:05	Hoi, met Bartos.	大家好，我是巴托斯。
+33:07	Hoi, Bartos, met Anouk.	嗨，巴托斯，我是阿努克。
+33:10	Ik zou je nog even bellen over je vakantie.	我本來打算給你打個電話，問你關於假期的事。
+33:14	Je had al vakantie in week 29.	你在第 29 週就已經在休假了。
+33:21	Ik heb het besproken met Richard.	我和理查德討論過這件事。
+33:25	En je mag ook in week 30 vakantie nemen.	您也可以在第 30 週休假。
+33:30	Maar je moet dan in week 28 wel gewoon werken.	但是，第 28 週你還是要照常上班。
+33:35	In week 31 begint een nieuwe collega, Thomas.	新同事托馬斯將於第 31 週入職。
+33:41	Jij kunt Thomas inwerken, want dan ben je er weer.	你可以訓練湯瑪斯，因為那樣你就能回來了。
+33:46	Oké, dat is goed.	好的，那就好。
+33:48	Nou, verder.	好了，我們繼續。
+33:50	De bouw in de Hoofdstraat gaat niet door, helaas.	很遺憾，Hoofdstraat的建設工程無法繼續進行。
+33:55	We beginnen daarom eerder in de Tuinstraat.	因此，我們將提前在Tuinstraat開始我們的行程。
+33:58	Daarna stond de bouw in de Visserstraat op de planning.	接下來，Visserstraat的建設工程被提上了行程。
+34:04	Maar, ja, die wordt nog later.	是的，那部電影上映時間更晚。
+34:08	De vergunning is nog steeds niet geregeld.	許可證尚未辦理。
+34:11	O, trouwens.	哦，對了。
+34:13	We hebben een nieuw project in de Rijnstraat.	我們在 Rijnstraat 有一個新項目。
+34:17	Dat begint volgende maand.	下個月開始。
+34:19	Leuk.	好的。
+34:20	Ja, oké.	好的。
+34:22	Nou, dat was het.	好了，事情就是這樣。
+34:24	Ik zie je maandag.	週一見。
+34:26	Daag.	再見。
+34:27	Daag.	再見。
+34:30	Hey, Amiel.	嘿，阿米爾。
+34:31	Goedemorgen.	早安.
+34:32	Fijn dat je er bent.	很高興你能來。
+34:33	Goedemorgen.	早安.
+34:34	We hebben veel te doen vandaag.	我們今天有很多事情要做。
+34:36	Er zijn drie auto's die gerepareerd moeten worden.	有三輛車需要修理。
+34:40	De zwarte auto met een kapotte accu vooraan is als eerste gebracht.	最先被送進來的是那輛前電池壞了的黑色轎車。
+34:45	Moet ik daarmee beginnen?	我應該從那裡開始嗎？
+34:47	Nee.	不。
+34:48	Ik wil dat je begint met de witte auto.	我希望你先從白色汽車開始。
+34:50	De koplamp links vooraan doet het niet meer.	左大燈不亮了。
+34:55	De eigenaar van de witte auto heeft een enorme haast en komt de auto over twee uur alweer ophalen.	白色汽車的車主非常著急，兩個小時後就要來取車了。
+35:02	Als laatste mag je de blauwe auto doen.	最後，你也可以選擇藍色汽車。
+35:05	Die wordt morgen pas opgehaald.	要到明天才能取走。
+35:08	De deuren zijn het probleem.	問題出在門上。
+35:10	Die gaan niet meer open.	他們不會再營業了。
+35:12	Ik denk dat we de sleutel moeten controleren.	我認為我們需要檢查一下鑰匙。
+35:16	Maar goed, dat zien we dan wel.	總之，到時候再說吧。
+35:19	Oké?	好的？
+35:19	Oké.	好的。
+35:28	Met Anne.	和安妮一起。
+35:30	Hallo, met Fatima.	你好，我是法蒂瑪。
+35:32	Hoi.	你好。
+35:33	Hoe gaat het met je?	你好嗎？
+35:34	Met mij gaat het goed.	我一切都好。
+35:36	Nou ja, eigenlijk niet helemaal.	嗯，其實也不完全是這樣。
+35:40	Ik heb vaak buikpijn.	我經常胃痛。
+35:42	Daarom heb ik een afspraak met de dokter gemaakt.	這就是我預約醫生的原因。
+35:45	Maar nu heb ik een probleem.	但我現在遇到了一個問題。
+35:47	Mijn afspraak is morgen om kwart voor drie.	我明天下午三點四十五分有個預約。
+35:51	Maar om drie uur moet ik mijn zoon van school ophalen.	但我下午三點要去學校接兒子。
+35:55	Ik dacht, ik bel jou.	我想，我會打電話給你吧。
+35:57	Ben jij morgen misschien thuis?	你明天會回家嗎？
+35:59	Eh, even kijken.	嗯，讓我想想。
+36:02	Ja, ja hoor.	當然可以。
+36:03	En ik wil je zoon morgen wel ophalen.	我很樂意明天去接你兒子。
+36:06	Dan gaat hij met mij mee naar huis.	然後他跟我一起回家了。
+36:08	En dan heb jij tijd om naar de dokter te gaan.	這樣你就有時間去看醫生了。
+36:12	Dan ga ik gezellig met je zoon thee drinken.	然後我就去和你兒子一起喝杯茶。
+36:14	Oh, dat vind ik heel fijn.	哦，我對此非常高興。
+36:18	Goedemiddag dokter van Lennep.	下午好，範倫內普醫生。
+36:19	Goedemiddag mevrouw Hakimi.	下午好，哈基米夫人。
+36:21	Gaat u zitten.	請坐。
+36:23	Zo.	像這樣。
+36:25	Hoe gaat het met uw dochter?	你女兒最近怎麼樣？
+36:26	Goed.	好的。
+36:27	Met haar keel gaat het veel beter.	她的喉嚨情況好多了。
+36:30	Ze hoest niet meer zoveel.	她咳嗽的次數少了。
+36:31	Dat is fijn om te horen.	聽到這個消息真令人高興。
+36:33	Maar u komt vast voor iets anders.	但你來這裡可能另有目的。
+36:35	Dat klopt.	這是正確的。
+36:37	Ik kom voor mezelf.	我來這裡是為了我自己。
+36:39	Ik heb veel last van mijn knie.	我的膝蓋很不舒服。
+36:41	En daar word ik zo moe van.	我真是受夠了。
+36:43	En vooral wanneer u staat of wanneer u zit?	尤其是當你站著或坐著的時候？
+36:46	Wanneer ik lang sta.	當我長時間站立時。
+36:48	Ik werk in een winkel, ziet u.	我在一家商店工作。
+36:51	En daar moet ik veel staan.	而且我常常要站在那裡。
+36:53	En daar is het ook erg warm.	那裡也很熱。
+36:55	Ik heb daar wel wat voor.	我有個辦法。
+36:57	Misschien moet u eens een zalf proberen.	或許你應該試試藥膏。
+37:00	Als u die eropsmeert, dan kan de huid wat rood worden.	塗抹後，皮膚可能會有點發紅。
+37:04	Maar dat hoort zo.	但事情本來就該是這樣的。
+37:06	Ik maak gelijk een recept voor u.	我馬上就為你準備一份食譜。
+37:09	En gaat de pijn ook weg van die zalf?	這種藥膏也能緩解疼痛嗎？
+37:12	Ik verwacht van wel ja.	我估計是這樣。
+37:14	Het recept gaat via de computer naar de apotheek.	處方透過電腦送到藥局。
+37:17	En daar maken ze de zalf voor u.	他們會在那裡為你配製藥膏。
+37:20	U kunt hem direct ophalen als u dat wilt.	如果你願意，可以立即取走。
+37:22	En hoe vaak moet ik die zalf op mijn knie smeren?	我應該多久給膝蓋塗抹一次這種藥膏？
+37:25	Meerdere keren per dag.	一天數次。
+37:27	Maar dat zullen ze bij de apotheek allemaal uitleggen.	但藥房會解釋所有這些。
+37:30	Oké.	好的。
+37:31	Dank u wel.	謝謝。
+37:33	Prima.	美好的。
+37:34	Hey Jari.	嘿，賈裡。
+37:37	Hey Steven.	嘿，史蒂文。
+37:38	Hoe gaat het?	你好嗎？
+37:39	Heel goed.	非常好。
+37:40	Vertel.	告訴。
+37:41	Iets te vieren?	有什麼值得慶祝的嗎？
+37:42	Daniela is zwanger.	丹妮拉懷孕了。
+37:44	We krijgen een kindje.	我們要有寶寶了。
+37:45	Wat leuk.	真好。
+37:46	Gefeliciteerd joh.	恭喜你，兄弟。
+37:48	Hoe lang is Daniela al zwanger?	丹妮拉懷孕多久了？
+37:49	Drie maanden.	三個月。
+37:51	Leuk.	好的。
+37:51	Jullie eerste kindje.	你的第一個孩子。
+37:52	Dat moeten we vieren.	我們應該為此慶祝。
+37:54	Ja.	是的。
+37:54	Daarom wilde ik je uitnodigen om komende zaterdag bij ons te komen eten.	所以，我才想邀請你本週六來和我們一起吃晚餐。
+37:59	Een paar vriendinnen van Daniela komen ook.	丹妮拉的幾個朋友也會來。
+38:02	En ik nodig Paul ook uit.	我也邀請了保羅。
+38:04	Ja, leuk.	是的，不錯。
+38:05	En hartstikke gezellig.	而且真的很有趣。
+38:07	Zeg.	說。
+38:08	Kan jij helpen klussen de aankomende tijd?	接下來這段時間你能幫忙做些零工嗎？
+38:11	Er moeten een aantal muren geschilderd worden.	很多牆壁需要粉刷。
+38:13	En er moet ook een nieuwe vloer komen.	此外，還需要鋪設新的地板。
+38:15	Tuurlijk.	當然。
+38:16	Geen probleem.	沒問題。
+38:17	Top.	頂部。
+38:18	Dan zie ik je zaterdag.	那我周六見。
+38:19	Tot dan.	到時候見。
+38:20	Welkom bij Uitzendbureau Kracht.	歡迎來到 Kracht 職業介紹所。
+38:30	U heeft zich bij ons ingeschreven via internet.	您已透過網路向我們註冊。
+38:34	En u heeft binnenkort een kennismakingsgesprek.	你很快就要參加一個介紹會議了。
+38:37	U krijgt daarvoor een uitnodiging per e-mail met de datum en de tijd.	您將透過電子郵件收到邀請，其中包含日期和時間。
+38:42	Mensen kunnen bij ons werken in de schoonmaak, de beveiliging en in de productie.	人們可以加入我們，從事清潔、保全和生產方面的工作。
+38:54	Voor de schoonmaak en productie moet u Nederlands spreken op A2 niveau.	清潔和生產人員必須具備 A2 程度的荷蘭語能力。
+39:00	Voor de beveiliging op B1 niveau.	達到 B1 安全等級。
+39:03	Ook is het fijn als u ervaring heeft met het werk, maar dat hoeft niet.	如果你有相關工作經驗當然比較好，但這並非必要條件。
+39:11	U kunt bij ons ook een avondopleiding volgen tot leidinggevende.	你也可以參加晚間課程，成為我們公司的經理。
+39:16	Deze opleiding duurt vier maanden.	本課程為期四個月。
+39:21	U leert bijvoorbeeld een werkplanning maken.	例如，你將學習如何制定工作計劃。
+39:24	Of werkroosters bijhouden.	或用來記錄工作行程。
+39:28	Tijdens uw opleiding loopt u ook stage.	在學習期間，你還將完成實習。
+39:30	U oefent dan wat u heeft geleerd.	然後，你將實踐所學到的知識。
+39:33	Deze stage duurt twee maanden.	本次實習為期兩個月。
+39:40	Dus de opleiding duurt in totaal vier maanden.	所以課程總共持續四個月。
+39:46	Na de opleiding kunt u aan het werk als leidinggevende.	完成培訓後，你就可以開始擔任經理一職了。
+39:51	Heeft u interesse in deze opleiding?	你對這門課程有興趣嗎？
+39:54	Geeft u dat dan aan bij uw kennismakingsgesprek.	請在初次見面時提及此事。
+39:57	Tot ziens bij het gesprek.	會議上見。
+39:58	Verkeersinformatie	交通資訊
+40:03	Verkeersinformatie	交通資訊
+40:04	En dan nu de files.	接下來是交通壅塞問題。
+40:09	Op de snelweg A2 tussen Amsterdam en Utrecht staat vijf kilometer file.	阿姆斯特丹和烏特勒支之間的A2高速公路出現5公里長的交通堵塞。
+40:14	De oorzaak is een ongeluk met drie auto's.	事故原因是三車相撞事故。
+40:20	Bij Rotterdam op de snelweg A4 naar Delft staat een kapotte vrachtwagen.	在鹿特丹附近的 A4 高速公路上，往代爾夫特方向行駛，有一輛拋錨的卡車。
+40:24	Daarom staat er nu een file van vier kilometer.	這就是造成四公里交通堵塞的原因。
+40:29	Over een half uur zal het verkeer weer kunnen doorrijden.	半小時後交通即可恢復通行。
+40:34	De laatste file staat op de A50 bij Apeldoorn.	最後一起交通堵塞發生在阿珀爾多倫附近的A50公路。
+40:39	Daar is een vrachtwagen met eieren omgevallen.	一輛運雞蛋的卡車在那裡翻車了。
+40:43	De vrachtwagen en de eieren liggen op de weg.	卡車和雞蛋都躺在路邊。
+40:45	De weg wordt nu schoongemaakt.	道路正在清掃中。
+40:49	Er staat een file van tien kilometer.	交通堵塞長達十公里。
+40:53	Ten slotte nog een bericht voor mensen die met de trein reizen.	最後，給乘坐火車出行的人們一個訊息。
+40:58	Tussen de stations Arnhem en Utrecht rijden geen treinen.	阿納姆車站和烏得勒支站之間沒有列車運行。
+41:03	U kunt met de NS-bussen reizen.	您可以搭乘NS巴士出行。
+41:07	Tot zover de files.	關於交通擁堵的情況就到此為止了。
+41:08	Dag mevrouw.	您好，女士。
+41:13	Zou ik u misschien een folder mogen meegeven?	我可以送您一份宣傳冊嗎？
+41:15	Waar gaat dit over?	這是什麼事？
+41:17	Volgende week opent hier in de straat een nieuwe sportschool.	下週這條街上將新開一家健身房。
+41:20	Superfit heet die.	它叫做Superfit。
+41:21	Houdt u van sporten?	你喜歡運動嗎？
+41:23	Eh, ja wel.	嗯，是的。
+41:25	Dan is superfit misschien wel iets voor u.	那麼Superfit或許適合你。
+41:27	Kijk maar.	請看。
+41:29	De eerste twee maanden sport u gratis.	前兩個月可免費運動。
+41:31	En daarna betaalt u maar 12,50 euro per maand.	之後，你每月只需支付 12.50 歐元。
+41:34	Oh, dat is niet duur.	哦，那並不貴。
+41:36	Nee, en u betaalt ook geen inschrijving.	不，你也不需要支付註冊費。
+41:38	Nou, dat klinkt heel goed.	嗯，聽起來很不錯。
+41:40	Alleen helaas woon ik hier niet in de buurt.	可惜，我不住在附近。
+41:43	Oh, wat jammer.	哦，真是太可惜了。
+41:45	Zou u de folder misschien aan iemand kunnen meegeven?	您能否將傳單轉交給其他人？
+41:48	Ja, mijn zus woont hier wel in de buurt.	是的，我姐姐就住在附近。
+41:50	Dus misschien wil zij bij jullie komen sporten.	所以她可能想和你一起運動。
+41:53	Oh, nou, heel fijn.	哦，那真是太好了。
+41:54	Dank u wel.	謝謝。
+41:55	Fijne dag.	天氣真好。
+41:56	Hetzelfde.	相同。
+41:56	Dag.	天。
+41:57	Dag.	天。
+42:03	Welkom bij voicemail van Teleworks.	歡迎使用 Teleworks 語音信箱。
+42:05	U heeft één nieuw bericht.	您有一條新訊息。
+42:08	Hoi, Chantie.	嗨，Chantie。
+42:12	Met George.	和喬治一起。
+42:14	Morgen is toch die bijeenkomst in Amsterdam?	明天在阿姆斯特丹的會議是吧？
+42:17	Ik zou je nog bellen over het samenreizen.	我本來打算打電話給你，商量一起旅行的事。
+42:20	Mijn kaart voor het openbaar vervoer heb ik niet meer.	我的大眾運輸卡不見了。
+42:24	En zonder kaart kan ik niet met de trein reizen.	沒有卡，我就不能搭火車。
+42:27	Maar we kunnen wel met de auto van het werk.	但我們可以開公司用車。
+42:30	De bijeenkomst begint om acht uur.	會議八點開始。
+42:32	Ik haal je om half zes bij jou thuis op.	我會在五點五分到你家接你。
+42:39	Dat is misschien wel vroeg, maar dan hebben we genoeg tijd om de auto te parkeren.	那可能有點早，但我們有足夠的時間停車。
+42:45	Het kan soms zo druk zijn.	有時候會非常繁忙。
+42:50	Dat was het, geloof ik.	我想，事情就是這樣了。
+42:52	Oh ja.	哦是的。
+42:53	Wil je nog even een berichtje sturen met je straat- en huisnummer?	能否請您傳送一則包含您街道地址和門牌號碼的訊息？
+42:57	Ik weet het niet meer zo precies.	我記不太清楚了。
+43:00	Ik lees het wel.	我會讀的。
+43:03	Dag.	天。
+43:08	Mevrouw.	女士。
+43:08	Ja.	是的。
+43:09	Mag ik iets vragen?	我可以問個問題嗎？
+43:10	Natuurlijk.	自然。
+43:12	Waar zijn de plaskamers?	洗手間在哪裡？
+43:14	De plaskamers zijn daar.	那裡有小便室。
+43:16	Tegenover de kassa.	收銀台對面。
+43:17	Oh ja.	哦是的。
+43:18	Dank u.	謝謝。
+43:19	Oh, en als de broek niet past, dan roept u mij maar.	哦，如果褲子不合身，就打電話給我。
+43:22	Dan pak ik een andere maat voor u.	那我再給你找個其他尺寸的。
+43:24	Is goed.	很好。
+43:26	En?	和？
+43:34	Lukt het?	它能用嗎？
+43:35	Ja.	是的。
+43:37	Maar, eh, hij zit niet zo lekker.	但是，呃，它不太合身。
+43:44	Nee, hij is gewoon te groot.	不，它太大了。
+43:47	Welke maat is dit?	這多大？
+43:50	Maat 52.	尺寸 52。
+43:51	Ik zal een kleinere maat broek voor u pakken.	我會買一條小一號的褲子給你。
+43:56	Maat 50 zou goed moeten zijn.	50碼應該合適。
+43:59	Oh, en die broek, die kunt u zo aan mij geven.	哦，還有那條褲子，你可以馬上給我。
+44:02	Dan leg ik hem wel terug.	那我把它放回去就好了。
+44:04	Oké.	好的。
+44:04	Oké?	好的？
+44:09	Welkom bij voicemail van Teleworks.	歡迎使用 Teleworks 語音信箱。
+44:12	U heeft één nieuw bericht.	您有一條新訊息。
+44:15	Hoi Ellen, Steve hier.	嗨，艾倫，我是史蒂夫。
+44:19	Jammer dat je er vandaag niet was.	你今天沒來真是太可惜了。
+44:22	Hopelijk ben je snel weer beter.	希望你早日康復。
+44:24	Je hebt een interessante les gemist.	你錯過了一堂精彩的課。
+44:27	We hebben geleerd hoe we verschillende soorten brood voor de feestdagen kunnen maken.	我們學會如何製作各種節慶麵包。
+44:32	We hebben een kerstbrood en een suikerbrood leren maken.	我們學習如何製作聖誕麵包和糖麵包。
+44:36	Echt leuk.	真不錯。
+44:36	Maar, eh, ik bel om het huiswerk door te geven.	但是，呃，我打電話來是想把作業傳給你。
+44:42	Ehm, voor de toets rekenen moeten we hoofdstuk 6 leren.	嗯，數學考試我們要複習第六章。
+44:48	En we moeten oefening 1 en 2 van hoofdstuk 7 maken voor Nederlands.	我們還得做荷蘭語第七章的練習1和練習2。
+44:55	Voor maatschappijleer moeten we een tekst uit de krant kiezen.	在社會研究課上，我們需要從報紙上選出一篇文章。
+45:00	Dat wordt het onderwerp van de presentatie die we moeten maken.	這將是我們要準備的簡報的主題。
+45:03	Nou, wetenschap en we bellen nog wel.	嗯，先說科學方面的事情，我們稍後再聯繫。
+45:10	Oh, oh, oh ja.	哦，哦，哦，是的。
+45:12	Die tekst uit de krant moet je meenemen naar school.	你必須把報紙上的那篇文章帶到學校。
+45:16	Niet vergeten, hè?	別忘了，好嗎？
+45:18	Doeg!	再見！
+45:22	Goedemorgen en welkom bij het tv-programma De Praktijk.	早安，歡迎收看電視節目 De Praktijk。
+45:25	Vandaag kijken wij mee met Bram.	今天我們跟隨布拉姆。
+45:27	Hij loopt stage als medewerker Groen.	他目前在綠地管理部門實習。
+45:30	Bram, wat ga je vandaag doen?	布拉姆，你今天打算做什麼？
+45:31	Vandaag gaan we een boom weghalen.	今天我們要移除一棵樹。
+45:34	En wat doe jij nog meer tijdens je stage?	實習期間你還做了哪些工作？
+45:37	Soms moeten we het gras maaien of bloemen neerzetten.	有時候我們需要割草或種花。
+45:40	Maar vandaag dus niet.	但今天不行。
+45:42	En wat vind je nou het allerleukste om te doen tijdens je stage?	實習期間你最喜歡做什麼？
+45:45	Het buitenwerken vind ik heel fijn.	我非常喜歡戶外工作。
+45:48	En het samenwerken met collega's ook.	還要與同事合作。
+45:50	Maar het leukste vind ik het werken in een team.	但我最喜歡的還是團隊合作。
+45:53	En Wim Egge is jouw baas, toch?	維姆·埃格是你的老闆，對吧？
+45:55	Ja, dat klopt.	是的，沒錯。
+45:57	Wim.	維姆。
+46:01	Wim, hoe vind je dat Bram het doet?	維姆，你覺得布拉姆現在怎麼樣？
+46:04	Heel goed.	非常好。
+46:05	Hij werkt goed in een team.	他很擅長團隊合作。
+46:07	En hij doet zijn werk heel goed.	他工作做得非常出色。
+46:09	Alleen op tijd op zijn werk komen, dat vind je nog wel een beetje moeilijk, hè?	只是你覺得準時上班還是有點困難，對吧？
+46:13	Ja, dat klopt.	是的，沒錯。
+46:14	Ik moet vroeger opstaan.	我得早起。
+46:17	Nou, heel veel succes jullie samen nog.	祝你們倆好運。
+46:20	En dankjewel voor dit interview.	感謝您接受這次採訪。
+46:21	Dankjewel.	謝謝。
+46:25	Zoek jij werk?	你在找工作嗎？
+46:33	Wil je met leuke collega's werken?	你想和友善的同事一起工作嗎？
+46:35	Vind je lekkere en gezonde snacks ook belangrijk?	你也覺得美味又健康的零食很重要嗎？
+46:39	Dan pas jij precies bij ons bedrijf.	那你就是我們公司的理想人選。
+46:42	Wij verkopen allerlei soorten noten.	我們出售各種堅果。
+46:45	Die noten komen uit veel verschillende landen over de hele wereld.	這些堅果產自世界各地許多不同的國家。
+46:50	Zuid-Amerika, Azië, Afrika.	南美洲、亞洲、非洲。
+46:53	Het zijn echte wereldnotjes.	它們真是小寶貝。
+46:56	In Nederland verwerken en verpakken we de noten in de fabriek.	我們在荷蘭的工廠對堅果進行加工和包裝。
+47:00	Daarna gaan ze naar verschillende supermarkten.	之後，他們去了各個超市。
+47:03	We zoeken twee mensen voor in het magazijn.	我們正在招募兩名倉庫工作人員。
+47:07	Drie chauffeurs.	三名司機。
+47:10	En vijf mensen die in de fabriek willen werken.	還有五個人想來這家工廠工作。
+47:13	Wil jij bij ons komen werken?	你想來我們公司工作嗎？
+47:16	Bel dan naar kantoor.	然後打電話給辦公室。
+47:17	Bel 018-36-544-81.	請致電 018-36-544-81。
+47:22	Welkom bij voicemail van Teleworks.	歡迎使用 Teleworks 語音信箱。
+47:33	U heeft één nieuw bericht.	您有一條新訊息。
+47:36	Hoi, met Sinep.	大家好，我是Sinep。
+47:40	Ik bel even over vanavond.	我今晚會打電話。
+47:43	We hadden afgesproken om naar die pizzeria te gaan.	我們之前約好要去那家披薩店。
+47:47	Maar hij is gesloten.	但它已經關門了。
+47:50	Er is een bedrijfsfeest.	公司要辦派對。
+47:52	Morgenavond is het restaurant wel open.	餐廳明天晚上照常營業。
+47:58	Kun jij dan toevallig ook?	你碰巧也能來嗎？
+48:00	Om zeven uur?	七點鐘？
+48:02	Ik zal wel reserveren.	我會預訂。
+48:06	Oh ja.	哦是的。
+48:07	Ik ga morgenavond ook nog met mijn broer Moerad naar de film.	明天晚上我還要跟哥哥穆拉德一起去看電影。
+48:13	Vind je het leuk om na het eten met ons mee te gaan naar de film?	晚餐後你想和我們一起去看電影嗎？
+48:16	Ik zal je, zal ik je thuis komen ophalen.	我會的，我會到你家接你。
+48:23	Dan zien we mijn broer later bij de bioscoop.	之後我們會在電影院見到我哥哥。
+48:26	Dus wil je mij even terugbellen?	那您能給我回電嗎？
+48:31	Dank je.	謝謝。
+48:33	Dag.	天。
+48:37	Hallo allemaal.	大家好。
+48:39	Hallo.	你好。
+48:40	Vandaag bespreek ik de laatste opdracht met jullie.	今天我將和你們討論期末作業。
+48:43	Jullie korte verhaal dat jullie als huiswerkopdracht hadden gemaakt.	你作為家庭作業寫的那篇短篇小說。
+48:49	We gaan straks samen jullie verhalen lezen.	我們稍後會一起讀你的故事。
+48:51	Maar eerst bespreek ik het natuurproject waar we morgen mee gaan starten.	但首先，我想談談我們明天即將啟動的自然保育計畫。
+48:57	Voor dit project gaan jullie een aantal verhalen schrijven over de natuur.	在這個專案中，你需要寫一些關於大自然的故事。
+49:03	We gaan morgen dan ook echt de natuur in.	所以明天我們要真正走進大自然。
+49:06	Aan het einde van de les spreken we af wie morgen wat meeneemt.	課後，我們同意明天誰帶什麼。
+49:14	Ik bedoel een woordenboek of zo.	我是指字典之類的東西。
+49:18	Maar iedereen moet zijn eigen schrijfblok meenemen.	但每個人都必須自備筆記本。
+49:23	Let op.	註：
+49:24	We spreken morgen om tien uur in het park af.	我們明天上午十點在公園見面。
+49:29	Dus niet op school.	所以不在學校。
+49:32	Via het park lopen we dan naar de stadsboerderij.	然後我們穿過公園前往城市農場。
+49:35	Dit project is een goede oefening voor het examen.	這個項目對準備考試很有幫助。
+49:41	Maar daarover later meer.	但稍後再談這一點。
+49:44	Goed.	好的。
+49:45	Dan ga ik nu over naar het lezen van jullie korte verhalen.	接下來我要繼續閱讀你的短篇小說了。
+49:50	Goed.	好的。
+49:51	Goed.	好的。
+49:51	Goed.	好的。
+49:51	Goed.	好的。
+49:52	***	***

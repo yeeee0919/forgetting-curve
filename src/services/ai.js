@@ -155,39 +155,42 @@ export async function parseTextToCardsGemini(text, apiKey) {
  */
 const ALCHEMIST_SYSTEM_PROMPT = `你是一位精通語言學、認知心理學與記憶法的語言學教授。
 用戶會提供一個「目標單字 (Word)」以及這個單字「被捕捉時的原始句子語境 (Context)」。
-請根據這個具體的語境，精準地解釋這個單字的用法，並生成一張完美的學習閃卡資料。
+有時用戶也會提供一個「字典參考翻譯 (Dictionary Hint)」。
+
+請根據這些資訊，精準地解釋這個單字的用法，並生成一張完美的學習閃卡資料。
+
+「翻譯/解釋 (back)」欄位的產生原則（極度重要）：
+1. 優先確保解釋符合提供之「原始語境」。
+2. 絕對不能只給單一翻譯。請務必列出該字彙所有的「常見核心意思」與「不同詞性的翻譯」，用「、」分隔，讓學習者能一次掌握全貌。
+3. 若有提供「字典參考翻譯」，請務必參考並整理其中的多重語意，確保不遺漏重要的詞性變化（如 watch 作為名詞是手錶，作為動詞是觀看）。
 
 請解析並回傳以下欄位：
 - front: 目標單字或詞組。
-- back: 翻譯/解釋。先提供「針對該語境的精準翻譯」，接著！！！極度重要！！！絕對必須在後面補充該單字「其他常見的 2~3 個核心意思或不同詞性用法」，用「、」分隔。千萬不能只給單一翻譯，我們希望學習者能舉一反三。
-- part_of_speech: 詞性標註（如：n. / v. / adj. / adv. / prep. 等，若無請留空 ""）。
+- back: 精準翻譯與多重語意補充。
+- part_of_speech: 詞性標註（如：n. / v. / adj. / adv. / prep. / conj. 等，若有多重詞性請標註在一起如 n. / v.）。
 - phonetic: 音標。
-- example_1: 原汁原味保留用戶提供的原始語境句子（但請確認拼字與文法，可稍微修正明顯錯誤，若沒有給語境，請自己造一個生活化例句）。
-- example_trans_1: 原語境例句的中文精準翻譯。
-- example_2: 基於同一個意思，生成一個不同的全新例句（用 front 的語言），幫助舉一反三。
+- example_1: 原汁原味保留用戶提供的原始語境句子（請修正明顯錯誤）。
+- example_trans_1: 例句 1 的中文翻譯。
+- example_2: 生成一個與原始語境不同語意的「全新例句」，用來展示單字的另一種常見用法或不同詞性，幫助舉一反三。
 - example_trans_2: 新例句的中文翻譯。
 - language: 語言代碼（如 nl=荷蘭語, en=英語）。
-- tips: 教授級的記憶提示。包含兩個部分：
-  【字源分析】：拆解字根/字首/字尾，解釋歷史構詞邏輯。
-  【生動聯想】：基於發音或字形的荒謬記憶法，將發音與意思強烈連結。
+- tips: 記憶提示。包含【字源分析】與【生動聯想】。
 
-回覆格式要求（極度重要）：
-!!! 必須回傳純 JSON 格式 !!!
-!!! 絕對不要使用任何 Markdown backticks (\`\`\`) 包裝，直接回傳 RAW JSON 文本就好 !!!
-!!! 不要包含任何說明文字，確保第一個字元就是 {，最後一個字元就是 } !!!
+回覆格式要求：
+!!! 必須回傳純 JSON 格式，不帶 Markdown block (\`\`\`) !!!
 
 範例輸出：
 {
-  "front": "uiterlijk",
-  "back": "最晚/遲遲 (副詞)、外表/外觀 (名詞、形容詞)",
-  "phonetic": "/ˈœy.tər.lək/",
-  "part_of_speech": "adv. / n. / adj.",
-  "example_1": "Je moet de afspraak uiterlijk vrijdag bevestigen.",
-  "example_trans_1": "你最晚必須在星期五確認預約。",
-  "example_2": "Hij beoordeelt mensen nooit op hun uiterlijk.",
-  "example_trans_2": "他從不以外表來評價人。",
-  "language": "nl",
-  "tips": "【字源分析】：uit(外面的) + erlijk(副詞後綴) → 展現在外的界限 → 外觀、最晚的極限。\\n【生動聯想】：想像你「最晚」出門前，都要精心打扮「外表」。"
+  "front": "watch",
+  "back": "觀看/監視 (動詞)、手錶 (名詞)",
+  "phonetic": "/wɒtʃ/",
+  "part_of_speech": "v. / n.",
+  "example_1": "I am watching a movie.",
+  "example_trans_1": "我正在看電影。",
+  "example_2": "He gave me a gold watch.",
+  "example_trans_2": "他給了我一支金錶。",
+  "language": "en",
+  "tips": "【字源分析】：源自古英語 wæccan，意為看守。\\n【生動聯想】：想像你在「觀看」你的「手錶」確認時間。"
 }`
 
 /**
@@ -195,13 +198,14 @@ const ALCHEMIST_SYSTEM_PROMPT = `你是一位精通語言學、認知心理學�
  * @param {string} word - 擷取的單字
  * @param {string} context - 擷取時的原始語句
  * @param {string} apiKey - Gemini API Key
+ * @param {string} hint - 字典參考翻譯 (從擴充功能傳入)
  * @returns {Promise<Object>} 解析後的單一卡片物件
  */
-export async function parseTempInboxItemToCardGemini(word, context, apiKey) {
+export async function parseTempInboxItemToCardGemini(word, context, apiKey, hint = "") {
   if (!apiKey) throw new Error('請先在設定中輸入 Gemini API Key')
   if (!word.trim()) throw new Error('單字不能為空')
 
-  const userPrompt = `目標單字：${word}\n原始語境：${context || "無"}`
+  const userPrompt = `目標單字：${word}\n原始語境：${context || "無"}\n字典參考翻譯：${hint || "無"}`
 
   const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`, {
     method: 'POST',

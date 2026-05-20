@@ -305,10 +305,11 @@
     font-weight: 900;
     color: var(--text-primary);
     text-align: center;
-    line-height: 1.2;
+    line-height: 1.25;
     word-break: break-word;
     overflow-wrap: break-word;
     width: 100%;
+    white-space: pre-wrap;
 }
 
 .rc-example {
@@ -798,6 +799,8 @@
     font-size: 0.75rem;
     color: var(--text-secondary);
     font-weight: 600;
+    white-space: pre-wrap;
+    line-height: 1.4;
 }
 
 /* ── 極簡行內鍵盤提示 ── */

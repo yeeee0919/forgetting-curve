@@ -7,6 +7,7 @@ import { getInboxWords, deleteInboxWord, clearInbox, getCloudCards, upsertCloudC
 import ReviewCard from './components/ReviewCard'
 import CardList from './components/CardList'
 import GrammarView from './components/GrammarView'
+import ListeningLab from './components/ListeningLab'
 import ImportModal from './components/ImportModal'
 import SettingsModal from './components/SettingsModal'
 import './App.css'
@@ -154,13 +155,28 @@ export default function App() {
     }
 
     const updateCards = useCallback((newCards) => {
-        const timestamped = newCards.map(c => ({ ...c, updatedAt: Date.now() }))
-        setCards(timestamped)
-        saveCards(timestamped)
-        if (syncId) {
-            // 背景同步
-            upsertCloudCards(syncId, timestamped.filter(c => c.updatedAt >= Date.now() - 1000))
-        }
+        setCards(prevCards => {
+            const timestamped = newCards.map(c => {
+                const oldCard = prevCards.find(old => old.id === c.id);
+                if (oldCard === c) return c; // No change (reference equality)
+                return { ...c, updatedAt: Date.now() };
+            });
+
+            saveCards(timestamped)
+
+            if (syncId) {
+                // 背景同步
+                const changedCards = timestamped.filter(c => {
+                    const oldCard = prevCards.find(old => old.id === c.id);
+                    return oldCard !== c;
+                });
+                if (changedCards.length > 0) {
+                    upsertCloudCards(syncId, changedCards)
+                }
+            }
+
+            return timestamped;
+        });
     }, [syncId])
 
 
@@ -314,7 +330,7 @@ export default function App() {
     }
 
     const clearAllWeakCards = () => {
-        const updated = cards.map(c => ({ ...c, isWeak: false }))
+        const updated = cards.map(c => c.isWeak ? { ...c, isWeak: false } : c)
         updateCards(updated)
         // 同時清空已略過清單，確保存檔同步
         setDismissedWeakCards([])
@@ -385,7 +401,7 @@ export default function App() {
             </header>
 
             {/* Main Content */}
-            <main className={`app-content ${view === 'home' || view === 'grammar' || view === 'review' ? 'wide' : ''}`}>
+            <main className={`app-content ${view === 'home' || view === 'grammar' || view === 'review' ? 'wide' : ''} ${view === 'lab' ? 'lab-fullscreen' : ''}`}>
                 {view === 'home' && (
                     <HomePage
                         totalCards={cards.length}
@@ -430,6 +446,14 @@ export default function App() {
                 {view === 'grammar' && (
                     <GrammarView settings={settings} />
                 )}
+                {view === 'lab' && (
+                    <ListeningLab
+                        onRate={(rating, cardId) => {
+                            // TODO: wire into SRS when ready
+                            console.log('Lab rating:', rating, cardId)
+                        }}
+                    />
+                )}
             </main>
 
             {/* Bottom Tab Bar */}
@@ -471,6 +495,15 @@ export default function App() {
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
                         </span>
                         文法
+                    </button>
+                    <button
+                        className={`tabbar-item ${view === 'lab' ? 'active' : ''}`}
+                        onClick={() => setView('lab')}
+                    >
+                        <span className="tabbar-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+                        </span>
+                        精聽
                     </button>
                 </nav>
             )}

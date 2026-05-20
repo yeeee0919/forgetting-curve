@@ -47,8 +47,8 @@ export default function CatcherInbox({ settings, onNeedKey, onImportDirect }) {
         setError('')
 
         try {
-            // 呼叫 AI 鍊金術 Prompt
-            const parsed = await parseTempInboxItemToCardGemini(item.word, item.context_sentence, settings.geminiKey)
+            // 呼叫 AI 鍊金術 Prompt，把原本擴充功能抓到的多重意思傳進去當參考
+            const parsed = await parseTempInboxItemToCardGemini(item.word, item.context_sentence, settings.geminiKey, item.translation)
 
             // 組裝準備寫入 LocalStorage 的完整卡片格式
             const newCard = {
