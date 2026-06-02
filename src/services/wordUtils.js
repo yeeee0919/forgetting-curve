@@ -25,28 +25,25 @@ export function getCardRoots(card) {
     if (!match) return []
 
     const etymologyText = match[1]
-    // 依照 + 或 ＋ 分割不同的部分
-    const parts = etymologyText.split(/[+＋]/)
+    
+    // 找出所有連續的英文字母/拉丁字母單字
+    const words = etymologyText.match(/[a-zA-Z\u00C0-\u017F]+/g)
+    if (!words) return []
+
+    const frontLower = (card.front || '').toLowerCase()
     const roots = []
 
-    for (let part of parts) {
-        // 清理括號及內部說明文字，例如 "ab- (離開) " -> "ab-"
-        const cleanPart = part.replace(/\([^)]*\)/g, '').trim()
-        
-        // 擷取英文字母或拉丁語系常用字母字串 (排除前後的橫線 -)
-        const letterMatch = cleanPart.match(/[a-zA-Z\u00C0-\u017F]+/)
-        if (letterMatch) {
-            const root = letterMatch[0].toLowerCase()
-            // 只保留長度大於等於 2 的有效字根，防範單一字母 (如 i, a 等) 誤配對
-            if (root.length >= 2) {
+    for (const w of words) {
+        const root = w.toLowerCase()
+        // 只保留長度大於等於 2 的有效字根，且確實是該單字的子字串
+        if (root.length >= 2 && frontLower.includes(root)) {
+            if (!roots.includes(root)) {
                 roots.push(root)
             }
         }
     }
 
-    // 3. 確保解析出的字根確實是該單字的子字串
-    const frontLower = (card.front || '').toLowerCase()
-    return roots.filter(root => frontLower.includes(root))
+    return roots
 }
 
 /**
