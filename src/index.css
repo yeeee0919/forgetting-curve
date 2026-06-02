@@ -111,8 +111,19 @@ input {
     border-radius: 4px;
 }
 
-/* 7. Word Root Highlighting Accent */
-.word-root-highlight {
+/* 7. Word Root Highlighting Accent — 3 rotating colors */
+/* 紫色 (brand accent) */
+.word-root-0 {
     color: var(--brand-accent);
     border-bottom: 2px dashed rgba(124, 58, 237, 0.45);
+}
+/* 藍色 (easy accent) */
+.word-root-1 {
+    color: #0891b2;
+    border-bottom: 2px dashed rgba(8, 145, 178, 0.45);
+}
+/* 橘色 (warm accent) */
+.word-root-2 {
+    color: #d97706;
+    border-bottom: 2px dashed rgba(217, 119, 6, 0.45);
 }

@@ -436,7 +436,7 @@ export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdat
                   <div className="rc-word-row">
                     <h2 className="rc-word">
                       {segmentWord(card.front, getCardRoots(card)).map((seg, idx) => (
-                        <span key={idx} className={seg.isRoot ? 'word-root-highlight' : ''}>
+                        <span key={idx} className={seg.isRoot ? `word-root-${seg.rootIndex % 3}` : ''}>
                           {seg.text}
                         </span>
                       ))}
@@ -504,7 +504,7 @@ export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdat
                 <div className="rc-back-top-row">
                   <span className="rc-back-word" style={{ marginLeft: '32px' }}>
                     {segmentWord(card.front, getCardRoots(card)).map((seg, idx) => (
-                      <span key={idx} className={seg.isRoot ? 'word-root-highlight' : ''}>
+                      <span key={idx} className={seg.isRoot ? `word-root-${seg.rootIndex % 3}` : ''}>
                         {seg.text}
                       </span>
                     ))}

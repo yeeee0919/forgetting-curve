@@ -72,7 +72,7 @@ export default function CardList({ cards, onDelete }) {
                                 <div className="cl-headword-row">
                                     <span className="cl-front">
                                         {segmentWord(card.front, getCardRoots(card)).map((seg, idx) => (
-                                            <span key={idx} className={seg.isRoot ? 'word-root-highlight' : ''}>
+                                            <span key={idx} className={seg.isRoot ? `word-root-${seg.rootIndex % 3}` : ''}>
                                                 {seg.text}
                                             </span>
                                         ))}

@@ -90,22 +90,24 @@ export function segmentWord(word, roots) {
         }
     }
 
-    // 4. 開始重組分段
+    // 4. 開始重組分段，並為每個字根指派獨立的 rootIndex（用於多色顯示）
     const result = []
     let lastIndex = 0
+    let rootCounter = 0
     for (const match of activeMatches) {
         // 匹配前方的非字根文字
         if (match.start > lastIndex) {
-            result.push({ text: word.slice(lastIndex, match.start), isRoot: false })
+            result.push({ text: word.slice(lastIndex, match.start), isRoot: false, rootIndex: -1 })
         }
-        // 字根部分
-        result.push({ text: word.slice(match.start, match.end), isRoot: true })
+        // 字根部分，每個字根有獨立的 rootIndex 供 UI 選色
+        result.push({ text: word.slice(match.start, match.end), isRoot: true, rootIndex: rootCounter })
+        rootCounter++
         lastIndex = match.end
     }
 
     // 剩餘後方的文字
     if (lastIndex < word.length) {
-        result.push({ text: word.slice(lastIndex), isRoot: false })
+        result.push({ text: word.slice(lastIndex), isRoot: false, rootIndex: -1 })
     }
 
     return result
