@@ -43,7 +43,25 @@ export function getCardRoots(card) {
         }
     }
 
-    return roots
+    // 3. 若仍未取得根字，嘗試以常見荷蘭語前綴/後綴做簡易切割 (只作為備援)
+    if (roots.length === 0) {
+        const prefixes = ['onder', 'te', 'ge', 'be', 'ver', 'her', 'ont', 'mis', 'voor', 'naar']
+        const lowerWord = (card.front || '').toLowerCase()
+        let remaining = lowerWord
+        for (const pre of prefixes) {
+            if (remaining.startsWith(pre)) {
+                roots.push(pre)
+                remaining = remaining.slice(pre.length)
+                // 只允許一次前綴切割，避免過度分割
+                break
+            }
+        }
+        // 若仍有剩餘，將其視為最後的字根（可能是動詞原形）
+        if (remaining && remaining.length > 0) {
+            roots.push(remaining)
+        }
+    }
+
 }
 
 /**
