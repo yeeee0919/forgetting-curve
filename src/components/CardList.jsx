@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import './CardList.css'
+import { getCardRoots, segmentWord } from '../services/wordUtils'
 
 export default function CardList({ cards, onDelete }) {
     const [hasCopied, setHasCopied] = useState(false)
@@ -69,7 +70,13 @@ export default function CardList({ cards, onDelete }) {
                         <div key={card.id} className="cl-item">
                             <div className="cl-item-main">
                                 <div className="cl-headword-row">
-                                    <span className="cl-front">{card.front}</span>
+                                    <span className="cl-front">
+                                        {segmentWord(card.front, getCardRoots(card)).map((seg, idx) => (
+                                            <span key={idx} className={seg.isRoot ? 'word-root-highlight' : ''}>
+                                                {seg.text}
+                                            </span>
+                                        ))}
+                                    </span>
                                     {card.phonetic && <span className="cl-phonetic">{card.phonetic}</span>}
                                     {card.part_of_speech && <span className="cl-pos">{card.part_of_speech}</span>}
                                 </div>

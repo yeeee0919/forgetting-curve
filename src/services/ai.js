@@ -18,6 +18,7 @@ const SYSTEM_PROMPT = `你是一位精通語言學、認知心理學與記憶法
 - tips: 教授級的記憶提示。請嚴格包含以下兩個部分，並使用指定的標籤開頭：
   【字源分析】：拆解字根、字首、字尾，解釋它的歷史或構詞邏輯。若無明顯字根可分析，請說明它的發音規則或詞源來源。
   【生動聯想】：基於發音（諧音）或字形，利用大腦的「荒謬記憶效應（Bizarre Effect）」，創造一個極度生動、甚至有點荒謬的畫面或小故事情境，將外語發音與中文意思強烈連結起來。
+- roots: 字根字首字尾的拆解陣列 (Array of strings)。請將該單字中具有代表性的字根、字首或字尾分別提取出來，以「字串陣列 (Array of strings)」的形式列出。這將用於在 UI 中以不同顏色標示字根。例如，對於 "uiterlijk" 為 ["uit", "erlijk"]；對於 "abnormal" 為 ["ab", "norm"]；對於 "reaction" 為 ["re", "act"]；對於 "structure" 為 ["struct"]。若該字無明顯字根字首，請輸出空陣列 []。
 
 回覆格式要求（極度重要）：
 !!! 必須回傳純 JSON 格式 !!!
@@ -36,7 +37,8 @@ const SYSTEM_PROMPT = `你是一位精通語言學、認知心理學與記憶法
       "example_2": "De betaling moet uiterlijk vrijdag binnen zijn.",
       "example_trans_2": "款項最晚必須在星期五收到。",
       "language": "nl",
-      "tips": "【字源分析】：uit (外面) + erlijk (結尾) → 從外在展現出來的 → 外表、最晚的極限。【生動聯想】：想像你「最晚」出門前，都要精心打扮「外表」。"
+      "tips": "【字源分析】：uit (外面) + erlijk (結尾) → 從外在展現出來的 → 外表、最晚的極限。【生動聯想】：想像你「最晚」出門前，都要精心打扮「外表」。",
+      "roots": ["uit", "erlijk"]
     }
   ]
 }`
@@ -175,6 +177,7 @@ const ALCHEMIST_SYSTEM_PROMPT = `你是一位精通語言學、認知心理學�
 - example_trans_2: 新例句的中文翻譯。
 - language: 語言代碼（如 nl=荷蘭語, en=英語）。
 - tips: 記憶提示。包含【字源分析】與【生動聯想】。
+- roots: 字根字首字尾的拆解陣列 (Array of strings)。請將該單字中具有代表性的字根、字首或字尾分別提取出來，以「字串陣列 (Array of strings)」的形式列出，例如 ["watch"] 或 ["re", "act"] 等，若無明顯字根字首請留空陣列 []。
 
 回覆格式要求：
 !!! 必須回傳純 JSON 格式，不帶 Markdown block (\`\`\`) !!!
@@ -190,7 +193,8 @@ const ALCHEMIST_SYSTEM_PROMPT = `你是一位精通語言學、認知心理學�
   "example_2": "He gave me a gold watch.",
   "example_trans_2": "他給了我一支金錶。",
   "language": "en",
-  "tips": "【字源分析】：源自古英語 wæccan，意為看守。\\n【生動聯想】：想像你在「觀看」你的「手錶」確認時間。"
+  "tips": "【字源分析】：源自古英語 wæccan，意為看守。\\n【生動聯想】：想像你在「觀看」你的「手錶」確認時間。",
+  "roots": []
 }`
 
 /**

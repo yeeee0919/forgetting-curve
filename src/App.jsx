@@ -208,6 +208,8 @@ export default function App() {
                 example_2: p.example_2 || '',
                 example_trans_2: p.example_trans_2 || '',
                 language: p.language || 'en',
+                tips: p.tips || null,
+                roots: p.roots || [],
                 createdAt: Date.now(),
                 ...initCard(),
             }))
@@ -234,6 +236,7 @@ export default function App() {
             return {
                 ...existing,
                 tips: incoming.tips ?? existing.tips,
+                roots: incoming.roots ?? existing.roots,
                 phonetic: incoming.phonetic || existing.phonetic,
                 example_1: incoming.example_1 || incoming.example || existing.example_1 || existing.example,
                 example_trans_1: incoming.example_trans_1 || incoming.example_trans || existing.example_trans_1 || existing.example_trans,
@@ -276,7 +279,10 @@ export default function App() {
 
     const handleDelete = useCallback((cardId) => {
         updateCards(cards.filter(c => c.id !== cardId))
-    }, [cards, updateCards])
+        if (syncId) {
+            deleteCloudCard(syncId, cardId).catch(err => console.error('Cloud delete failed:', err))
+        }
+    }, [cards, updateCards, syncId])
 
     const handleUpdateNote = useCallback((cardId, note) => {
         const updated = cards.map(c => {

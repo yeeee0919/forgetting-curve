@@ -75,6 +75,7 @@ export default function ImportModal({ onImport, onClose, importing, error, hasAp
                 example_trans_2: p.example_trans_2 || '',
                 language: p.language || 'en',
                 tips: p.tips || null,
+                roots: p.roots || [],
                 createdAt: Date.now(),
                 ...initCard(),
             }))
@@ -101,6 +102,7 @@ export default function ImportModal({ onImport, onClose, importing, error, hasAp
 - tips: 教授級的記憶提示。請嚴格包含以下兩個部分，並使用指定的標籤開頭：
   【字源分析】：拆解字根、字首、字尾，解釋它的歷史或構詞邏輯。
   【生動聯想】：基於發音（諧音）或字形，利用大腦的「荒謬記憶效應（Bizarre Effect）」，創造一個極度生動、甚至有點荒謬的畫面或小故事情境，將外語發音與中文意思強烈連結起來。
+- roots: 字根字首字尾的拆解陣列 (Array of strings)。請將該單字中具有代表性的字根、字首或字尾分別提取出來，以「字串陣列 (Array of strings)」的形式列出，用來在 UI 中著色字根。例如，對於 "uiterlijk" 為 ["uit", "erlijk"]；對於 "abnormal" 為 ["ab", "norm"]；對於 "reaction" 為 ["re", "act"]；對於 "structure" 為 ["struct"]。若該字無明顯字根字首，請輸出空陣列 []。
 
 回覆只要純 JSON 陣列，不要其他說明文字。
 

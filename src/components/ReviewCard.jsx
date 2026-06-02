@@ -1,6 +1,7 @@
 import './ReviewCard.css'
 import { useState, useEffect, useRef } from 'react'
 import { RATING, previewLabel, getStatusLabel } from '../services/srs'
+import { getCardRoots, segmentWord } from '../services/wordUtils'
 
 const LANG_MAP = {
   nl: 'nl-NL', en: 'en-US', ja: 'ja-JP',
@@ -208,11 +209,31 @@ export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdat
       const baseId = card.id.split('_retry_')[0]
       if (onDelete) onDelete(baseId)
 
-      const nextIndex = index + 1
-      setIndex(nextIndex)
+      const nextSessionCards = sessionCards.filter(c => c.id.split('_retry_')[0] !== baseId)
+      setSessionCards(nextSessionCards)
 
-      if (autoPlay && nextIndex < sessionCards.length) {
-        const nextCard = sessionCards[nextIndex]
+      const nextFailedCards = failedCards.filter(c => c.id.split('_retry_')[0] !== baseId)
+      setFailedCards(nextFailedCards)
+
+      const nextIndex = index >= nextSessionCards.length ? nextSessionCards.length : index
+      setIndex(nextIndex)
+      setFlipped(false)
+      setTipsOpen(false)
+
+      if (updateSession) {
+        updateSession({
+          ...sessionState,
+          activeSession: {
+            cards: nextSessionCards,
+            index: nextIndex,
+            results: results,
+            failedCards: nextFailedCards
+          }
+        })
+      }
+
+      if (autoPlay && nextIndex < nextSessionCards.length) {
+        const nextCard = nextSessionCards[nextIndex]
         speak(nextCard.front, nextCard.language).catch(err => console.error("TTS Error:", err))
       }
     }
@@ -413,7 +434,13 @@ export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdat
                     </span>
                   )}
                   <div className="rc-word-row">
-                    <h2 className="rc-word">{card.front}</h2>
+                    <h2 className="rc-word">
+                      {segmentWord(card.front, getCardRoots(card)).map((seg, idx) => (
+                        <span key={idx} className={seg.isRoot ? 'word-root-highlight' : ''}>
+                          {seg.text}
+                        </span>
+                      ))}
+                    </h2>
                     <button
                       className="rc-speak-icon-btn"
                       onClick={e => { e.stopPropagation(); speak(card.front, card.language) }}
@@ -475,7 +502,13 @@ export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdat
                 </div>
 
                 <div className="rc-back-top-row">
-                  <span className="rc-back-word" style={{ marginLeft: '32px' }}>{card.front}</span>
+                  <span className="rc-back-word" style={{ marginLeft: '32px' }}>
+                    {segmentWord(card.front, getCardRoots(card)).map((seg, idx) => (
+                      <span key={idx} className={seg.isRoot ? 'word-root-highlight' : ''}>
+                        {seg.text}
+                      </span>
+                    ))}
+                  </span>
                   {(card.part_of_speech || card.phonetic) && (
                     <span className="rc-phonetic" style={{ marginBottom: 0, fontSize: '0.85rem' }}>
                       {card.part_of_speech && <span style={{ marginRight: '6px', fontWeight: 700, fontStyle: 'normal', color: 'var(--brand-accent)' }}>{card.part_of_speech}</span>}

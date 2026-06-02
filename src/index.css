@@ -110,3 +110,9 @@ input {
     background: var(--border-default);
     border-radius: 4px;
 }
+
+/* 7. Word Root Highlighting Accent */
+.word-root-highlight {
+    color: var(--brand-accent);
+    border-bottom: 2px dashed rgba(124, 58, 237, 0.45);
+}
