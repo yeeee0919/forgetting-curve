@@ -43,24 +43,39 @@ export function getCardRoots(card) {
         }
     }
 
-    // 3. 若仍未取得根字，嘗試以常見荷蘭語前綴/後綴做簡易切割 (只作為備援)
-    if (roots.length === 0) {
-        const prefixes = ['onder', 'te', 'ge', 'be', 'ver', 'her', 'ont', 'mis', 'voor', 'naar']
-        const lowerWord = (card.front || '').toLowerCase()
-        let remaining = lowerWord
-        for (const pre of prefixes) {
-            if (remaining.startsWith(pre)) {
-                roots.push(pre)
-                remaining = remaining.slice(pre.length)
-                // 只允許一次前綴切割，避免過度分割
-                break
+    // 3. 若仍未取得根字，嘗試以常見荷蘭語前綴與後綴做切割 (備援)
+    if (roots.length === 0 || (roots.length === 1 && roots[0] === frontLower)) {
+        const prefixes = ['onder', 'te', 'ge', 'be', 'ver', 'her', 'ont', 'mis', 'voor', 'naar'];
+        let remaining = (card.front || '').toLowerCase();
+        // 逐個檢查並移除前綴，允許多個前綴連續出現
+        while (true) {
+            let matched = false;
+            for (const pre of prefixes) {
+                if (remaining.startsWith(pre)) {
+                    roots.push(pre);
+                    remaining = remaining.slice(pre.length);
+                    matched = true;
+                    break;
+                }
+            }
+            if (!matched) break;
+        }
+        // 檢查常見荷蘭語後綴，將其作為獨立根字
+        const suffixes = ['kundige', 'lijk', 'baar', 'ig', 'isch', 'heid', 'ing', 'schap'];
+        for (const suf of suffixes) {
+            if (remaining.endsWith(suf) && remaining.length > suf.length) {
+                roots.push(suf);
+                remaining = remaining.slice(0, -suf.length);
+                break;
             }
         }
-        // 若仍有剩餘，將其視為最後的字根（可能是動詞原形）
+        // 若還有剩餘，視為最後的根字（可能是動詞原形或名詞根）
         if (remaining && remaining.length > 0) {
-            roots.push(remaining)
+            roots.push(remaining);
         }
     }
+    // 最終返回根字清單
+    return roots
 
 }
 
