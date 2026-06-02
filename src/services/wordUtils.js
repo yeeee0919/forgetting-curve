@@ -44,8 +44,8 @@ export function getCardRoots(card) {
     }
 
     // 3. 若仍未取得根字，或仍有未解析的部分，嘗試以常見荷蘭語前綴與後綴做切割 (備援)
-    const prefixes = ['onder', 'om', 'te', 'ge', 'be', 'ver', 'her', 'ont', 'mis', 'voor', 'naar'];
-    const suffixes = ['kundige', 'lijk', 'baar', 'ig', 'isch', 'heid', 'ing', 'schap', 'igheid'];
+    const prefixes = ['onder', 'om', 'te', 'ge', 'be', 'ver', 'her', 'ont', 'mis', 'voor', 'naar', 'kenteken', 'tegen', 'op', 'opge'];
+    const suffixes = ['kundige', 'lijk', 'baar', 'ig', 'isch', 'heid', 'ing', 'schap', 'igheid', 'plaat', 'duiker', 'schakelen', 'liggers'];
     let remaining = (card.front || '').toLowerCase();
     // 移除已找出的根字，避免重複
     for (const r of roots) {
