@@ -584,6 +584,27 @@ function HomePage({ totalCards, stats, bufferCapacity, dueCount, onStartReview, 
                     {emoji} {text}！
                 </h1>
 
+                <div className="stats-overview" style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'center', marginBottom: '1.2rem' }}>
+                  <div className="stat-item" style={{ background: 'var(--surface)', padding: '0.6rem 1rem', borderRadius: '0.6rem', boxShadow: '0 2px 6px rgba(0,0,0,.08)', textAlign: 'center' }}>
+                    <span className="label" style={{ fontSize: '0.85rem', color: 'var(--text-tertiary)' }}>總卡片</span>
+                    <span className="value" style={{ fontSize: '1.3rem', fontWeight: 600, color: 'var(--text-primary)' }}>{totalCards}</span>
+                  </div>
+                  <div className="stat-item" style={{ background: 'var(--surface)', padding: '0.6rem 1rem', borderRadius: '0.6rem', boxShadow: '0 2px 6px rgba(0,0,0,.08)', textAlign: 'center' }}>
+                    <span className="label" style={{ fontSize: '0.85rem', color: 'var(--text-tertiary)' }}>已熟練</span>
+                    <span className="value" style={{ fontSize: '1.3rem', fontWeight: 600, color: 'var(--good)' }}>{stats.mastered}</span>
+                    {stats.masteredDue > 0 && (
+                      <span className="due" style={{ display: 'block', fontSize: '0.75rem', color: 'var(--again)', marginTop: '0.2rem' }}>⚡ {stats.masteredDue} 今日到期</span>
+                    )}
+                  </div>
+                  <div className="stat-item" style={{ background: 'var(--surface)', padding: '0.6rem 1rem', borderRadius: '0.6rem', boxShadow: '0 2px 6px rgba(0,0,0,.08)', textAlign: 'center' }}>
+                    <span className="label" style={{ fontSize: '0.85rem', color: 'var(--text-tertiary)' }}>緩衝區</span>
+                    <span className="value" style={{ fontSize: '1.3rem', fontWeight: 600, color: 'var(--primary)' }}>{stats.buffer}/{bufferCapacity}</span>
+                  </div>
+                  <div className="stat-item" style={{ background: 'var(--surface)', padding: '0.6rem 1rem', borderRadius: '0.6rem', boxShadow: '0 2px 6px rgba(0,0,0,.08)', textAlign: 'center' }}>
+                    <span className="label" style={{ fontSize: '0.85rem', color: 'var(--text-tertiary)' }}>待複習</span>
+                    <span className="value" style={{ fontSize: '1.3rem', fontWeight: 600, color: 'var(--again)' }}>{dueCount}</span>
+                  </div>
+                </div>
                 <div className="funnel-container">
                     {/* Layer 1: Pool */}
                     <div className="funnel-layer pool">
