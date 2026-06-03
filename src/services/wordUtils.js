@@ -11,29 +11,21 @@
 export function getCardRoots(card) {
     if (!card) return []
 
-    // 1. 若已有結構化 roots 欄位，直接回傳
-    if (card.roots && Array.isArray(card.roots) && card.roots.length > 0) {
-        return card.roots
-    }
-
-    // 2. 嘗試從 tips 解析字根
-    const roots = []
     const frontLower = (card.front || '').toLowerCase()
 
+    // 1. 優先從 tips【字源分析】解析字根（比快取 roots 更可信）
+    const tipsRoots = []
     if (card.tips && typeof card.tips === 'string') {
-        // 尋找「【字源分析】：...」或「【字源分析】:...」後方的內容
         const match = card.tips.match(/【字源分析】[:：]\s*([^\n\r→。]+)/)
         if (match) {
             const etymologyText = match[1]
-            // 找出所有連續的英文字母/拉丁字母單字
             const words = etymologyText.match(/[a-zA-Z\u00C0-\u017F]+/g)
             if (words) {
                 for (const w of words) {
                     const root = w.toLowerCase()
-                    // 只保留長度大於等於 2 的有效字根，且確實是該單字的子字串
                     if (root.length >= 2 && root !== frontLower && frontLower.includes(root)) {
-                        if (!roots.includes(root)) {
-                            roots.push(root)
+                        if (!tipsRoots.includes(root)) {
+                            tipsRoots.push(root)
                         }
                     }
                 }
@@ -41,9 +33,26 @@ export function getCardRoots(card) {
         }
     }
 
+    // 若 tips 成功解析出字根，直接使用（跳過快取 roots，避免舊資料污染）
+    const roots = tipsRoots.length > 0 ? [...tipsRoots] : []
+
+    // 2. 若 tips 無結果，才從結構化 roots 欄位讀取快取
+    if (roots.length === 0 && card.roots && Array.isArray(card.roots)) {
+        for (const r of card.roots) {
+            const root = r.toLowerCase()
+            if (root.length >= 2 && root !== frontLower && frontLower.includes(root)) {
+                if (!roots.includes(root)) {
+                    roots.push(root)
+                }
+            }
+        }
+    }
+
+
     // 3. 若仍未取得根字，或仍有未解析的部分，嘗試以常見荷蘭語前綴與後綴做切割 (備援)
     const prefixes = ['aange', 'uitge', 'onder', 'om', 'te', 'ge', 'be', 'ver', 'her', 'ont', 'mis', 'voor', 'naar', 'kenteken', 'tegen', 'opge', 'op', 'aan', 'uit', 'in', 'af', 'mee', 'toe', 'door', 'over', 'rond', 'samen', 'terug', 'thuis', 'vast', 'weg', 'binnen', 'buiten', 'neer'];
-    const suffixes = ['kundige', 'lijk', 'baar', 'ig', 'isch', 'heid', 'ing', 'schap', 'igheid', 'plaat', 'duiker', 'schakelen', 'liggers', 'en', 'd', 't', 's'];
+    // 注意：不包含單字母後綴 ('d','t','s')，避免對 bord、het、das 等短字誤切割
+    const suffixes = ['kundige', 'lijk', 'baar', 'ig', 'isch', 'heid', 'ing', 'schap', 'igheid', 'plaat', 'duiker', 'schakelen', 'liggers', 'en'];
     let remaining = (card.front || '').toLowerCase();
     // 移除已找出的根字，避免重複
     for (const r of roots) {
@@ -65,9 +74,9 @@ export function getCardRoots(card) {
         }
         if (!matched) break;
     }
-    // 後綴檢查
+    // 後綴檢查：剩餘部分必須 >= 3 字母才允許切，避免對短字誤判
     for (const suf of suffixes) {
-        if (remaining.endsWith(suf) && !roots.includes(suf) && remaining.length >= suf.length) {
+        if (remaining.endsWith(suf) && !roots.includes(suf) && remaining.length - suf.length >= 3) {
             roots.push(suf);
             remaining = remaining.slice(0, -suf.length);
             break;

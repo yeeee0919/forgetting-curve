@@ -182,12 +182,32 @@ export function migrateCards(cards, bufferCapacity = 50) {
         }
 
         // 【字根修復 (Root Healing)】：
-        // 若之前被舊版 AI 解析 Bug 寫入了「整個單字」作為字根，會導致 UI 分段完全失效。
-        // 若發現有字根等於單字本身，就將 roots 清空，強制系統用新版 wordUtils 動態重新解析
+        // 情況一：若發現有字根等於單字本身（舊 Bug 遺留），將 roots 清空
+        // 情況二：若 tips 能解析出字根，且與快取 roots 不同，也清空快取讓 getCardRoots 重新從 tips 計算
         let newRoots = c.roots;
         if (newRoots && Array.isArray(newRoots)) {
             const frontLower = (c.front || '').toLowerCase();
-            if (newRoots.some(r => r.toLowerCase() === frontLower)) {
+            // 情況一：字根等於整個單字
+            const hasFullWordRoot = newRoots.some(r => r.toLowerCase() === frontLower);
+            // 情況二：tips 有字源分析，且解析出的字根與快取不一致
+            let tipsDisagrees = false;
+            if (!hasFullWordRoot && c.tips && typeof c.tips === 'string') {
+                const match = c.tips.match(/【字源分析】[:：]\s*([^\n\r→。]+)/);
+                if (match) {
+                    const tipsWords = (match[1].match(/[a-zA-Z\u00C0-\u017F]+/g) || [])
+                        .map(w => w.toLowerCase())
+                        .filter(w => w.length >= 2 && w !== frontLower && frontLower.includes(w));
+                    if (tipsWords.length > 0) {
+                        const tipsSet = new Set(tipsWords);
+                        const cachedSet = new Set(newRoots.map(r => r.toLowerCase()));
+                        // 若 tips 解析的字根與快取不同，清除快取
+                        const different = tipsWords.some(w => !cachedSet.has(w)) ||
+                            newRoots.some(r => !tipsSet.has(r.toLowerCase()));
+                        if (different) tipsDisagrees = true;
+                    }
+                }
+            }
+            if (hasFullWordRoot || tipsDisagrees) {
                 newRoots = null;
                 updated = true;
             }
