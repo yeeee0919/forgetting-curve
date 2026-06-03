@@ -150,3 +150,7 @@ export function segmentWord(word, roots) {
 
     return result
 }
+export function generateRoots(card) {
+    // Alias for getCardRoots to maintain backward compatibility
+    return getCardRoots(card);
+}
