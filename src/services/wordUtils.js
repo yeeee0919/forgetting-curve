@@ -31,7 +31,7 @@ export function getCardRoots(card) {
                 for (const w of words) {
                     const root = w.toLowerCase()
                     // 只保留長度大於等於 2 的有效字根，且確實是該單字的子字串
-                    if (root.length >= 2 && frontLower.includes(root)) {
+                    if (root.length >= 2 && root !== frontLower && frontLower.includes(root)) {
                         if (!roots.includes(root)) {
                             roots.push(root)
                         }
