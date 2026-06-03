@@ -181,8 +181,20 @@ export function migrateCards(cards, bufferCapacity = 50) {
             newStatus = STATUS.REVIEW;
         }
 
+        // 【字根修復 (Root Healing)】：
+        // 若之前被舊版 AI 解析 Bug 寫入了「整個單字」作為字根，會導致 UI 分段完全失效。
+        // 若發現有字根等於單字本身，就將 roots 清空，強制系統用新版 wordUtils 動態重新解析
+        let newRoots = c.roots;
+        if (newRoots && Array.isArray(newRoots)) {
+            const frontLower = (c.front || '').toLowerCase();
+            if (newRoots.some(r => r.toLowerCase() === frontLower)) {
+                newRoots = null;
+                updated = true;
+            }
+        }
+
         if (c.status !== newStatus) updated = true;
-        return { ...c, status: newStatus };
+        return { ...c, status: newStatus, roots: newRoots === null ? undefined : newRoots };
     });
 
     // 自動修剪緩衝區 (Buffer Pruning) - 嚴格執行 50 個名額制
