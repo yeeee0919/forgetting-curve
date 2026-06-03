@@ -162,18 +162,21 @@ export function previewLabel(card, rating) {
  */
 export function migrateCards(cards, bufferCapacity = 50) {
     let updated = false;
+    const validStatuses = [STATUS.NEW, STATUS.LEARNING, STATUS.REVIEW, STATUS.RELEARNING];
     const migrated = cards.map(c => {
         let newStatus = c.status;
-        if (!c.status) newStatus = c.repetitions > 0 ? STATUS.LEARNING : STATUS.NEW;
-        
+
+        // 【完整狀態驗證】：任何 undefined / null / 非法值都視為未知，依 repetitions 判斷
+        if (!newStatus || !validStatuses.includes(newStatus)) {
+            newStatus = (c.repetitions && c.repetitions > 0) ? STATUS.LEARNING : STATUS.NEW;
+        }
+
+        // 舊資料：曾學過但被誤標 NEW
         if (newStatus === STATUS.NEW && c.repetitions > 0) newStatus = STATUS.LEARNING;
 
-        // 【極為重要的重構與資料修復】：
-        // 先前的錯誤邏輯會把 interval < 3 天的熟練詞降級為 RELEARNING，導致無窮 1 天迴圈。
-        // 所以這裡要實作「自我修復 (Self-Healing)」機制：
-        // 如果這個單字目前被標為 RELEARNING (記憶修復)，但是它的 interval >= 1 天，
-        // 在正常的演算法中，剛進入重學區的字間隔只會是 10 分鐘，不可能有 1 天以上的間隔！
-        // 證明這張卡片是被錯誤降級的「熟練卡 (REVIEW)」，大赦送還給 REVIEW 繼續翻倍！
+        // 【自我修復 (Self-Healing)】：
+        // 若卡片被標為 RELEARNING 但間隔 >= 1 天，代表這是被舊版 Bug 錯誤降級的熟練卡，
+        // 大赦送回 REVIEW（正常重學剛進入時間隔只有 10 分鐘，不可能 >= 1 天）
         if (newStatus === STATUS.RELEARNING && c.interval >= 1 * DAY) {
             newStatus = STATUS.REVIEW;
         }
@@ -225,8 +228,10 @@ export function migrateCards(cards, bufferCapacity = 50) {
  */
 export function buildSessionSequence(cards, learningCapacity = 50, sessionSize = 30) {
     const now = Date.now();
-    
-    const pool = cards.filter(c => c.status === STATUS.NEW); 
+    const validStatuses = [STATUS.NEW, STATUS.LEARNING, STATUS.REVIEW, STATUS.RELEARNING];
+
+    // 狀態異常的卡片（undefined / null / 非法值）統一視為 NEW，確保 pool+buffer+mastered = cards.length
+    const pool = cards.filter(c => c.status === STATUS.NEW || !validStatuses.includes(c.status));
     const buffer = cards.filter(c => c.status === STATUS.LEARNING || c.status === STATUS.RELEARNING);
     const learningBuffer = cards.filter(c => c.status === STATUS.LEARNING);
     const relearningBuffer = cards.filter(c => c.status === STATUS.RELEARNING);

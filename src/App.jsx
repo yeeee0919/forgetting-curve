@@ -108,8 +108,10 @@ export default function App() {
                 return (remote.updatedAt || 0) > (local.updatedAt || 0) ? remote : local
             })
 
-            setCards(merged)
-            saveCards(merged)
+            // 同步後執行狀態修復，避免雲端舊資料的非法 status
+            const { migrated: migratedMerged } = migrateCards(merged, sessionState.bufferCapacity || 50)
+            setCards(migratedMerged)
+            saveCards(migratedMerged)
             setLastSynced(Date.now())
 
             // 如果本地有比雲端新的，或是雲端沒有的，推送到雲端
@@ -560,53 +562,103 @@ function ProgressRing({ value, max }) {
                 <circle className="progress-ring-track" cx="48" cy="48" r={r} />
                 <circle
                     className="progress-ring-fill"
-                    cx="48" cy="48" r={r}
+                    cx="48" cy="48"
+                    r={r}
                     strokeDasharray={circ}
                     strokeDashoffset={offset}
                 />
             </svg>
             <div className="progress-ring-label">
                 <span className="progress-ring-num">{value}</span>
-                <span className="progress-ring-total">/ {max}</span>
+                <span className="progress-ring-total">/{max}</span>
             </div>
         </div>
     )
 }
 
-function HomePage({ totalCards, stats, bufferCapacity, dueCount, onStartReview, onImport, inboxWords = [], onDeleteInboxWord, onClearInbox, weakCards = [], dismissWeakCard, clearAllWeakCards, activityLog = {}, isMobile, sessionSize, dueCards = [], hasActiveSession }) {
-
-    const { text, emoji } = getGreeting()
+function HomePage({
+    totalCards, stats, bufferCapacity, dueCount, onStartReview, onImport,
+    inboxWords, onDeleteInboxWord, onClearInbox, weakCards, dismissWeakCard,
+    clearAllWeakCards, activityLog, isMobile, sessionSize, dueCards, hasActiveSession
+}) {
+    const { text: greetingText, emoji: greetingEmoji } = getGreeting()
+    // 公式驗證：pool + buffer + mastered 應該等於 totalCards
+    const computedTotal = stats.pool + stats.buffer + stats.mastered
 
     return (
         <div className="home-layout">
             <div className="home-main">
                 <h1 className="home-greeting">
-                    {emoji} {text}！
+                    {greetingEmoji} {greetingText}，<span>繼續學習吧！</span>
                 </h1>
 
-                <div className="stats-overview" style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'center', marginBottom: '1.2rem' }}>
-                  <div className="stat-item" style={{ background: 'var(--surface)', padding: '0.6rem 1rem', borderRadius: '0.6rem', boxShadow: '0 2px 6px rgba(0,0,0,.08)', textAlign: 'center' }}>
-                    <span className="label" style={{ fontSize: '0.85rem', color: 'var(--text-tertiary)' }}>總卡片</span>
-                    <span className="value" style={{ fontSize: '1.3rem', fontWeight: 600, color: 'var(--text-primary)' }}>{totalCards}</span>
-                  </div>
-                  <div className="stat-item" style={{ background: 'var(--surface)', padding: '0.6rem 1rem', borderRadius: '0.6rem', boxShadow: '0 2px 6px rgba(0,0,0,.08)', textAlign: 'center' }}>
-                    <span className="label" style={{ fontSize: '0.85rem', color: 'var(--text-tertiary)' }}>已熟練</span>
-                    <span className="value" style={{ fontSize: '1.3rem', fontWeight: 600, color: 'var(--good)' }}>{stats.mastered}</span>
-                    {stats.masteredDue > 0 && (
-                      <span className="due" style={{ display: 'block', fontSize: '0.75rem', color: 'var(--again)', marginTop: '0.2rem' }}>⚡ {stats.masteredDue} 今日到期</span>
-                    )}
-                  </div>
-                  <div className="stat-item" style={{ background: 'var(--surface)', padding: '0.6rem 1rem', borderRadius: '0.6rem', boxShadow: '0 2px 6px rgba(0,0,0,.08)', textAlign: 'center' }}>
-                    <span className="label" style={{ fontSize: '0.85rem', color: 'var(--text-tertiary)' }}>緩衝區</span>
-                    <span className="value" style={{ fontSize: '1.3rem', fontWeight: 600, color: 'var(--primary)' }}>{stats.buffer}/{bufferCapacity}</span>
-                  </div>
-                  <div className="stat-item" style={{ background: 'var(--surface)', padding: '0.6rem 1rem', borderRadius: '0.6rem', boxShadow: '0 2px 6px rgba(0,0,0,.08)', textAlign: 'center' }}>
-                    <span className="label" style={{ fontSize: '0.85rem', color: 'var(--text-tertiary)' }}>待複習</span>
-                    <span className="value" style={{ fontSize: '1.3rem', fontWeight: 600, color: 'var(--again)' }}>{dueCount}</span>
-                  </div>
+                {/* 進度圈 */}
+                <div className="home-progress-section">
+                    <ProgressRing value={stats.mastered} max={computedTotal || 1} />
+                    <div className="home-progress-info">
+                        <div className="home-progress-title">🏆 已熟練 {stats.mastered} / {computedTotal} 張</div>
+                        <div className="home-progress-sub">
+                            讓更多單字升級到長期記憶！
+                        </div>
+                    </div>
                 </div>
+
+                {/* 四張統計卡：公式分布 */}
+                <div className="stats-row">
+                    <div className="stat-card" style={{ borderTop: '3px solid var(--text-tertiary)' }}>
+                        <span className="stat-num" style={{ color: 'var(--text-secondary)' }}>{stats.pool}</span>
+                        <span className="stat-label">📥 總量池</span>
+                        <span style={{ fontSize: '0.68rem', color: 'var(--text-tertiary)', marginTop: '2px', display: 'block' }}>尚未開始</span>
+                    </div>
+                    <div className="stat-card" style={{ borderTop: '3px solid var(--hard)' }}>
+                        <span className="stat-num" style={{ color: 'var(--hard)' }}>
+                            {stats.buffer}<span style={{ fontSize: '0.85rem', opacity: 0.5, fontWeight: 700 }}>/{bufferCapacity}</span>
+                        </span>
+                        <span className="stat-label">🧠 緩衝區</span>
+                        <span style={{ fontSize: '0.68rem', color: 'var(--text-tertiary)', marginTop: '2px', display: 'block' }}>記憶建立中</span>
+                    </div>
+                    <div className="stat-card" style={{ borderTop: '3px solid var(--good)' }}>
+                        <span className="stat-num" style={{ color: 'var(--good)' }}>{stats.mastered}</span>
+                        <span className="stat-label">🏆 已熟練</span>
+                        <span style={{ fontSize: '0.68rem', color: 'var(--text-tertiary)', marginTop: '2px', display: 'block' }}>長期記憶</span>
+                    </div>
+                    <div className="stat-card" style={{ borderTop: '3px solid var(--again)' }}>
+                        <span className="stat-num" style={{ color: dueCount > 0 ? 'var(--again)' : 'var(--text-tertiary)' }}>{dueCount}</span>
+                        <span className="stat-label">⚡ 今日待複習</span>
+                        <span style={{ fontSize: '0.68rem', color: 'var(--text-tertiary)', marginTop: '2px', display: 'block' }}>
+                            {stats.masteredDue > 0 ? `含 ${stats.masteredDue} 張熟練到期` : stats.relearning > 0 ? `含 ${stats.relearning} 張重學中` : '新詞或空白'}
+                        </span>
+                    </div>
+                </div>
+
+                {/* 公式白話說明 */}
+                <div className="hint-box">
+                    <div style={{ marginBottom: '8px' }}>
+                        <strong>📐 公式：總量池 + 緩衝區 + 已熟練 = 總卡片</strong>
+                    </div>
+                    <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: '0.88rem', background: 'rgba(124,58,237,0.06)', borderRadius: '6px', padding: '8px 12px', marginBottom: '8px', color: 'var(--text-primary)', fontWeight: 700 }}>
+                        {stats.pool} + {stats.buffer} + {stats.mastered} = <span style={{ color: 'var(--brand-accent)' }}>{computedTotal}</span>
+                        {computedTotal !== totalCards && (
+                            <span style={{ color: 'var(--again)', marginLeft: '12px', fontWeight: 700 }}>
+                                ⚠️ 確存 {totalCards - computedTotal} 張狀態異常，將在下次啟動時自動修復
+                            </span>
+                        )}
+                    </div>
+                    <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.65 }}>
+                        💡 <strong>已熟練為何會減少？</strong> 複習時選「完全沒印象」，該字就會從熟練區（長期記憶）<strong>退回緩衝區重學</strong>，熟練數下降、緩衝區上升。這是正常機制。
+                    </div>
+                    <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.65, marginTop: '4px' }}>
+                        💡 <strong>緩衝區有上限（{bufferCapacity} 個）</strong>。緩衝區满載時，新字就會暂停進入，最少要先將區內的字練熟。
+                    </div>
+                    {stats.relearning > 0 && (
+                        <div style={{ fontSize: '0.82rem', color: 'var(--hard)', lineHeight: 1.65, marginTop: '4px', fontWeight: 600 }}>
+                            🔄 目前有 {stats.relearning} 張字在「重學中」，10 分鐘後即會回到待複習任務中。
+                        </div>
+                    )}
+                </div>
+
+                {/* 漏斗視覺化 */}
                 <div className="funnel-container">
-                    {/* Layer 1: Pool */}
                     <div className="funnel-layer pool">
                         <div className="funnel-label-group">
                             <div className="funnel-icon">📥</div>
@@ -620,9 +672,8 @@ function HomePage({ totalCards, stats, bufferCapacity, dueCount, onStartReview, 
 
                     <div className="funnel-connector"></div>
 
-                    {/* Layer 2: Buffer */}
                     <div className="funnel-layer buffer">
-                        <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: `${Math.min(100, (stats.buffer / bufferCapacity) * 100)}%`, background: 'var(--primary)', opacity: 0.08, zIndex: 0 }}></div>
+                        <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: `${Math.min(100, (stats.buffer / bufferCapacity) * 100)}%`, background: 'var(--brand-primary)', opacity: 0.08, zIndex: 0 }}></div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', zIndex: 1, position: 'relative' }}>
                             <div className="funnel-label-group">
                                 <div className="funnel-icon">🧠</div>
@@ -631,11 +682,10 @@ function HomePage({ totalCards, stats, bufferCapacity, dueCount, onStartReview, 
                                     <div className="funnel-subtitle">{stats.buffer >= bufferCapacity ? '容量滿載' : `剩餘 ${bufferCapacity - stats.buffer} 個餘裕`}</div>
                                 </div>
                             </div>
-                            <div className="funnel-number" style={{ color: 'var(--primary)' }}>
+                            <div className="funnel-number" style={{ color: 'var(--brand-accent)' }}>
                                 {stats.buffer}<span style={{ fontSize: '0.9rem', opacity: 0.5, fontWeight: 600 }}>/{bufferCapacity}</span>
                             </div>
                         </div>
-                        
                         <div className="funnel-buffer-split" style={{ zIndex: 1, position: 'relative' }}>
                             <div className="funnel-track">
                                 <div className="funnel-track-label">新詞背誦</div>
@@ -650,7 +700,6 @@ function HomePage({ totalCards, stats, bufferCapacity, dueCount, onStartReview, 
 
                     <div className="funnel-connector"></div>
 
-                    {/* Layer 3: Mastered */}
                     <div className="funnel-layer mastered">
                         <div className="funnel-label-group">
                             <div className="funnel-icon">🏆</div>
@@ -677,7 +726,7 @@ function HomePage({ totalCards, stats, bufferCapacity, dueCount, onStartReview, 
 
                 {dueCount > 0 && (
                     <div style={{ textAlign: 'center', marginBottom: '16px', color: 'var(--again)', fontWeight: 600, fontSize: '0.95rem' }}>
-                        🔥 任務就緒：大腦緩衝區目前有 {dueCount} 個複習任務，先衝刺 {dueCards.length} 個吧！
+                        🔥 任務就緒：目前有 {dueCount} 個複習任務，先衝刺 {dueCards.length} 個吧！
                     </div>
                 )}
 
@@ -707,7 +756,7 @@ function HomePage({ totalCards, stats, bufferCapacity, dueCount, onStartReview, 
                         </button>
                     )}
                 </div>
-            </div >
+            </div>
 
             {!isMobile && weakCards.length > 0 && (
                 <div className="home-col weak-cards">
@@ -783,6 +832,6 @@ function HomePage({ totalCards, stats, bufferCapacity, dueCount, onStartReview, 
                 </div>
             )}
 
-        </div >
+        </div>
     )
 }

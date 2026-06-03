@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
+import { getInboxWords, deleteInboxWord, clearInbox } from '../services/supabase'
 import { generateId } from '../services/storage'
 import { initCard } from '../services/srs'
-import { getInboxWords, deleteInboxWord, clearInbox } from '../services/supabase'
+import { generateRoots } from '../services/wordUtils'
 
 export default function ImportModal({ onImport, onClose, importing, error, hasApiKey, onNeedKey, onImportDirect }) {
     const [tab, setTab] = useState('ai')
@@ -75,7 +76,7 @@ export default function ImportModal({ onImport, onClose, importing, error, hasAp
                 example_trans_2: p.example_trans_2 || '',
                 language: p.language || 'en',
                 tips: p.tips || null,
-                roots: p.roots || [],
+                roots: p.roots && p.roots.length ? p.roots : generateRoots(p),
                 createdAt: Date.now(),
                 ...initCard(),
             }))
