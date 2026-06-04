@@ -16,16 +16,30 @@ export function getCardRoots(card) {
     // 1. 優先從 tips【字源分析】解析字根（比快取 roots 更可信）
     const tipsRoots = []
     if (card.tips && typeof card.tips === 'string') {
-        const match = card.tips.match(/【字源分析】[:：]\s*([^\n\r→。]+)/)
+        // 不被「。」截斷，但避開下一個「【」區段，例如【生動聯想】
+        const match = card.tips.match(/【字源分析】[:：]\s*([^\n\r→【]+)/)
         if (match) {
             const etymologyText = match[1]
             const words = etymologyText.match(/[a-zA-Z\u00C0-\u017F]+/g)
             if (words) {
                 for (const w of words) {
                     const root = w.toLowerCase()
-                    if (root.length >= 2 && root !== frontLower && frontLower.includes(root)) {
+                    if (root.length < 2 || root === frontLower) continue
+
+                    // 1.1 如果直接包含於單字中
+                    if (frontLower.includes(root)) {
                         if (!tipsRoots.includes(root)) {
                             tipsRoots.push(root)
+                        }
+                    }
+                    // 1.2 否則若是以 -en 結尾的動詞原型，嘗試尋找去 en 的詞幹 (stem)
+                    // 例如: nemen -> nem (ondernemer 裡有 nem)
+                    else if (root.endsWith('en') && root.length >= 4) {
+                        const stem = root.slice(0, -2)
+                        if (stem.length >= 2 && stem !== frontLower && frontLower.includes(stem)) {
+                            if (!tipsRoots.includes(stem)) {
+                                tipsRoots.push(stem)
+                            }
                         }
                     }
                 }
@@ -34,7 +48,7 @@ export function getCardRoots(card) {
     }
 
     // 若 tips 成功解析出字根，直接使用（跳過快取 roots，避免舊資料污染）
-    const roots = tipsRoots.length > 0 ? [...tipsRoots] : []
+    let roots = tipsRoots.length > 0 ? [...tipsRoots] : []
 
     // 2. 若 tips 無結果，才從結構化 roots 欄位讀取快取
     if (roots.length === 0 && card.roots && Array.isArray(card.roots)) {
@@ -48,47 +62,70 @@ export function getCardRoots(card) {
         }
     }
 
-
     // 3. 若仍未取得根字，或仍有未解析的部分，嘗試以常見荷蘭語前綴與後綴做切割 (備援)
-    const prefixes = ['aange', 'uitge', 'onder', 'om', 'te', 'ge', 'be', 'ver', 'her', 'ont', 'mis', 'voor', 'naar', 'kenteken', 'tegen', 'opge', 'op', 'aan', 'uit', 'in', 'af', 'mee', 'toe', 'door', 'over', 'rond', 'samen', 'terug', 'thuis', 'vast', 'weg', 'binnen', 'buiten', 'neer'];
-    // 注意：不包含單字母後綴 ('d','t','s')，避免對 bord、het、das 等短字誤切割
-    const suffixes = ['kundige', 'lijk', 'baar', 'ig', 'isch', 'heid', 'ing', 'schap', 'igheid', 'plaat', 'duiker', 'schakelen', 'liggers', 'en'];
-    let remaining = (card.front || '').toLowerCase();
-    // 移除已找出的根字，避免重複
-    for (const r of roots) {
-        const idx = remaining.indexOf(r);
-        if (idx !== -1) {
-            remaining = remaining.slice(0, idx) + remaining.slice(idx + r.length);
+    // 加上 'zij' 到 prefixes，'feest' 到 suffixes
+    const prefixes = ['aange', 'uitge', 'onder', 'om', 'te', 'ge', 'be', 'ver', 'her', 'ont', 'mis', 'voor', 'naar', 'kenteken', 'tegen', 'opge', 'op', 'aan', 'uit', 'in', 'af', 'mee', 'toe', 'door', 'over', 'rond', 'samen', 'terug', 'thuis', 'vast', 'weg', 'binnen', 'buiten', 'neer', 'zij'];
+    const suffixes = ['kundige', 'lijk', 'baar', 'ig', 'isch', 'heid', 'ing', 'schap', 'igheid', 'plaat', 'duiker', 'schakelen', 'liggers', 'en', 'feest'];
+    
+    if (roots.length === 0) {
+        let remaining = (card.front || '').toLowerCase();
+        // 前綴檢查 (允許多個連續前綴)
+        while (true) {
+            let matched = false;
+            for (const pre of prefixes) {
+                if (remaining.startsWith(pre) && !roots.includes(pre)) {
+                    roots.push(pre);
+                    remaining = remaining.slice(pre.length);
+                    matched = true;
+                    break;
+                }
+            }
+            if (!matched) break;
         }
-    }
-    // 前綴檢查 (允許多個連續前綴)
-    while (true) {
-        let matched = false;
-        for (const pre of prefixes) {
-            if (remaining.startsWith(pre) && !roots.includes(pre)) {
-                roots.push(pre);
-                remaining = remaining.slice(pre.length);
-                matched = true;
+        // 後綴檢查：剩餘部分必須 >= 3 字母才允許切，避免對短字誤判
+        for (const suf of suffixes) {
+            if (remaining.endsWith(suf) && !roots.includes(suf) && remaining.length - suf.length >= 3) {
+                roots.push(suf);
+                remaining = remaining.slice(0, -suf.length);
                 break;
             }
         }
-        if (!matched) break;
-    }
-    // 後綴檢查：剩餘部分必須 >= 3 字母才允許切，避免對短字誤判
-    for (const suf of suffixes) {
-        if (remaining.endsWith(suf) && !roots.includes(suf) && remaining.length - suf.length >= 3) {
-            roots.push(suf);
-            remaining = remaining.slice(0, -suf.length);
-            break;
+        // 若仍有剩餘且未被列為根字，加入最後的根字
+        if (remaining && remaining.length > 0 && !roots.includes(remaining)) {
+            roots.push(remaining);
         }
     }
-    // 若仍有剩餘且未被列為根字，加入最後的根字
-    if (remaining && remaining.length > 0 && !roots.includes(remaining)) {
-        roots.push(remaining);
-    }
-    // 最終返回根字清單
-    return roots
 
+    // 4. 「能分開就分開」優化：若有大字根能被其他兩個小字根組合而成（含常見連接音），則移除大字根
+    if (roots.length >= 3) {
+        const sorted = [...roots].sort((a, b) => b.length - a.length);
+        const toRemove = new Set();
+        for (let i = 0; i < sorted.length; i++) {
+            const r1 = sorted[i];
+            for (let j = 0; j < sorted.length; j++) {
+                if (i === j) continue;
+                const r2 = sorted[j];
+                if (r1.startsWith(r2)) {
+                    const rest = r1.slice(r2.length);
+                    for (let k = 0; k < sorted.length; k++) {
+                        if (i === k || j === k) continue;
+                        const r3 = sorted[k];
+                        if (rest === r3 || 
+                            rest === 's' + r3 || 
+                            rest === 'e' + r3 || 
+                            rest === 'en' + r3) {
+                            toRemove.add(r1);
+                            break;
+                        }
+                    }
+                }
+                if (toRemove.has(r1)) break;
+            }
+        }
+        roots = roots.filter(r => !toRemove.has(r));
+    }
+
+    return roots
 }
 
 /**

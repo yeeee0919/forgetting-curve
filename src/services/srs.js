@@ -4,6 +4,8 @@
  * 參考 Anki SM-2，加入 Fuzz Factor 避免易度地獄
  */
 
+import { getCardRoots } from './wordUtils.js'
+
 export const RATING = {
     AGAIN: 1, // 完全忘了
     HARD: 2, // 有點模糊
@@ -182,32 +184,15 @@ export function migrateCards(cards, bufferCapacity = 50) {
         }
 
         // 【字根修復 (Root Healing)】：
-        // 情況一：若發現有字根等於單字本身（舊 Bug 遺留），將 roots 清空
-        // 情況二：若 tips 能解析出字根，且與快取 roots 不同，也清空快取讓 getCardRoots 重新從 tips 計算
+        // 取得目前最新解析出的字根，若與快取 roots 不一致，則清空快取以套用最新規則。
         let newRoots = c.roots;
         if (newRoots && Array.isArray(newRoots)) {
-            const frontLower = (c.front || '').toLowerCase();
-            // 情況一：字根等於整個單字
-            const hasFullWordRoot = newRoots.some(r => r.toLowerCase() === frontLower);
-            // 情況二：tips 有字源分析，且解析出的字根與快取不一致
-            let tipsDisagrees = false;
-            if (!hasFullWordRoot && c.tips && typeof c.tips === 'string') {
-                const match = c.tips.match(/【字源分析】[:：]\s*([^\n\r→。]+)/);
-                if (match) {
-                    const tipsWords = (match[1].match(/[a-zA-Z\u00C0-\u017F]+/g) || [])
-                        .map(w => w.toLowerCase())
-                        .filter(w => w.length >= 2 && w !== frontLower && frontLower.includes(w));
-                    if (tipsWords.length > 0) {
-                        const tipsSet = new Set(tipsWords);
-                        const cachedSet = new Set(newRoots.map(r => r.toLowerCase()));
-                        // 若 tips 解析的字根與快取不同，清除快取
-                        const different = tipsWords.some(w => !cachedSet.has(w)) ||
-                            newRoots.some(r => !tipsSet.has(r.toLowerCase()));
-                        if (different) tipsDisagrees = true;
-                    }
-                }
-            }
-            if (hasFullWordRoot || tipsDisagrees) {
+            const freshRoots = getCardRoots(c);
+            const freshSet = new Set(freshRoots.map(r => r.toLowerCase()));
+            const cachedSet = new Set(newRoots.map(r => r.toLowerCase()));
+            const mismatch = freshSet.size !== cachedSet.size ||
+                [...freshSet].some(r => !cachedSet.has(r));
+            if (mismatch) {
                 newRoots = null;
                 updated = true;
             }
