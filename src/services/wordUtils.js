@@ -62,11 +62,65 @@ export function getCardRoots(card) {
         }
     }
 
-    // 3. 若仍未取得根字，或仍有未解析的部分，嘗試以常見荷蘭語前綴與後綴做切割 (備援)
-    // 加上 'zij' 到 prefixes，'feest' 到 suffixes
-    const prefixes = ['aange', 'uitge', 'onder', 'om', 'te', 'ge', 'be', 'ver', 'her', 'ont', 'mis', 'voor', 'naar', 'kenteken', 'tegen', 'opge', 'op', 'aan', 'uit', 'in', 'af', 'mee', 'toe', 'door', 'over', 'rond', 'samen', 'terug', 'thuis', 'vast', 'weg', 'binnen', 'buiten', 'neer', 'zij'];
-    const suffixes = ['kundige', 'lijk', 'baar', 'ig', 'isch', 'heid', 'ing', 'schap', 'igheid', 'plaat', 'duiker', 'schakelen', 'liggers', 'en', 'feest'];
-    
+    // 3. 若已取得字根（來自 tips 或 快取），執行「字根二次拆分」優化
+    // 目的：將較大的字根（如 godsdienst, vrijheid）進一步拆分為更細的語意單位
+    const prefixes = ['aange', 'uitge', 'onder', 'om', 'te', 'ge', 'be', 'ver', 'her', 'ont', 'mis', 'voor', 'naar', 'kenteken', 'tegen', 'opge', 'op', 'aan', 'uit', 'in', 'af', 'mee', 'toe', 'door', 'over', 'rond', 'samen', 'terug', 'thuis', 'vast', 'weg', 'binnen', 'buiten', 'neer', 'zij', 'god'];
+    const suffixes = ['kundige', 'lijk', 'baar', 'ig', 'isch', 'heid', 'ing', 'schap', 'igheid', 'plaat', 'duiker', 'schakelen', 'liggers', 'en', 'feest', 'dienst'];
+
+    if (roots.length > 0) {
+        let changed = true;
+        while (changed) {
+            changed = false;
+            const nextRoots = [];
+            for (const r of roots) {
+                let split = false;
+                // 優先嘗試複合詞尾的後綴二次拆分（僅使用 100% 安全的複合詞尾，避免派生字尾拼寫巧合造成的誤拆）
+                const compoundSuffixes = ['feest', 'dienst'];
+                for (const suf of compoundSuffixes) {
+                    if (r.endsWith(suf) && r !== suf) {
+                        let stem = r.slice(0, -suf.length);
+                        // 容忍連接音 s
+                        if (stem.endsWith('s') && stem.length >= 3) {
+                            stem = stem.slice(0, -1);
+                        }
+                        if (stem.length >= 3) {
+                            nextRoots.push(stem);
+                            nextRoots.push(suf);
+                            split = true;
+                            changed = true;
+                            break;
+                        }
+                    }
+                }
+                if (!split) {
+                    // 嘗試前綴二次拆分
+                    for (const pre of prefixes) {
+                        if (pre.length >= 3 && r.startsWith(pre) && r !== pre) {
+                            const rest = r.slice(pre.length);
+                            if (rest.length >= 2) {
+                                nextRoots.push(pre);
+                                nextRoots.push(rest);
+                                split = true;
+                                changed = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (!split) {
+                    nextRoots.push(r);
+                }
+            }
+            // 去重
+            const unique = [];
+            for (const r of nextRoots) {
+                if (!unique.includes(r)) unique.push(r);
+            }
+            roots = unique;
+        }
+    }
+
+    // 4. 若仍未取得根字，或仍有未解析的部分，嘗試以常見荷蘭語前綴與後綴做切割 (備援)
     if (roots.length === 0) {
         let remaining = (card.front || '').toLowerCase();
         // 前綴檢查 (允許多個連續前綴)
@@ -96,33 +150,53 @@ export function getCardRoots(card) {
         }
     }
 
-    // 4. 「能分開就分開」優化：若有大字根能被其他兩個小字根組合而成（含常見連接音），則移除大字根
-    if (roots.length >= 3) {
-        const sorted = [...roots].sort((a, b) => b.length - a.length);
+    // 5. 「能分開就分開」與「派生後綴細分」優化：
+    // 5.1 若有大字根能被其他兩個小字根組合而成（含常見連接音），則移除大字根並保留小字根。
+    // 5.2 若大字根去掉其中一個小字根後，剩下部分是常見的派生後綴（如 -heid, -lijk），也拆分之。
+    if (roots.length >= 2) {
         const toRemove = new Set();
-        for (let i = 0; i < sorted.length; i++) {
-            const r1 = sorted[i];
-            for (let j = 0; j < sorted.length; j++) {
-                if (i === j) continue;
-                const r2 = sorted[j];
+        const toAdd = [];
+        for (const r1 of roots) {
+            for (const r2 of roots) {
+                if (r1 === r2) continue;
                 if (r1.startsWith(r2)) {
                     const rest = r1.slice(r2.length);
-                    for (let k = 0; k < sorted.length; k++) {
-                        if (i === k || j === k) continue;
-                        const r3 = sorted[k];
-                        if (rest === r3 || 
-                            rest === 's' + r3 || 
-                            rest === 'e' + r3 || 
-                            rest === 'en' + r3) {
-                            toRemove.add(r1);
+                    
+                    // 情況一：剩餘部分等於另一個已知的字根 r3 (含連接音)
+                    let matchedR3 = false;
+                    for (const r3 of roots) {
+                        if (r3 === r1 || r3 === r2) continue;
+                        if (rest === r3 || rest === 's' + r3 || rest === 'e' + r3 || rest === 'en' + r3) {
+                            matchedR3 = true;
                             break;
                         }
                     }
+                    
+                    // 情況二：剩餘部分本身就是一個常見後綴 (含連接音)
+                    let isSuffix = false;
+                    let matchedSuf = null;
+                    for (const suf of suffixes) {
+                        if (rest === suf || rest === 's' + suf) {
+                            isSuffix = true;
+                            matchedSuf = suf;
+                            break;
+                        }
+                    }
+                    
+                    if (matchedR3 || isSuffix) {
+                        toRemove.add(r1);
+                        if (isSuffix && matchedSuf) {
+                            toAdd.push(matchedSuf);
+                        }
+                        break;
+                    }
                 }
-                if (toRemove.has(r1)) break;
             }
         }
         roots = roots.filter(r => !toRemove.has(r));
+        for (const a of toAdd) {
+            if (!roots.includes(a)) roots.push(a);
+        }
     }
 
     return roots
