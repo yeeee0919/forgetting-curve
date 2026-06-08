@@ -65,7 +65,7 @@ export default function App() {
     useEffect(() => {
         let loaded = getCards()
         // Data Migration for Three-Layer Architecture
-        const { migrated, updated } = migrateCards(loaded, sessionState.bufferCapacity || 50)
+        const { migrated, updated } = migrateCards(loaded, 60)
         if (updated) {
             saveCards(migrated)
             loaded = migrated
@@ -109,7 +109,7 @@ export default function App() {
             })
 
             // 同步後執行狀態修復，避免雲端舊資料的非法 status
-            const { migrated: migratedMerged } = migrateCards(merged, sessionState.bufferCapacity || 50)
+            const { migrated: migratedMerged } = migrateCards(merged, 60)
             setCards(migratedMerged)
             saveCards(migratedMerged)
             setLastSynced(Date.now())
@@ -344,7 +344,7 @@ export default function App() {
         setDismissedWeakCards([])
     }
 
-    const sequence = buildSessionSequence(cards, sessionState.bufferCapacity || 50, sessionState.sessionSize)
+    const sequence = buildSessionSequence(cards, 60, sessionState.sessionSize)
     const dueCards = sequence.sessionCards
     const dueCount = sequence.stats.dueCount
     const stats = sequence.stats
@@ -364,7 +364,6 @@ export default function App() {
         const accuracy = successCount / total
 
         let newSize = sessionState.sessionSize
-        let newCapacity = sessionState.bufferCapacity || 50
         let nextHistory = [...sessionState.history, accuracy].slice(-3) // keep last 3
 
         if (accuracy < 0.7 && newSize > 20) {
@@ -372,14 +371,13 @@ export default function App() {
              newSize = 20
              nextHistory = []
         } else if (nextHistory.length === 3 && nextHistory.every(a => a >= 0.9)) {
-             if (window.confirm('你已經連續 3 輪拿到 90% 以上的高正確率 🌟！狀態極佳！\n要挑戰進入「加速模式（一次 40 張）」並且把「背誦區容量擴增到 120」嗎？解鎖更多新單字！')) {
+             if (window.confirm('你已經連續 3 輪拿到 90% 以上的高正確率 🌟！狀態極佳！\n要挑戰進入「加速模式（一次 40 張）」嗎？解鎖更快的學習步調！')) {
                  newSize = 40
-                 newCapacity = 120
                  nextHistory = []
              }
         }
 
-        const newState = { activeSession: null, history: nextHistory, sessionSize: newSize, bufferCapacity: newCapacity }
+        const newState = { activeSession: null, history: nextHistory, sessionSize: newSize, bufferCapacity: 60 }
         setSessionState(newState)
         saveSessionState(newState)
         setView('home')
@@ -414,7 +412,7 @@ export default function App() {
                     <HomePage
                         totalCards={cards.length}
                         stats={stats}
-                        bufferCapacity={sessionState.bufferCapacity || 50}
+                        bufferCapacity={60}
                         dueCount={dueCount}
                         onStartReview={() => setView('review')}
                         onImport={() => setShowImport(true)}

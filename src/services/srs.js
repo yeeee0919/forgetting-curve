@@ -266,15 +266,32 @@ export function buildSessionSequence(cards, learningCapacity = 50, sessionSize =
     // P2: 背誦區常規 (推進學習)
     const p2 = learningBuffer.filter(c => c.dueDate <= now).sort((a, b) => a.dueDate - b.dueDate);
 
-    // 依序填滿 Session
-    let session = [...p0, ...p1, ...p2];
+    // 保證每個 Session 都有一定比例的新字，讓新字能穩定流入緩衝區 (30%)
+    const guaranteedNewRatio = 0.3;
+    const guaranteedNewSlots = Math.min(
+        Math.floor(sessionSize * guaranteedNewRatio), 
+        availableSlots, 
+        pool.length
+    );
     
-    // P3: 總量池補充新字
-    let newCardsToAdd = 0;
-    if (session.length < sessionSize && availableSlots > 0) {
-        newCardsToAdd = Math.min(sessionSize - session.length, availableSlots, pool.length);
-        const p3 = pool.slice(0, newCardsToAdd);
-        session = [...session, ...p3];
+    // 剩下的名額給待複習卡片
+    const dueSlots = sessionSize - guaranteedNewSlots;
+    let dueCards = [...p0, ...p1, ...p2];
+    let session = dueCards.slice(0, dueSlots);
+    
+    // P3: 總量池補充保障名額的新字
+    let newCardsToAdd = guaranteedNewSlots;
+    let p3 = pool.slice(0, newCardsToAdd);
+    session = [...session, ...p3];
+
+    // 如果還有剩餘空間 (例如待複習的卡片不足)，則繼續用新字補滿
+    if (session.length < sessionSize && availableSlots > newCardsToAdd) {
+        const extraNewSlots = Math.min(sessionSize - session.length, availableSlots - newCardsToAdd, pool.length - newCardsToAdd);
+        if (extraNewSlots > 0) {
+            const extraNew = pool.slice(newCardsToAdd, newCardsToAdd + extraNewSlots);
+            session = [...session, ...extraNew];
+            newCardsToAdd += extraNewSlots;
+        }
     }
     
     return {
