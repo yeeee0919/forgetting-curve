@@ -37,53 +37,75 @@ export async function clearInbox(ids) {
 }
 
 /** 
- * 同步功能：取得雲端卡片
+ * 同步功能：取得雲端卡片 (支援超過 1000 筆的分頁抓取)
  */
 export async function getCloudCards(syncId) {
     if (!syncId) return []
-    const { data, error } = await supabase
-        .from('user_cards')
-        .select('data')
-        .eq('user_id', syncId)
+    
+    let allData = []
+    let from = 0
+    let step = 1000
+    
+    while (true) {
+        const { data, error } = await supabase
+            .from('user_cards')
+            .select('data')
+            .eq('user_id', syncId)
+            .range(from, from + step - 1)
 
-    if (error) {
-        if (error.code === 'PGRST116' || error.message.includes('not found')) {
-            console.warn('Table user_cards not found. Please create it in Supabase.')
-            return []
+        if (error) {
+            if (error.code === 'PGRST116' || error.message.includes('not found')) {
+                console.warn('Table user_cards not found. Please create it in Supabase.')
+                return allData.length > 0 ? allData.map(item => item.data) : []
+            }
+            console.error('getCloudCards error:', error)
+            break
         }
-        console.error('getCloudCards error:', error)
-        return []
+        
+        if (!data || data.length === 0) {
+            break
+        }
+        
+        allData = allData.concat(data)
+        
+        if (data.length < step) {
+            break
+        }
+        from += step
     }
-    return data.map(item => item.data)
+    
+    return allData.map(item => item.data)
 }
 
 /**
- * 同步功能：上傳/更新雲端卡片
+ * 同步功能：上傳/更新雲端卡片 (批次上傳避免 Payload 過大)
  */
 export async function upsertCloudCards(syncId, cards) {
     if (!syncId || !cards.length) return
     
-    // 批次執行 upsert
     const items = cards.map(card => ({
-        id: `${syncId}_${card.id}`, // 複合金鑰概念，確保不同用戶 ID 相同也不會衝突
+        id: `${syncId}_${card.id}`,
         user_id: syncId,
         card_id: card.id,
         data: card,
-        updated_at: new RegExp() // 這邊先用 Date.now 替代
+        updated_at: new Date().toISOString()
     }))
 
-    // 實際實作中，我們使用 supabase 的 upsert
-    const { error } = await supabase
-        .from('user_cards')
-        .upsert(items.map(it => ({
-            id: it.id,
-            user_id: it.user_id,
-            data: it.data
-        })), { onConflict: 'id' })
+    const chunkSize = 500
+    for (let i = 0; i < items.length; i += chunkSize) {
+        const chunk = items.slice(i, i + chunkSize)
+        const { error } = await supabase
+            .from('user_cards')
+            .upsert(chunk.map(it => ({
+                id: it.id,
+                user_id: it.user_id,
+                data: it.data
+            })), { onConflict: 'id' })
 
-    if (error) {
-        console.error('upsertCloudCards error:', error)
-        throw error
+        if (error) {
+            console.error('upsertCloudCards error:', error)
+            throw error
+        }
     }
 }
 

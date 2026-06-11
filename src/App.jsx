@@ -87,15 +87,17 @@ export default function App() {
         if (!id) return
         try {
             const remoteCards = await getCloudCards(id)
-            if (!remoteCards.length && cards.length > 0) {
+            const currentLocalCards = getCards() // 修正：從 local 抓取最新，避免 closure 拿到初始的 []
+            
+            if (!remoteCards.length && currentLocalCards.length > 0) {
                 // 初次同步：將本地推送至雲端
-                await upsertCloudCards(id, cards)
+                await upsertCloudCards(id, currentLocalCards)
                 setLastSynced(Date.now())
                 return
             }
 
             // 合併邏輯：以 updatedAt 為準
-            const localMap = new Map(cards.map(c => [c.id, c]))
+            const localMap = new Map(currentLocalCards.map(c => [c.id, c]))
             const remoteMap = new Map(remoteCards.map(c => [c.id, c]))
             const allIds = new Set([...localMap.keys(), ...remoteMap.keys()])
 
