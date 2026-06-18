@@ -170,15 +170,15 @@ export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdat
     return localStorage.getItem('memoflip_autoplay') !== 'false'
   })
 
-  // 單字透明度設置 (預設 1.0)
-  const [wordOpacity, setWordOpacity] = useState(() => {
-    const saved = localStorage.getItem('memoflip_word_opacity')
-    return saved !== null ? parseFloat(saved) : 1.0
+  // 耳朵聽模式 (聽力專注模式，預設關閉)
+  const [earMode, setEarMode] = useState(() => {
+    return localStorage.getItem('memoflip_ear_mode') === 'true'
   })
 
-  const handleOpacityChange = (val) => {
-    setWordOpacity(val)
-    localStorage.setItem('memoflip_word_opacity', String(val))
+  const toggleEarMode = () => {
+    const next = !earMode
+    setEarMode(next)
+    localStorage.setItem('memoflip_ear_mode', String(next))
   }
 
   const card = sessionCards[index]
@@ -408,25 +408,14 @@ export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdat
           {autoPlay ? '🔊' : '🔇'}
         </button>
 
-        {/* 單字透明度控制 (調低以便練習聽力) */}
-        <div className="rc-opacity-control" title="單字透明度 (調低可專注練習聽力)">
-          <div className="rc-opacity-icon-wrap">
-            {wordOpacity === 0 ? '🙈' : wordOpacity <= 0.3 ? '👓' : '👁️'}
-          </div>
-          <div className="rc-opacity-slider-container" onPointerDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()}>
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.1"
-              value={wordOpacity}
-              onChange={(e) => handleOpacityChange(parseFloat(e.target.value))}
-              className="rc-opacity-slider"
-              orient="vertical"
-            />
-          </div>
-          <span className="rc-opacity-value">{Math.round(wordOpacity * 100)}%</span>
-        </div>
+        {/* 耳朵聽模式按鈕 */}
+        <button
+          className={`rc-ear-mode-btn ${earMode ? 'on' : ''}`}
+          onClick={toggleEarMode}
+          title={earMode ? '關閉耳朵聽模式' : '開啟耳朵聽模式 (只聽發音，鼠標懸停顯字)'}
+        >
+          {earMode ? '👂' : '👁️'}
+        </button>
       </div>
 
       {/* ── 主要複習區 ── */}
@@ -457,15 +446,15 @@ export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdat
                 <div className="rc-status-badge" style={{ background: statusInfo.bg, color: statusInfo.color }}>
                   {statusInfo.label}
                 </div>
-                <div className="rc-main-word-area">
+                <div className={`rc-main-word-area ${earMode ? 'rc-ear-mode-active' : ''}`}>
                   {(card.phonetic || card.part_of_speech) && (
-                    <span className="rc-phonetic" style={{ opacity: wordOpacity, transition: 'opacity 0.25s ease' }}>
+                    <span className="rc-phonetic">
                       {card.part_of_speech && <span style={{ marginRight: '6px', fontWeight: 700, fontStyle: 'normal', color: 'var(--brand-accent)' }}>{card.part_of_speech}</span>}
                       {card.phonetic && <span>{card.phonetic}</span>}
                     </span>
                   )}
                   <div className="rc-word-row">
-                    <h2 className="rc-word" style={{ opacity: wordOpacity, transition: 'opacity 0.25s ease' }}>
+                    <h2 className="rc-word">
                       {segmentWord(card.front, getCardRoots(card)).map((seg, idx) => (
                         <span key={idx} className={seg.isRoot ? `word-root-${seg.rootIndex % 3}` : ''}>
                           {seg.text}
@@ -483,8 +472,8 @@ export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdat
                 </div>
 
                 {(card.example_1 || card.example) && (
-                  <div className="rc-front-example" onPointerDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()}>
-                    <span style={{ userSelect: 'text', opacity: wordOpacity, transition: 'opacity 0.25s ease' }}>「{card.example_1 || card.example}」</span>
+                  <div className={`rc-front-example ${earMode ? 'rc-ear-mode-active' : ''}`} onPointerDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()}>
+                    <span style={{ userSelect: 'text' }}>「{card.example_1 || card.example}」</span>
                     <button
                       className="rc-speak-icon-btn small"
                       onClick={e => { e.stopPropagation(); speak(card.example_1 || card.example, card.language) }}
@@ -493,8 +482,8 @@ export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdat
                   </div>
                 )}
                 {card.example_2 && (
-                  <div className="rc-front-example" onPointerDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()} style={{ marginTop: '4px' }}>
-                    <span style={{ userSelect: 'text', opacity: wordOpacity, transition: 'opacity 0.25s ease' }}>「{card.example_2}」</span>
+                  <div className={`rc-front-example ${earMode ? 'rc-ear-mode-active' : ''}`} onPointerDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()} style={{ marginTop: '4px' }}>
+                    <span style={{ userSelect: 'text' }}>「{card.example_2}」</span>
                     <button
                       className="rc-speak-icon-btn small"
                       onClick={e => { e.stopPropagation(); speak(card.example_2, card.language) }}
