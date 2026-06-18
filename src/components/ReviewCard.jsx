@@ -170,6 +170,17 @@ export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdat
     return localStorage.getItem('memoflip_autoplay') !== 'false'
   })
 
+  // 單字透明度設置 (預設 1.0)
+  const [wordOpacity, setWordOpacity] = useState(() => {
+    const saved = localStorage.getItem('memoflip_word_opacity')
+    return saved !== null ? parseFloat(saved) : 1.0
+  })
+
+  const handleOpacityChange = (val) => {
+    setWordOpacity(val)
+    localStorage.setItem('memoflip_word_opacity', String(val))
+  }
+
   const card = sessionCards[index]
 
   const [localNote, setLocalNote] = useState('')
@@ -396,6 +407,26 @@ export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdat
         >
           {autoPlay ? '🔊' : '🔇'}
         </button>
+
+        {/* 單字透明度控制 (調低以便練習聽力) */}
+        <div className="rc-opacity-control" title="單字透明度 (調低可專注練習聽力)">
+          <div className="rc-opacity-icon-wrap">
+            {wordOpacity === 0 ? '🙈' : wordOpacity <= 0.3 ? '👓' : '👁️'}
+          </div>
+          <div className="rc-opacity-slider-container" onPointerDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()}>
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.1"
+              value={wordOpacity}
+              onChange={(e) => handleOpacityChange(parseFloat(e.target.value))}
+              className="rc-opacity-slider"
+              orient="vertical"
+            />
+          </div>
+          <span className="rc-opacity-value">{Math.round(wordOpacity * 100)}%</span>
+        </div>
       </div>
 
       {/* ── 主要複習區 ── */}
@@ -428,13 +459,13 @@ export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdat
                 </div>
                 <div className="rc-main-word-area">
                   {(card.phonetic || card.part_of_speech) && (
-                    <span className="rc-phonetic">
+                    <span className="rc-phonetic" style={{ opacity: wordOpacity, transition: 'opacity 0.25s ease' }}>
                       {card.part_of_speech && <span style={{ marginRight: '6px', fontWeight: 700, fontStyle: 'normal', color: 'var(--brand-accent)' }}>{card.part_of_speech}</span>}
                       {card.phonetic && <span>{card.phonetic}</span>}
                     </span>
                   )}
                   <div className="rc-word-row">
-                    <h2 className="rc-word">
+                    <h2 className="rc-word" style={{ opacity: wordOpacity, transition: 'opacity 0.25s ease' }}>
                       {segmentWord(card.front, getCardRoots(card)).map((seg, idx) => (
                         <span key={idx} className={seg.isRoot ? `word-root-${seg.rootIndex % 3}` : ''}>
                           {seg.text}
@@ -453,7 +484,7 @@ export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdat
 
                 {(card.example_1 || card.example) && (
                   <div className="rc-front-example" onPointerDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()}>
-                    <span style={{ userSelect: 'text' }}>「{card.example_1 || card.example}」</span>
+                    <span style={{ userSelect: 'text', opacity: wordOpacity, transition: 'opacity 0.25s ease' }}>「{card.example_1 || card.example}」</span>
                     <button
                       className="rc-speak-icon-btn small"
                       onClick={e => { e.stopPropagation(); speak(card.example_1 || card.example, card.language) }}
@@ -463,7 +494,7 @@ export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdat
                 )}
                 {card.example_2 && (
                   <div className="rc-front-example" onPointerDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()} style={{ marginTop: '4px' }}>
-                    <span style={{ userSelect: 'text' }}>「{card.example_2}」</span>
+                    <span style={{ userSelect: 'text', opacity: wordOpacity, transition: 'opacity 0.25s ease' }}>「{card.example_2}」</span>
                     <button
                       className="rc-speak-icon-btn small"
                       onClick={e => { e.stopPropagation(); speak(card.example_2, card.language) }}
