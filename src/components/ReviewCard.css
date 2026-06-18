@@ -1064,17 +1064,21 @@
     border-color: var(--brand-accent);
 }
 
-/* 聽力模式下隱藏文字 */
+/* 聽力模式下隱藏文字但保留 Placeholder 感 (模糊效果) */
 .rc-ear-mode-active .rc-word,
 .rc-ear-mode-active .rc-phonetic,
 .rc-ear-mode-active span {
-    opacity: 0 !important;
-    transition: opacity 0.25s ease !important;
+    filter: blur(6px);
+    opacity: 0.35 !important;
+    user-select: none;
+    transition: all 0.3s ease !important;
 }
 
 /* 懸停於該區塊時，漸變顯示文字 */
 .rc-ear-mode-active:hover .rc-word,
 .rc-ear-mode-active:hover .rc-phonetic,
 .rc-ear-mode-active:hover span {
+    filter: blur(0px);
     opacity: 1 !important;
+    user-select: auto;
 }
