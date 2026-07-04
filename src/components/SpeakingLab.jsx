@@ -20,7 +20,12 @@ function PlayButton({ text }) {
     setIsLoading(true)
     try {
       // 預先抓取並轉換好音訊（如果有快取就會直接回傳）
-      await preloadDutch(text)
+      try {
+        await preloadDutch(text)
+      } catch (err) {
+        // 若預載失敗（例如被限速 429），不中斷流程，交給 speakDutch 啟動內建語音備用方案
+        console.warn('Preload skipped or failed:', err.message)
+      }
       setIsLoading(false)
       setIsPlaying(true)
       // 開始播放
