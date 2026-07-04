@@ -84,6 +84,9 @@ function AnswerReveal({ answerZh, answerNl }) {
 // ─── TYPE 1: Q&A Card ───────────────────────────────────────────
 
 function QACard({ q }) {
+  // 合併例句 + 問題，讓用戶一次點擊就能連續聽到兩句
+  const combinedText = `${q.exampleSentenceNl} ${q.promptNl}`
+
   return (
     <div className="sl-card sl-card-qa">
       <TypeBadge type="TYPE1_QA" />
@@ -94,7 +97,6 @@ function QACard({ q }) {
           <div className="sl-example-zh">{q.exampleSentenceZh}</div>
           <div className="sl-example-nl">{q.exampleSentenceNl}</div>
         </div>
-        <PlayButton text={q.exampleSentenceNl} />
       </div>
 
       <div className="sl-prompt sl-prompt-row">
@@ -102,7 +104,7 @@ function QACard({ q }) {
           <div className="sl-prompt-zh">{q.promptZh}</div>
           <div className="sl-prompt-nl">{q.promptNl}</div>
         </div>
-        <PlayButton text={q.promptNl} />
+        <PlayButton text={combinedText} />
       </div>
 
       <AnswerReveal answerZh={q.answerZh} answerNl={q.answerNl} />
