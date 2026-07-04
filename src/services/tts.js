@@ -32,105 +32,36 @@ export async function preloadDutch(text) {
   await fetchGoogleTTS(text)
 }
 
-// ─── Google Gemini TTS 實作 ─────────────────────────────────────────────
+// ─── Google Translate TTS (Free, No API Key) ─────────────────────────────────────────────
 
-const GOOGLE_API_KEY = 'AFHD4XaUyYw7HqSMIKqMXRSm0lM2bXitOqYtBNDSUnwI6NR8bA.QA'.split('').reverse().join('')
-const GEMINI_TTS_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent'
-
-/**
- * 將 LINEAR16 (原始 PCM) 資料轉換為可播放的 WAV Blob
- */
-function pcmToWavBlob(base64PCM, sampleRate = 24000, numChannels = 1, bitsPerSample = 16) {
-  // 解碼 Base64 → 原始位元組
-  const binary = atob(base64PCM)
-  const pcmBuffer = new Uint8Array(binary.length)
-  for (let i = 0; i < binary.length; i++) {
-    pcmBuffer[i] = binary.charCodeAt(i)
+// 將長文本依照標點符號分割，避免超過 Google Translate TTS 的 200 字元限制
+function splitTextIntoChunks(text, maxLength = 150) {
+  const chunks = []
+  const sentences = text.match(/[^.!?]+[.!?]+/g) || [text]
+  
+  let currentChunk = ''
+  for (const sentence of sentences) {
+    if ((currentChunk + sentence).length <= maxLength) {
+      currentChunk += sentence
+    } else {
+      if (currentChunk) chunks.push(currentChunk.trim())
+      currentChunk = sentence
+    }
   }
-
-  const dataLength = pcmBuffer.byteLength
-  const buffer = new ArrayBuffer(44 + dataLength)
-  const view = new DataView(buffer)
-
-  // WAV 檔頭 (RIFF)
-  const writeStr = (offset, str) => {
-    for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i))
-  }
-
-  writeStr(0, 'RIFF')
-  view.setUint32(4, 36 + dataLength, true)
-  writeStr(8, 'WAVE')
-  writeStr(12, 'fmt ')
-  view.setUint32(16, 16, true)                                        // fmt chunk 大小
-  view.setUint16(20, 1, true)                                         // PCM 格式
-  view.setUint16(22, numChannels, true)                               // 聲道數
-  view.setUint32(24, sampleRate, true)                                // 取樣率
-  view.setUint32(28, sampleRate * numChannels * (bitsPerSample / 8), true) // 每秒位元組數
-  view.setUint16(32, numChannels * (bitsPerSample / 8), true)         // 區塊對齊
-  view.setUint16(34, bitsPerSample, true)                             // 每樣本位元數
-  writeStr(36, 'data')
-  view.setUint32(40, dataLength, true)
-
-  // 填入 PCM 資料
-  const pcmView = new Uint8Array(buffer, 44)
-  pcmView.set(pcmBuffer)
-
-  return new Blob([buffer], { type: 'audio/wav' })
+  if (currentChunk) chunks.push(currentChunk.trim())
+  return chunks
 }
 
 async function fetchGoogleTTS(text) {
-  if (audioCache.has(text)) return audioCache.get(text)
-
-  // 如果在限速冷卻期內，直接拋出錯誤進入 fallback，不要再打 API
-  if (Date.now() < rateLimitUntil) {
-    throw new Error('Gemini TTS 目前處於 10 RPM 速率限制冷卻期，直接使用內建語音')
-  }
-
-  const response = await fetch(GEMINI_TTS_ENDPOINT, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-goog-api-key': GOOGLE_API_KEY
-    },
-    body: JSON.stringify({
-      contents: [{
-        parts: [{
-          text: `Read aloud in a warm, welcoming tone in Dutch (Netherlands): ${text}`
-        }]
-      }],
-      generationConfig: {
-        responseModalities: ['AUDIO'],
-        speechConfig: {
-          voiceConfig: {
-            prebuiltVoiceConfig: {
-              voiceName: 'Iapetus'
-            }
-          }
-        }
-      }
-    })
-  })
-
-  if (!response.ok) {
-    if (response.status === 429) {
-      // 碰到 429，設定 60 秒冷卻期
-      rateLimitUntil = Date.now() + 60000
-      console.warn('⚠️ 觸發 Gemini API 每分鐘 10 次限制，未來 60 秒將暫時使用內建語音')
-    }
-    const errText = await response.text()
-    throw new Error(`Gemini TTS API error: ${response.status} — ${errText}`)
-  }
-
-  const data = await response.json()
-  const audioB64 = data.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data
-  if (!audioB64) throw new Error('Gemini TTS: 沒有收到音訊資料')
-
-  const wavBlob = pcmToWavBlob(audioB64)
-  const audioUrl = URL.createObjectURL(wavBlob)
-
-  // 存入快取，避免重複呼叫
-  audioCache.set(text, audioUrl)
-  return audioUrl
+  // 對於 Google Translate TTS，我們不需要在這裡抓取二進位資料，
+  // 因為它可以直接用 URL 播放。但為了配合預載邏輯，我們可以回傳 chunk URLs。
+  const chunks = splitTextIntoChunks(text)
+  const urls = chunks.map(chunk => 
+    `https://translate.google.com/translate_tts?ie=UTF-8&tl=nl-NL&client=tw-ob&q=${encodeURIComponent(chunk)}`
+  )
+  
+  audioCache.set(text, urls)
+  return urls
 }
 
 async function playGoogleTTS(text) {
@@ -143,26 +74,32 @@ async function playGoogleTTS(text) {
 
   return new Promise(async (resolve) => {
     try {
-      let audioUrl = audioCache.get(text)
+      let urls = audioCache.get(text)
 
-      if (!audioUrl) {
-        audioUrl = await fetchGoogleTTS(text)
+      if (!urls) {
+        urls = await fetchGoogleTTS(text)
       }
 
-      const audio = new Audio(audioUrl)
-      currentAudio = audio
+      // 依序播放每個片段
+      for (let i = 0; i < urls.length; i++) {
+        await new Promise((resolveChunk, rejectChunk) => {
+          const audio = new Audio(urls[i])
+          currentAudio = audio
 
-      audio.onended = () => {
-        currentAudio = null
-        resolve()
+          audio.onended = () => {
+            currentAudio = null
+            resolveChunk()
+          }
+          audio.onerror = () => {
+            currentAudio = null
+            rejectChunk(new Error('Audio playback failed'))
+          }
+
+          audio.play().catch(rejectChunk)
+        })
       }
-      audio.onerror = () => {
-        currentAudio = null
-        resolve()
-      }
-
-      await audio.play()
-
+      
+      resolve()
     } catch (err) {
       console.error('Google TTS 播放失敗，降級為內建語音', err)
       await playBrowserTTS(text)
