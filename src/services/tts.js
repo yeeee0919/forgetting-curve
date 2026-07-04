@@ -20,6 +20,15 @@ export async function speakDutch(text) {
   await playGoogleTTS(text)
 }
 
+/**
+ * 預先載入發音，存入快取但不播放
+ */
+export async function preloadDutch(text) {
+  if (!text) return
+  if (audioCache.has(text)) return
+  await fetchGoogleTTS(text)
+}
+
 // ─── Google Gemini TTS 實作 ─────────────────────────────────────────────
 
 const GOOGLE_API_KEY = 'AFHD4XaUyYw7HqSMIKqMXRSm0lM2bXitOqYtBNDSUnwI6NR8bA.QA'.split('').reverse().join('')
@@ -66,6 +75,51 @@ function pcmToWavBlob(base64PCM, sampleRate = 24000, numChannels = 1, bitsPerSam
   return new Blob([buffer], { type: 'audio/wav' })
 }
 
+async function fetchGoogleTTS(text) {
+  if (audioCache.has(text)) return audioCache.get(text)
+
+  const response = await fetch(GEMINI_TTS_ENDPOINT, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-goog-api-key': GOOGLE_API_KEY
+    },
+    body: JSON.stringify({
+      contents: [{
+        parts: [{
+          text: `Read aloud in a warm, welcoming tone in Dutch (Netherlands): ${text}`
+        }]
+      }],
+      generationConfig: {
+        responseModalities: ['AUDIO'],
+        speechConfig: {
+          voiceConfig: {
+            prebuiltVoiceConfig: {
+              voiceName: 'Iapetus'
+            }
+          }
+        }
+      }
+    })
+  })
+
+  if (!response.ok) {
+    const errText = await response.text()
+    throw new Error(`Gemini TTS API error: ${response.status} — ${errText}`)
+  }
+
+  const data = await response.json()
+  const audioB64 = data.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data
+  if (!audioB64) throw new Error('Gemini TTS: 沒有收到音訊資料')
+
+  const wavBlob = pcmToWavBlob(audioB64)
+  const audioUrl = URL.createObjectURL(wavBlob)
+
+  // 存入快取，避免重複呼叫
+  audioCache.set(text, audioUrl)
+  return audioUrl
+}
+
 async function playGoogleTTS(text) {
   // 如果正在播放，先中斷
   if (currentAudio) {
@@ -79,45 +133,7 @@ async function playGoogleTTS(text) {
       let audioUrl = audioCache.get(text)
 
       if (!audioUrl) {
-        const response = await fetch(GEMINI_TTS_ENDPOINT, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-goog-api-key': GOOGLE_API_KEY
-          },
-          body: JSON.stringify({
-            contents: [{
-              parts: [{
-                text: `Read aloud in a warm, welcoming tone in Dutch (Netherlands): ${text}`
-              }]
-            }],
-            generationConfig: {
-              responseModalities: ['AUDIO'],
-              speechConfig: {
-                voiceConfig: {
-                  prebuiltVoiceConfig: {
-                    voiceName: 'Iapetus'
-                  }
-                }
-              }
-            }
-          })
-        })
-
-        if (!response.ok) {
-          const errText = await response.text()
-          throw new Error(`Gemini TTS API error: ${response.status} — ${errText}`)
-        }
-
-        const data = await response.json()
-        const audioB64 = data.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data
-        if (!audioB64) throw new Error('Gemini TTS: 沒有收到音訊資料')
-
-        const wavBlob = pcmToWavBlob(audioB64)
-        audioUrl = URL.createObjectURL(wavBlob)
-
-        // 存入快取，避免重複呼叫
-        audioCache.set(text, audioUrl)
+        audioUrl = await fetchGoogleTTS(text)
       }
 
       const audio = new Audio(audioUrl)

@@ -549,3 +549,17 @@
     font-size: 1.3rem;
   }
 }
+
+/* Spinner Animation */
+.sl-spinner {
+  animation: sl-spin 1s linear infinite;
+}
+@keyframes sl-spin {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+.sl-play-btn.loading {
+  opacity: 0.7;
+  cursor: wait;
+}

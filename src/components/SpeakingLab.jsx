@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react'
 import { qaQuestions, photoQuestions, comparisonQuestions, storyQuestions } from '../data/speakingQuestions'
-import { speakDutch, stopTTS } from '../services/tts'
+import { speakDutch, stopTTS, preloadDutch } from '../services/tts'
 import './SpeakingLab.css'
 
 // ─── Sub-components ──────────────────────────────────────────────
 
 function PlayButton({ text }) {
   const [isPlaying, setIsPlaying] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
 
   const handlePlay = async (e) => {
     e.stopPropagation()
@@ -15,12 +16,26 @@ function PlayButton({ text }) {
         setIsPlaying(false)
         return
     }
-    setIsPlaying(true)
+    
+    setIsLoading(true)
     try {
+      // 預先抓取並轉換好音訊（如果有快取就會直接回傳）
+      await preloadDutch(text)
+      setIsLoading(false)
+      setIsPlaying(true)
+      // 開始播放
       await speakDutch(text)
+    } catch (err) {
+      console.error(err)
     } finally {
+      setIsLoading(false)
       setIsPlaying(false)
     }
+  }
+
+  // 滑鼠移上去或手指碰到時，就偷偷提早幾百毫秒去抓音檔
+  const handlePreload = () => {
+    preloadDutch(text).catch(() => {})
   }
 
   // Cleanup on unmount
@@ -33,17 +48,27 @@ function PlayButton({ text }) {
   return (
     <div className="sl-play-btn-wrap">
       <button 
-        className={`sl-play-btn ${isPlaying ? 'playing' : ''}`} 
+        className={`sl-play-btn ${isPlaying ? 'playing' : ''} ${isLoading ? 'loading' : ''}`} 
         onClick={handlePlay}
+        onMouseEnter={handlePreload}
+        onTouchStart={handlePreload}
         title="播放荷蘭文"
+        disabled={isLoading}
       >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill={isPlaying ? "currentColor" : "currentColor"} stroke="none">
-          {isPlaying ? (
-            <path d="M6 4h4v16H6zM14 4h4v16h-4z" />
-          ) : (
-            <path d="M8 5v14l11-7z" />
-          )}
-        </svg>
+        {isLoading ? (
+          <svg className="sl-spinner" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
+            <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
+            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+          </svg>
+        ) : (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill={isPlaying ? "currentColor" : "currentColor"} stroke="none">
+            {isPlaying ? (
+              <path d="M6 4h4v16H6zM14 4h4v16h-4z" />
+            ) : (
+              <path d="M8 5v14l11-7z" />
+            )}
+          </svg>
+        )}
       </button>
       <div className="sl-play-rate">0.75x</div>
     </div>
