@@ -53,6 +53,14 @@
     overflow: hidden;
 }
 
+/* Speaking view: full width, scrollable, no padding override */
+.app-content.speaking-fullscreen {
+    max-width: 100%;
+    padding: 0;
+    margin: 0;
+    overflow-y: auto;
+}
+
 /* ── Side Nav Bar / Bottom Tab Bar ── */
 .tabbar {
     position: fixed;
