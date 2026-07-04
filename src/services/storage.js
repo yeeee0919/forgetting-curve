@@ -34,9 +34,9 @@ export function saveCards(cards) {
 export function getSettings() {
     try {
         const raw = localStorage.getItem(SETTINGS_KEY)
-        return raw ? JSON.parse(raw) : { openaiKey: '', geminiKey: '' }
+        return raw ? JSON.parse(raw) : { openaiKey: '', geminiKey: '', elevenLabsKey: '' }
     } catch {
-        return { openaiKey: '', geminiKey: '' }
+        return { openaiKey: '', geminiKey: '', elevenLabsKey: '' }
     }
 }
 

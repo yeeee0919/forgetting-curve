@@ -1,56 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { qaQuestions, photoQuestions, comparisonQuestions, storyQuestions } from '../data/speakingQuestions'
+import { speakDutch, stopTTS } from '../services/tts'
 import './SpeakingLab.css'
-
-// ─── TTS Utility ─────────────────────────────────────────────────
-
-let cachedVoices = []
-
-if (typeof window !== 'undefined' && window.speechSynthesis) {
-  window.speechSynthesis.onvoiceschanged = () => {
-    cachedVoices = window.speechSynthesis.getVoices()
-  }
-}
-
-async function speakDutch(text) {
-  if (!text || !window.speechSynthesis) return
-
-  if (window.speechSynthesis.speaking) {
-    window.speechSynthesis.cancel()
-    await new Promise(r => setTimeout(r, 15))
-  }
-
-  return new Promise((resolve) => {
-    const utterance = new SpeechSynthesisUtterance(text)
-    utterance.lang = 'nl-NL'
-    utterance.rate = 0.75  // 放慢語速
-
-    if (cachedVoices.length === 0) {
-      cachedVoices = window.speechSynthesis.getVoices()
-    }
-
-    if (cachedVoices.length > 0) {
-      const nlVoices = cachedVoices.filter(v => v.lang.startsWith('nl'))
-      const bestVoice = nlVoices.find(v => 
-        v.name.includes('Premium') || 
-        v.name.includes('Enhanced') || 
-        v.name.includes('Google') ||
-        v.name.includes('Siri')
-      )
-      if (bestVoice) {
-        utterance.voice = bestVoice
-      } else if (nlVoices.length > 0) {
-        utterance.voice = nlVoices[0]
-      }
-    }
-
-    utterance.onend = () => resolve()
-    utterance.onerror = (e) => resolve(e)
-
-    window.__speechUtterance = utterance
-    window.speechSynthesis.speak(utterance)
-  })
-}
 
 // ─── Sub-components ──────────────────────────────────────────────
 
@@ -60,14 +11,24 @@ function PlayButton({ text }) {
   const handlePlay = async (e) => {
     e.stopPropagation()
     if (isPlaying) {
-        window.speechSynthesis.cancel()
+        stopTTS()
         setIsPlaying(false)
         return
     }
     setIsPlaying(true)
-    await speakDutch(text)
-    setIsPlaying(false)
+    try {
+      await speakDutch(text)
+    } finally {
+      setIsPlaying(false)
+    }
   }
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (isPlaying) stopTTS()
+    }
+  }, [isPlaying])
 
   return (
     <div className="sl-play-btn-wrap">

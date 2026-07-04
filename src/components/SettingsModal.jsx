@@ -7,6 +7,7 @@ const LANG_MAP = {
 export default function SettingsModal({ settings, onSave, onClose, onExport, onRestore, syncId, onSyncIdChange, lastSynced, onManualSync }) {
     const [key, setKey] = useState(settings.openaiKey || '')
     const [geminiKey, setGeminiKey] = useState(settings.geminiKey || '')
+    const [elevenLabsKey, setElevenLabsKey] = useState(settings.elevenLabsKey || '')
     const [voices, setVoices] = useState([])
     const [selectedVoice, setSelectedVoice] = useState(settings.voiceName || '')
     const [voiceLang, setVoiceLang] = useState('nl')
@@ -84,6 +85,21 @@ export default function SettingsModal({ settings, onSave, onClose, onExport, onR
                             前往 <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" style={{ color: 'rgba(167, 139, 250, 1)' }}>Google AI Studio</a> 取得。
                         </p>
                     </div>
+
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                        <label className="form-label">ElevenLabs API Key (選填，高品質發音)</label>
+                        <input
+                            className="form-input"
+                            type="password"
+                            placeholder="sk_..."
+                            value={elevenLabsKey}
+                            onChange={e => setElevenLabsKey(e.target.value)}
+                        />
+                        <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: 6, marginBottom: 0 }}>
+                            前往 <a href="https://elevenlabs.io/" target="_blank" rel="noreferrer" style={{ color: 'rgba(167, 139, 250, 1)' }}>ElevenLabs</a> 註冊取得 API Key。
+                        </p>
+                    </div>
+
                     <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: 0 }}>
                         Key 儲存在本機，不會上傳至任何其他伺服器。
                     </p>
@@ -174,7 +190,8 @@ export default function SettingsModal({ settings, onSave, onClose, onExport, onR
                     onClick={() => {
                         localStorage.setItem('memoflip_voice_name', selectedVoice)
                         localStorage.setItem('memoflip_speech_rate', String(rate))
-                        onSave({ ...settings, openaiKey: key, geminiKey, voiceName: selectedVoice, speechRate: rate })
+                        const newSettings = { ...settings, openaiKey: key, geminiKey, elevenLabsKey, voiceName: selectedVoice, speechRate: rate }
+                        onSave(newSettings)
                     }}
                 >
                     儲存設定
