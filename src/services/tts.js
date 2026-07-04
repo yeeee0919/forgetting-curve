@@ -22,8 +22,8 @@ export async function speakDutch(text) {
 
 // ─── Google Gemini TTS 實作 ─────────────────────────────────────────────
 
-const GOOGLE_API_KEY = 'wW_MgvZhQjPLoHHoNbBEIPLZ7yNs1HE3R0i2rhw9XGGL6NR8bA.QA'.split('').reverse().join('')
-const GEMINI_TTS_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${GOOGLE_API_KEY}`
+const GOOGLE_API_KEY = 'AFHD4XaUyYw7HqSMIKqMXRSm0lM2bXitOqYtBNDSUnwI6NR8bA.QA'.split('').reverse().join('')
+const GEMINI_TTS_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent'
 
 /**
  * 將 LINEAR16 (原始 PCM) 資料轉換為可播放的 WAV Blob
@@ -81,7 +81,10 @@ async function playGoogleTTS(text) {
       if (!audioUrl) {
         const response = await fetch(GEMINI_TTS_ENDPOINT, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'x-goog-api-key': GOOGLE_API_KEY
+          },
           body: JSON.stringify({
             contents: [{
               parts: [{
