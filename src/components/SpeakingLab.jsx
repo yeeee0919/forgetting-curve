@@ -2,7 +2,92 @@ import { useState } from 'react'
 import { qaQuestions, photoQuestions, comparisonQuestions, storyQuestions } from '../data/speakingQuestions'
 import './SpeakingLab.css'
 
+// ─── TTS Utility ─────────────────────────────────────────────────
+
+let cachedVoices = []
+
+if (typeof window !== 'undefined' && window.speechSynthesis) {
+  window.speechSynthesis.onvoiceschanged = () => {
+    cachedVoices = window.speechSynthesis.getVoices()
+  }
+}
+
+async function speakDutch(text) {
+  if (!text || !window.speechSynthesis) return
+
+  if (window.speechSynthesis.speaking) {
+    window.speechSynthesis.cancel()
+    await new Promise(r => setTimeout(r, 15))
+  }
+
+  return new Promise((resolve) => {
+    const utterance = new SpeechSynthesisUtterance(text)
+    utterance.lang = 'nl-NL'
+    utterance.rate = 0.75  // 放慢語速
+
+    if (cachedVoices.length === 0) {
+      cachedVoices = window.speechSynthesis.getVoices()
+    }
+
+    if (cachedVoices.length > 0) {
+      const nlVoices = cachedVoices.filter(v => v.lang.startsWith('nl'))
+      const bestVoice = nlVoices.find(v => 
+        v.name.includes('Premium') || 
+        v.name.includes('Enhanced') || 
+        v.name.includes('Google') ||
+        v.name.includes('Siri')
+      )
+      if (bestVoice) {
+        utterance.voice = bestVoice
+      } else if (nlVoices.length > 0) {
+        utterance.voice = nlVoices[0]
+      }
+    }
+
+    utterance.onend = () => resolve()
+    utterance.onerror = (e) => resolve(e)
+
+    window.__speechUtterance = utterance
+    window.speechSynthesis.speak(utterance)
+  })
+}
+
 // ─── Sub-components ──────────────────────────────────────────────
+
+function PlayButton({ text }) {
+  const [isPlaying, setIsPlaying] = useState(false)
+
+  const handlePlay = async (e) => {
+    e.stopPropagation()
+    if (isPlaying) {
+        window.speechSynthesis.cancel()
+        setIsPlaying(false)
+        return
+    }
+    setIsPlaying(true)
+    await speakDutch(text)
+    setIsPlaying(false)
+  }
+
+  return (
+    <div className="sl-play-btn-wrap">
+      <button 
+        className={`sl-play-btn ${isPlaying ? 'playing' : ''}`} 
+        onClick={handlePlay}
+        title="播放荷蘭文"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill={isPlaying ? "currentColor" : "currentColor"} stroke="none">
+          {isPlaying ? (
+            <path d="M6 4h4v16H6zM14 4h4v16h-4z" />
+          ) : (
+            <path d="M8 5v14l11-7z" />
+          )}
+        </svg>
+      </button>
+      <div className="sl-play-rate">0.75x</div>
+    </div>
+  )
+}
 
 function TypeBadge({ type }) {
   const labels = {
@@ -25,7 +110,10 @@ function AnswerReveal({ answerZh, answerNl }) {
       {open && (
         <div className="sl-answer-body">
           <div className="sl-answer-zh">{answerZh}</div>
-          <div className="sl-answer-nl">{answerNl}</div>
+          <div className="sl-answer-nl-wrap">
+            <div className="sl-answer-nl">{answerNl}</div>
+            <PlayButton text={answerNl} />
+          </div>
         </div>
       )}
     </div>
@@ -41,15 +129,19 @@ function QACard({ q }) {
 
       <div className="sl-example-box">
         <div className="sl-example-icon">$</div>
-        <div className="sl-example-text">
+        <div className="sl-example-text" style={{ flex: 1 }}>
           <div className="sl-example-zh">{q.exampleSentenceZh}</div>
           <div className="sl-example-nl">{q.exampleSentenceNl}</div>
         </div>
+        <PlayButton text={q.exampleSentenceNl} />
       </div>
 
-      <div className="sl-prompt">
-        <div className="sl-prompt-zh">{q.promptZh}</div>
-        <div className="sl-prompt-nl">{q.promptNl}</div>
+      <div className="sl-prompt sl-prompt-row">
+        <div className="sl-prompt-text" style={{ flex: 1 }}>
+          <div className="sl-prompt-zh">{q.promptZh}</div>
+          <div className="sl-prompt-nl">{q.promptNl}</div>
+        </div>
+        <PlayButton text={q.promptNl} />
       </div>
 
       <AnswerReveal answerZh={q.answerZh} answerNl={q.answerNl} />
@@ -75,10 +167,11 @@ function PhotoCard({ q }) {
       </div>
 
       <div className="sl-prompt sl-prompt-row">
-        <div className="sl-prompt-text">
+        <div className="sl-prompt-text" style={{ flex: 1 }}>
           <div className="sl-prompt-zh">{q.promptZh}</div>
           <div className="sl-prompt-nl">{q.promptNl}</div>
         </div>
+        <PlayButton text={q.promptNl} />
       </div>
 
       <AnswerReveal answerZh={q.answerZh} answerNl={q.answerNl} />
@@ -105,10 +198,11 @@ function ComparisonCard({ q }) {
       </div>
 
       <div className="sl-prompt sl-prompt-row">
-        <div className="sl-prompt-text">
+        <div className="sl-prompt-text" style={{ flex: 1 }}>
           <div className="sl-prompt-zh">{q.promptZh}</div>
           <div className="sl-prompt-nl">{q.promptNl}</div>
         </div>
+        <PlayButton text={q.promptNl} />
       </div>
 
       <AnswerReveal answerZh={q.answerZh} answerNl={q.answerNl} />
@@ -133,10 +227,11 @@ function StoryCard({ q }) {
       </div>
 
       <div className="sl-prompt sl-prompt-row">
-        <div className="sl-prompt-text">
+        <div className="sl-prompt-text" style={{ flex: 1 }}>
           <div className="sl-prompt-zh">{q.promptZh}</div>
           <div className="sl-prompt-nl">{q.promptNl}</div>
         </div>
+        <PlayButton text={q.promptNl} />
       </div>
 
       <AnswerReveal answerZh={q.answerZh} answerNl={q.answerNl} />
