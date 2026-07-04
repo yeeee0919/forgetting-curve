@@ -7,6 +7,7 @@
 //           永久存入 IndexedDB。之後的每次播放都直接讀快取，不消耗任何
 //           API 額度（免費 10 次/天 的限制幾乎不會被感覺到）。
 // ──────────────────────────────────────────────────────────────────────────────
+import { getSettings } from './storage'
 
 // ─── 瀏覽器語音快取 ────────────────────────────────────────────────────────────
 let cachedVoices = []
@@ -64,8 +65,12 @@ async function idbSet(key, value) {
 }
 
 // ─── Gemini TTS API ───────────────────────────────────────────────────────────
-const GEMINI_KEY      = import.meta.env.VITE_GOOGLE_TTS_KEY
+// API Key 優先讀取用戶設定（存於 localStorage），讓 Vercel 部署也能正常運作
 const GEMINI_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent'
+
+function getApiKey() {
+  return getSettings().geminiKey || import.meta.env.VITE_GOOGLE_TTS_KEY || ''
+}
 
 /**
  * 將 Gemini 回傳的 Base64 LINEAR16 PCM 資料轉換為 WAV Blob
@@ -108,7 +113,8 @@ function pcmToWavBlob(base64PCM, sampleRate = 24000, numChannels = 1, bitsPerSam
  * @returns {string} Blob URL
  */
 async function fetchAndCacheGeminiTTS(text) {
-  if (!GEMINI_KEY) throw new Error('[TTS] No API key (VITE_GOOGLE_TTS_KEY not set)')
+  const GEMINI_KEY = getApiKey()
+  if (!GEMINI_KEY) throw new Error('[TTS] No API key — 請在設定中輸入 Gemini API Key')
 
   const response = await fetch(GEMINI_ENDPOINT, {
     method: 'POST',
