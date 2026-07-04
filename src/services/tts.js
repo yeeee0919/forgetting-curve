@@ -95,6 +95,14 @@ async function playElevenLabs(text, apiKey) {
 
     } catch (err) {
       console.error('ElevenLabs 播放失敗，降級為內建語音', err)
+      if (err.message.includes('401')) {
+        alert('ElevenLabs 播放失敗：API Key 錯誤或無效。將暫時使用瀏覽器內建語音。')
+      } else if (err.message.includes('402') || err.message.includes('429')) {
+        alert('ElevenLabs 播放失敗：您的免費額度可能已用盡。將暫時使用瀏覽器內建語音。')
+      } else {
+        alert(`ElevenLabs 播放發生錯誤 (${err.message})。將暫時使用瀏覽器內建語音。`)
+      }
+      
       // 如果 API 呼叫失敗 (例如額度用盡或 Key 錯誤)，降級為內建
       await playBrowserTTS(text)
       resolve()

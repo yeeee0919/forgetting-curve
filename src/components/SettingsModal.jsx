@@ -192,6 +192,7 @@ export default function SettingsModal({ settings, onSave, onClose, onExport, onR
                         localStorage.setItem('memoflip_speech_rate', String(rate))
                         const newSettings = { ...settings, openaiKey: key, geminiKey, elevenLabsKey, voiceName: selectedVoice, speechRate: rate }
                         onSave(newSettings)
+                        onClose()
                     }}
                 >
                     儲存設定
