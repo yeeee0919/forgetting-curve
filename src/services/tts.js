@@ -1,13 +1,59 @@
 // ──────────────────────────────────────────────────────────────────────────────
 // Dutch TTS Service
-// Primary : Google Gemini TTS API  (with IndexedDB persistent cache)
-// Fallback : Browser Web Speech API
-//
-// 快取策略：每個荷蘭語片段在首次播放後，會以 WAV ArrayBuffer 形式
-//           永久存入 IndexedDB。之後的每次播放都直接讀快取，不消耗任何
-//           API 額度（免費 10 次/天 的限制幾乎不會被感覺到）。
+// 優先級：靜態音檔（/audio/*.mp3）→ IndexedDB 快取 → Gemini API → 瀏覽器語音
 // ──────────────────────────────────────────────────────────────────────────────
 import { getSettings } from './storage'
+
+// ─── 靜態音檔 manifest ────────────────────────────────────────────────────────
+// manifest.json 格式：{ "<md5-hash>": "/audio/<hash>.mp3" }
+let _manifest = null
+
+async function getManifest() {
+  if (_manifest) return _manifest
+  try {
+    const res = await fetch('/audio/manifest.json')
+    if (res.ok) {
+      _manifest = await res.json()
+    } else {
+      _manifest = {}
+    }
+  } catch {
+    _manifest = {}
+  }
+  return _manifest
+}
+
+async function textToHash(text) {
+  const encoder = new TextEncoder()
+  const data    = encoder.encode(text.trim())
+  const hashBuf = await crypto.subtle.digest('MD5', data).catch(() => null)
+  // 不是所有瀏覽器都支援 MD5，用 FNV-1a 32-bit 作備案
+  if (!hashBuf) return fnv1a(text.trim()).toString(16).padStart(8, '0').repeat(2)
+  return Array.from(new Uint8Array(hashBuf))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('')
+    .slice(0, 16)
+}
+
+// FNV-1a 備用 hash（瀏覽器不支援 SubtleCrypto MD5 時使用）
+function fnv1a(str) {
+  let h = 2166136261
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i)
+    h = (h * 16777619) >>> 0
+  }
+  return h
+}
+
+async function getStaticAudioUrl(text) {
+  const manifest = await getManifest()
+  if (Object.keys(manifest).length === 0) return null
+
+  // 用相同的 MD5(text.trim()).slice(0,16) 找音檔
+  const hash = await textToHash(text)
+  const path = manifest[hash]
+  return path || null
+}
 
 // ─── 瀏覽器語音快取 ────────────────────────────────────────────────────────────
 let cachedVoices = []
@@ -20,7 +66,7 @@ if (typeof window !== 'undefined' && window.speechSynthesis) {
 // 追蹤目前的播放，方便中斷
 let currentAudio = null
 
-// ─── IndexedDB 永久快取 ────────────────────────────────────────────────────────
+// ─── IndexedDB 永久快取（給 Gemini 生成的音訊用）────────────────────────────
 const IDB_NAME    = 'dutch-tts-cache-v2'
 const IDB_STORE   = 'audio'
 const IDB_VERSION = 1
@@ -65,16 +111,12 @@ async function idbSet(key, value) {
 }
 
 // ─── Gemini TTS API ───────────────────────────────────────────────────────────
-// API Key 優先讀取用戶設定（存於 localStorage），讓 Vercel 部署也能正常運作
 const GEMINI_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent'
 
 function getApiKey() {
   return getSettings().geminiKey || import.meta.env.VITE_GOOGLE_TTS_KEY || ''
 }
 
-/**
- * 將 Gemini 回傳的 Base64 LINEAR16 PCM 資料轉換為 WAV Blob
- */
 function pcmToWavBlob(base64PCM, sampleRate = 24000, numChannels = 1, bitsPerSample = 16) {
   const binary    = atob(base64PCM)
   const pcmBuffer = new Uint8Array(binary.length)
@@ -92,13 +134,13 @@ function pcmToWavBlob(base64PCM, sampleRate = 24000, numChannels = 1, bitsPerSam
   view.setUint32(4,  36 + dataLength, true)
   writeStr(8,  'WAVE')
   writeStr(12, 'fmt ')
-  view.setUint32(16, 16, true)                                         // fmt chunk 大小
-  view.setUint16(20, 1,  true)                                         // PCM 格式
-  view.setUint16(22, numChannels, true)                                 // 聲道數
-  view.setUint32(24, sampleRate, true)                                  // 取樣率
-  view.setUint32(28, sampleRate * numChannels * (bitsPerSample / 8), true) // 每秒位元組數
-  view.setUint16(32, numChannels * (bitsPerSample / 8), true)           // 區塊對齊
-  view.setUint16(34, bitsPerSample, true)                               // 每樣本位元數
+  view.setUint32(16, 16, true)
+  view.setUint16(20, 1,  true)
+  view.setUint16(22, numChannels, true)
+  view.setUint32(24, sampleRate, true)
+  view.setUint32(28, sampleRate * numChannels * (bitsPerSample / 8), true)
+  view.setUint16(32, numChannels * (bitsPerSample / 8), true)
+  view.setUint16(34, bitsPerSample, true)
   writeStr(36, 'data')
   view.setUint32(40, dataLength, true)
 
@@ -108,10 +150,6 @@ function pcmToWavBlob(base64PCM, sampleRate = 24000, numChannels = 1, bitsPerSam
   return new Blob([buffer], { type: 'audio/wav' })
 }
 
-/**
- * 從 Gemini TTS API 抓取音訊，成功後自動寫入 IndexedDB 永久快取
- * @returns {string} Blob URL
- */
 async function fetchAndCacheGeminiTTS(text) {
   const GEMINI_KEY = getApiKey()
   if (!GEMINI_KEY) throw new Error('[TTS] No API key — 請在設定中輸入 Gemini API Key')
@@ -146,7 +184,6 @@ async function fetchAndCacheGeminiTTS(text) {
   const audioB64  = data.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data
   if (!audioB64) throw new Error('[TTS] Gemini 沒有回傳音訊資料')
 
-  // 轉 WAV → 存 IndexedDB → 回傳 Blob URL
   const wavBlob = pcmToWavBlob(audioB64)
   const arrBuf  = await wavBlob.arrayBuffer()
   await idbSet(text, arrBuf)
@@ -154,24 +191,24 @@ async function fetchAndCacheGeminiTTS(text) {
   return URL.createObjectURL(wavBlob)
 }
 
-/**
- * 取得音訊 URL：優先查 IndexedDB 快取，沒有才打 Gemini API
- */
+// ─── 取得音訊 URL（四層優先級）─────────────────────────────────────────────────
 async function getAudioUrl(text) {
-  // 1. 查 IndexedDB 永久快取（不消耗 API 額度）
+  // 1. 靜態音檔（最快，從 Vercel CDN 播放）
+  const staticUrl = await getStaticAudioUrl(text)
+  if (staticUrl) return staticUrl
+
+  // 2. IndexedDB 本機永久快取（Gemini 之前生成過的）
   const cached = await idbGet(text)
   if (cached) {
     return URL.createObjectURL(new Blob([cached], { type: 'audio/wav' }))
   }
 
-  // 2. 呼叫 Gemini TTS API（首次才需要消耗 1 次額度）
+  // 3. Gemini TTS API（首次生成，會存入 IndexedDB）
   return await fetchAndCacheGeminiTTS(text)
 }
 
 // ─── 核心播放邏輯 ──────────────────────────────────────────────────────────────
-
-async function playGeminiTTS(text) {
-  // 如果正在播放，先中斷
+async function playTTS(text) {
   if (currentAudio) {
     currentAudio.pause()
     currentAudio.currentTime = 0
@@ -189,15 +226,14 @@ async function playGeminiTTS(text) {
 
       await audio.play()
     } catch (err) {
-      console.error('[TTS] Gemini 播放失敗，降級為內建語音', err)
+      console.error('[TTS] 播放失敗，降級為內建語音', err)
       await playBrowserTTS(text)
       resolve()
     }
   })
 }
 
-// ─── 瀏覽器內建 Web Speech API（備用）────────────────────────────────────────
-
+// ─── 瀏覽器內建 Web Speech API（最終備用）────────────────────────────────────
 async function playBrowserTTS(text) {
   if (!window.speechSynthesis) return
 
@@ -230,7 +266,7 @@ async function playBrowserTTS(text) {
       }
     }
 
-    utterance.onend  = () => resolve()
+    utterance.onend   = () => resolve()
     utterance.onerror = (e) => resolve(e)
 
     window.__speechUtterance = utterance
@@ -242,31 +278,31 @@ async function playBrowserTTS(text) {
 
 /**
  * 播放荷蘭文文字
- * 流程：IndexedDB 快取 → Gemini TTS API → 瀏覽器內建語音
+ * 優先級：靜態音檔 → IndexedDB → Gemini API → 瀏覽器語音
  */
 export async function speakDutch(text) {
   if (!text) return
-  await playGeminiTTS(text)
+  await playTTS(text)
 }
 
 /**
- * 預先載入發音並存入 IndexedDB，但不播放
- * 若已有快取則直接跳過（不消耗 API 額度）
+ * 預先載入（目前僅對 Gemini 快取有效，靜態音檔由瀏覽器自行快取）
  */
 export async function preloadDutch(text) {
   if (!text) return
-  const cached = await idbGet(text)
-  if (cached) return
   try {
+    const staticUrl = await getStaticAudioUrl(text)
+    if (staticUrl) return  // 靜態音檔存在，跳過預載
+    const cached = await idbGet(text)
+    if (cached) return
     await fetchAndCacheGeminiTTS(text)
   } catch (err) {
-    // 預載失敗不影響播放流程
     console.warn('[TTS] Preload failed:', err.message)
   }
 }
 
 /**
- * 停止所有語音播放（Gemini WAV + Web Speech API）
+ * 停止所有語音播放
  */
 export function stopTTS() {
   if (currentAudio) {
