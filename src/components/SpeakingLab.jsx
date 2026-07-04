@@ -33,11 +33,6 @@ function PlayButton({ text }) {
     }
   }
 
-  // 滑鼠移上去或手指碰到時，就偷偷提早幾百毫秒去抓音檔
-  const handlePreload = () => {
-    preloadDutch(text).catch(() => {})
-  }
-
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -50,8 +45,6 @@ function PlayButton({ text }) {
       <button 
         className={`sl-play-btn ${isPlaying ? 'playing' : ''} ${isLoading ? 'loading' : ''}`} 
         onClick={handlePlay}
-        onMouseEnter={handlePreload}
-        onTouchStart={handlePreload}
         title="播放荷蘭文"
         disabled={isLoading}
       >
