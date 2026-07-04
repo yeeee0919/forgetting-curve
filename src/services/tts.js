@@ -12,6 +12,9 @@ if (typeof window !== 'undefined' && window.speechSynthesis) {
 // 追蹤目前的播放，方便中斷
 let currentAudio = null
 
+// 追蹤是否被 Gemini API 限速 (429)
+let rateLimitUntil = 0
+
 /**
  * 播放荷蘭文，優先使用 Google Gemini TTS，若失敗則降級為內建 Web Speech API
  */
@@ -78,6 +81,11 @@ function pcmToWavBlob(base64PCM, sampleRate = 24000, numChannels = 1, bitsPerSam
 async function fetchGoogleTTS(text) {
   if (audioCache.has(text)) return audioCache.get(text)
 
+  // 如果在限速冷卻期內，直接拋出錯誤進入 fallback，不要再打 API
+  if (Date.now() < rateLimitUntil) {
+    throw new Error('Gemini TTS 目前處於 10 RPM 速率限制冷卻期，直接使用內建語音')
+  }
+
   const response = await fetch(GEMINI_TTS_ENDPOINT, {
     method: 'POST',
     headers: {
@@ -104,6 +112,11 @@ async function fetchGoogleTTS(text) {
   })
 
   if (!response.ok) {
+    if (response.status === 429) {
+      // 碰到 429，設定 60 秒冷卻期
+      rateLimitUntil = Date.now() + 60000
+      console.warn('⚠️ 觸發 Gemini API 每分鐘 10 次限制，未來 60 秒將暫時使用內建語音')
+    }
     const errText = await response.text()
     throw new Error(`Gemini TTS API error: ${response.status} — ${errText}`)
   }
