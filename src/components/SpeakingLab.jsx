@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { qaQuestions, photoQuestions, comparisonQuestions, storyQuestions } from '../data/speakingQuestions'
 import { speakDutch, stopTTS, preloadDutch } from '../services/tts'
 import './SpeakingLab.css'
@@ -225,6 +225,136 @@ function StoryCard({ q }) {
   )
 }
 
+// ─── Play All Bar ────────────────────────────────────────────────
+
+function PlayAllBar({ questions }) {
+  const [status, setStatus] = useState('idle') // idle | loading | playing | paused
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const [phase, setPhase] = useState('question') // question | waiting | answer
+  const stopFlag = useRef(false)
+  const total = questions.length
+
+  const sleep = (ms) => new Promise((res) => {
+    const id = setTimeout(res, ms)
+    stopFlag._timerId = id
+  })
+
+  const handlePlayAll = useCallback(async () => {
+    if (status === 'playing' || status === 'loading') {
+      stopFlag.current = true
+      stopTTS()
+      setStatus('idle')
+      setCurrentIndex(0)
+      setPhase('question')
+      return
+    }
+
+    stopFlag.current = false
+    setStatus('loading')
+    setCurrentIndex(0)
+    setPhase('question')
+
+    // Pre-load first question to reduce initial latency
+    try {
+      await preloadDutch(questions[0].promptNl)
+    } catch (_) {}
+
+    setStatus('playing')
+
+    for (let i = 0; i < questions.length; i++) {
+      if (stopFlag.current) break
+
+      const q = questions[i]
+      setCurrentIndex(i)
+
+      // --- 播題目 ---
+      setPhase('question')
+      await speakDutch(q.promptNl)
+      if (stopFlag.current) break
+
+      // --- 等待 5 秒（讓用戶思考）---
+      setPhase('waiting')
+      await sleep(5000)
+      if (stopFlag.current) break
+
+      // --- 播參考答案 ---
+      setPhase('answer')
+      await speakDutch(q.answerNl)
+      if (stopFlag.current) break
+
+      // --- 題目間短暫停頓 1.5 秒 ---
+      if (i < questions.length - 1) {
+        setPhase('waiting')
+        await sleep(1500)
+      }
+      if (stopFlag.current) break
+    }
+
+    if (!stopFlag.current) {
+      setStatus('idle')
+      setCurrentIndex(0)
+      setPhase('question')
+    }
+  }, [questions, status])
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      stopFlag.current = true
+      stopTTS()
+    }
+  }, [])
+
+  const isActive = status === 'playing' || status === 'loading'
+
+  const phaseLabel = {
+    question: '🎯 唸題目',
+    waiting:  '⏳ 思考中…',
+    answer:   '💡 參考答案',
+  }[phase]
+
+  return (
+    <div className={`sl-play-all-bar ${isActive ? 'active' : ''}`}>
+      <button
+        className={`sl-play-all-btn ${isActive ? 'stop' : 'start'} ${status === 'loading' ? 'loading' : ''}`}
+        onClick={handlePlayAll}
+        disabled={status === 'loading'}
+      >
+        {status === 'loading' ? (
+          <svg className="sl-spinner" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+            <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
+            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+          </svg>
+        ) : isActive ? (
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+            <rect x="5" y="4" width="4" height="16" rx="1" />
+            <rect x="15" y="4" width="4" height="16" rx="1" />
+          </svg>
+        ) : (
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+            <path d="M8 5v14l11-7z" />
+          </svg>
+        )}
+        <span>{status === 'loading' ? '載入中…' : isActive ? '停止播放' : '播放全部題目'}</span>
+      </button>
+
+      {isActive && (
+        <div className="sl-play-all-progress">
+          <div className="sl-play-all-track">
+            <div
+              className="sl-play-all-fill"
+              style={{ width: `${((currentIndex + (phase === 'answer' ? 0.8 : phase === 'waiting' ? 0.4 : 0.1)) / total) * 100}%` }}
+            />
+          </div>
+          <span className="sl-play-all-label">
+            第 {currentIndex + 1} / {total} 題 &nbsp;·&nbsp; {phaseLabel}
+          </span>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── Main Component ─────────────────────────────────────────────
 
 const TABS = [
@@ -236,6 +366,13 @@ const TABS = [
 
 export default function SpeakingLab() {
   const [activeTab, setActiveTab] = useState('qa')
+
+  const currentQuestions = {
+    qa: qaQuestions,
+    photo: photoQuestions,
+    comparison: comparisonQuestions,
+    story: storyQuestions,
+  }[activeTab]
 
   const renderCards = () => {
     switch (activeTab) {
@@ -285,6 +422,11 @@ export default function SpeakingLab() {
             口語練習
           </h1>
           <p className="sl-subtitle">荷蘭語 A2 等級口說訓練 · 自主練習</p>
+        </div>
+
+        {/* Play All Bar */}
+        <div className="sl-play-all-bar-wrap">
+          <PlayAllBar key={activeTab} questions={currentQuestions} />
         </div>
 
         {/* Tab Bar */}
