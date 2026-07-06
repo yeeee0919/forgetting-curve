@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { qaQuestions, photoQuestions, comparisonQuestions, storyQuestions } from '../data/speakingQuestions'
 import { speakDutch, stopTTS, preloadDutch } from '../services/tts'
+import { hasSprite, getSprite, generateSprite, createSpriteAudio, getCurrentInfo } from '../services/audioSprite'
 import './SpeakingLab.css'
 
 // ─── Sub-components ──────────────────────────────────────────────
@@ -225,107 +226,146 @@ function StoryCard({ q }) {
   )
 }
 
-// ─── Play All Bar ────────────────────────────────────────────────
+// ─── Play All Bar (Sprite 版本) ──────────────────────────────────
+//
+// 狀態機：
+//   idle       → 無音檔，首次點擊開始生成
+//   generating → 生成中，可取消
+//   ready      → 音檔已存在 IndexedDB，點擊即可立刻播放
+//   playing    → 播放中，點擊停止
+// ─────────────────────────────────────────────────────────────────
 
-function PlayAllBar({ questions }) {
-  const [status, setStatus] = useState('idle') // idle | loading | playing | paused
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const [phase, setPhase] = useState('question') // question | waiting | answer
-  const stopFlag = useRef(false)
-  const total = questions.length
+function PlayAllBar({ questions, tabId }) {
+  // 'idle' | 'generating' | 'ready' | 'playing'
+  const [status,    setStatus]    = useState('idle')
+  const [genDone,   setGenDone]   = useState(0)
+  const [genTotal,  setGenTotal]  = useState(0)
+  const [playTime,  setPlayTime]  = useState(0)
+  const [totalDur,  setTotalDur]  = useState(0)
+  const [tsRef,     setTsRef]     = useState([])
 
-  const sleep = (ms) => new Promise((res) => {
-    const id = setTimeout(res, ms)
-    stopFlag._timerId = id
-  })
+  const cancelRef  = useRef(false)
+  const audioRef   = useRef(null)
+  const blobUrlRef = useRef(null)
 
-  const handlePlayAll = useCallback(async () => {
-    if (status === 'playing' || status === 'loading') {
-      stopFlag.current = true
-      stopTTS()
-      setStatus('idle')
-      setCurrentIndex(0)
-      setPhase('question')
+  // 掛載時檢查 IndexedDB 是否已有音檔
+  useEffect(() => {
+    hasSprite(tabId).then(exists => setStatus(exists ? 'ready' : 'idle'))
+    return () => {
+      cancelRef.current = true
+      cleanup()
+    }
+  }, [tabId])
+
+  function cleanup() {
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current.ontimeupdate = null
+      audioRef.current.onended      = null
+      audioRef.current = null
+    }
+    if (blobUrlRef.current) {
+      URL.revokeObjectURL(blobUrlRef.current)
+      blobUrlRef.current = null
+    }
+  }
+
+  function startPlayingEntry(entry) {
+    cleanup()
+    const { audio, url, timestamps, totalDuration } = createSpriteAudio(entry)
+    blobUrlRef.current = url
+    audioRef.current   = audio
+    setTsRef(timestamps)
+    setTotalDur(totalDuration)
+    setPlayTime(0)
+
+    audio.ontimeupdate = () => setPlayTime(audio.currentTime)
+    audio.onended = () => {
+      setStatus('ready')
+      setPlayTime(0)
+      cleanup()
+    }
+    audio.play()
+    setStatus('playing')
+  }
+
+  async function handleClick() {
+    // 播放中 → 停止
+    if (status === 'playing') {
+      cleanup()
+      setStatus('ready')
       return
     }
 
-    stopFlag.current = false
-    setStatus('loading')
-    setCurrentIndex(0)
-    setPhase('question')
-
-    // Pre-load first question to reduce initial latency
-    try {
-      await preloadDutch(questions[0].promptNl)
-    } catch (_) {}
-
-    setStatus('playing')
-
-    for (let i = 0; i < questions.length; i++) {
-      if (stopFlag.current) break
-
-      const q = questions[i]
-      setCurrentIndex(i)
-
-      // --- 播題目 ---
-      setPhase('question')
-      await speakDutch(q.promptNl)
-      if (stopFlag.current) break
-
-      // --- 等待 5 秒（讓用戶思考）---
-      setPhase('waiting')
-      await sleep(5000)
-      if (stopFlag.current) break
-
-      // --- 播參考答案 ---
-      setPhase('answer')
-      await speakDutch(q.answerNl)
-      if (stopFlag.current) break
-
-      // --- 題目間短暫停頓 1.5 秒 ---
-      if (i < questions.length - 1) {
-        setPhase('waiting')
-        await sleep(1500)
-      }
-      if (stopFlag.current) break
-    }
-
-    if (!stopFlag.current) {
+    // 生成中 → 取消
+    if (status === 'generating') {
+      cancelRef.current = true
       setStatus('idle')
-      setCurrentIndex(0)
-      setPhase('question')
+      return
     }
-  }, [questions, status])
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      stopFlag.current = true
-      stopTTS()
+    // 已有音檔 → 立刻播放
+    if (status === 'ready') {
+      const entry = await getSprite(tabId)
+      if (entry) { startPlayingEntry(entry); return }
+      setStatus('idle')  // 意外遺失，重新生成
     }
-  }, [])
 
-  const isActive = status === 'playing' || status === 'loading'
+    // idle → 開始生成
+    cancelRef.current = false
+    const total = questions.length * 2
+    setGenDone(0)
+    setGenTotal(total)
+    setStatus('generating')
 
-  const phaseLabel = {
+    const entry = await generateSprite(
+      tabId,
+      questions,
+      (done, t) => { setGenDone(done); setGenTotal(t) },
+      cancelRef
+    )
+
+    if (cancelRef.current) return  // 被取消
+
+    if (entry) {
+      startPlayingEntry(entry)
+    } else {
+      setStatus('idle')
+    }
+  }
+
+  // 計算目前播到哪一題、什麼階段
+  const curInfo = getCurrentInfo(playTime, tsRef)
+  const phaseLabel = curInfo ? {
     question: '🎯 唸題目',
     waiting:  '⏳ 思考中…',
     answer:   '💡 參考答案',
-  }[phase]
+  }[curInfo.phase] : ''
+
+  const isGenerating = status === 'generating'
+  const isPlaying    = status === 'playing'
+  const isReady      = status === 'ready'
+  const isBusy       = isGenerating || isPlaying
 
   return (
-    <div className={`sl-play-all-bar ${isActive ? 'active' : ''}`}>
+    <div className={`sl-play-all-bar ${isBusy ? 'active' : ''}`}>
+
+      {/* ── 主按鈕 ── */}
       <button
-        className={`sl-play-all-btn ${isActive ? 'stop' : 'start'} ${status === 'loading' ? 'loading' : ''}`}
-        onClick={handlePlayAll}
-        disabled={status === 'loading'}
+        className={`sl-play-all-btn ${
+          isPlaying    ? 'stop'
+          : isGenerating ? 'cancel'
+          : 'start'
+        }`}
+        onClick={handleClick}
+        disabled={status === 'idle' && false}  // always enabled
       >
-        {status === 'loading' ? (
+        {isGenerating ? (
           <svg className="sl-spinner" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
             <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
             <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
           </svg>
-        ) : isActive ? (
+        ) : isPlaying ? (
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="none">
             <rect x="5" y="4" width="4" height="16" rx="1" />
             <rect x="15" y="4" width="4" height="16" rx="1" />
@@ -335,19 +375,38 @@ function PlayAllBar({ questions }) {
             <path d="M8 5v14l11-7z" />
           </svg>
         )}
-        <span>{status === 'loading' ? '載入中…' : isActive ? '停止播放' : '播放全部題目'}</span>
+        <span>
+          {isGenerating ? '取消生成'
+          : isPlaying   ? '停止播放'
+          : isReady     ? '▶ 播放全部題目（已快取）'
+          :               '▶ 播放全部題目'}
+        </span>
       </button>
 
-      {isActive && (
+      {/* ── 生成進度條 ── */}
+      {isGenerating && (
         <div className="sl-play-all-progress">
           <div className="sl-play-all-track">
-            <div
-              className="sl-play-all-fill"
-              style={{ width: `${((currentIndex + (phase === 'answer' ? 0.8 : phase === 'waiting' ? 0.4 : 0.1)) / total) * 100}%` }}
-            />
+            <div className="sl-play-all-fill sl-play-all-fill-gen"
+              style={{ width: `${genTotal > 0 ? (genDone / genTotal) * 100 : 0}%` }} />
           </div>
           <span className="sl-play-all-label">
-            第 {currentIndex + 1} / {total} 題 &nbsp;·&nbsp; {phaseLabel}
+            🔊 正在生成音檔… {genDone} / {genTotal} 段
+          </span>
+        </div>
+      )}
+
+      {/* ── 播放進度條 ── */}
+      {isPlaying && (
+        <div className="sl-play-all-progress">
+          <div className="sl-play-all-track">
+            <div className="sl-play-all-fill"
+              style={{ width: `${totalDur > 0 ? (playTime / totalDur) * 100 : 0}%` }} />
+          </div>
+          <span className="sl-play-all-label">
+            {curInfo
+              ? `第 ${curInfo.index + 1} / ${questions.length} 題 · ${phaseLabel}`
+              : '播放中…'}
           </span>
         </div>
       )}
@@ -426,7 +485,7 @@ export default function SpeakingLab() {
 
         {/* Play All Bar */}
         <div className="sl-play-all-bar-wrap">
-          <PlayAllBar key={activeTab} questions={currentQuestions} />
+          <PlayAllBar key={activeTab} tabId={activeTab} questions={currentQuestions} />
         </div>
 
         {/* Tab Bar */}

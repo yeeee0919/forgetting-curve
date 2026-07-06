@@ -314,3 +314,20 @@ export function stopTTS() {
     window.speechSynthesis.cancel()
   }
 }
+
+/**
+ * 取得音訊的原始 WAV ArrayBuffer（供 sprite 合併使用）
+ * 優先級：IndexedDB 快取 → Gemini TTS API
+ * 注意：跳過靜態音檔（MP3 格式無法直接 PCM 合併）
+ */
+export async function getAudioBuffer(text) {
+  if (!text) return null
+  // 先查 IndexedDB（Gemini 生成過的 WAV）
+  const cached = await idbGet(text)
+  if (cached) return cached  // ArrayBuffer
+
+  // 呼叫 Gemini 生成並快取
+  await fetchAndCacheGeminiTTS(text)
+  return await idbGet(text)
+}
+
