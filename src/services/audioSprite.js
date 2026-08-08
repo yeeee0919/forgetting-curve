@@ -114,6 +114,53 @@ export async function getSprite(tabId) {
   return await spriteGet(tabId)
 }
 
+/** 判斷 TTS 錯誤是否值得重試（429 / quota / 5xx） */
+export function isRetryableTtsError(err) {
+  const msg = err?.message || ''
+  if (/429|quota|RESOURCE_EXHAUSTED/i.test(msg)) return true
+  // 只匹配獨立的 HTTP 5xx 狀態碼，避免誤判含數字「5」的一般訊息
+  if (/\b5\d{2}\b/.test(msg)) return true
+  return false
+}
+
+/**
+ * 可被 cancelRef 中斷的等待；若被取消回傳 false
+ */
+async function cancellableSleep(ms, cancelRef) {
+  const step = 200
+  let left = ms
+  while (left > 0) {
+    if (cancelRef?.current) return false
+    const slice = Math.min(step, left)
+    await new Promise(res => setTimeout(res, slice))
+    left -= slice
+  }
+  return !cancelRef?.current
+}
+
+/**
+ * 帶指數退避的重試版 getAudioBuffer
+ * 遇到 429 或 5xx 時最多重試 4 次，每次等待時間倍增
+ */
+async function retryGetAudioBuffer(text, cancelRef) {
+  const MAX_RETRIES = 4
+  let delay = 5000  // 初始等 5 秒
+
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    if (cancelRef?.current) return null
+    try {
+      return await getAudioBuffer(text)
+    } catch (err) {
+      if (!isRetryableTtsError(err) || attempt === MAX_RETRIES) throw err
+
+      console.warn(`[Sprite] 請求失敗（${err.message?.slice(0, 60)}），${delay / 1000}s 後重試…`)
+      const ok = await cancellableSleep(delay, cancelRef)
+      if (!ok) return null
+      delay *= 2  // 指數退避：5s → 10s → 20s → 40s
+    }
+  }
+}
+
 /**
  * 生成並儲存一個 tab 的完整音檔 sprite
  *
@@ -129,54 +176,62 @@ export async function generateSprite(tabId, questions, onProgress, cancelRef) {
   let   cursor     = 0   // 目前累積秒數
   const total      = questions.length * 2  // 每題有題目 + 答案
 
-  for (let i = 0; i < questions.length; i++) {
-    if (cancelRef?.current) return null
+  try {
+    for (let i = 0; i < questions.length; i++) {
+      if (cancelRef?.current) return null
 
-    const q = questions[i]
+      const q = questions[i]
 
-    // ── 1. 題目音訊 ──────────────────────────────────────────────────
-    const qWav = await getAudioBuffer(q.promptNl)
-    if (cancelRef?.current) return null
+      // ── 1. 題目音訊 ──────────────────────────────────────────────────
+      const qWav = await retryGetAudioBuffer(q.promptNl, cancelRef)
+      if (cancelRef?.current || !qWav) return null
 
-    const qPcm  = wavToPCM(qWav)
-    const qDur  = bytesToSeconds(qPcm.byteLength)
-    const qStart = cursor
+      const qPcm  = wavToPCM(qWav)
+      const qDur  = bytesToSeconds(qPcm.byteLength)
+      const qStart = cursor
 
-    pcmChunks.push(qPcm)
-    cursor += qDur
-    onProgress?.(i * 2 + 1, total)
+      pcmChunks.push(qPcm)
+      cursor += qDur
+      onProgress?.(i * 2 + 1, total)
 
-    // ── 2. 靜音 5 秒（讓用戶思考）────────────────────────────────────
-    pcmChunks.push(createSilencePCM(5))
-    cursor += 5
+      // ── 2. 靜音 5 秒（讓用戶思考）────────────────────────────────────
+      pcmChunks.push(createSilencePCM(5))
+      cursor += 5
 
-    // ── 3. 答案音訊 ──────────────────────────────────────────────────
-    if (cancelRef?.current) return null
+      // ── 3. 答案音訊（請求前先等 400ms，避免觸發限速）────────────────
+      if (!(await cancellableSleep(400, cancelRef))) return null
 
-    const aWav  = await getAudioBuffer(q.answerNl)
-    if (cancelRef?.current) return null
+      const aWav  = await retryGetAudioBuffer(q.answerNl, cancelRef)
+      if (cancelRef?.current || !aWav) return null
 
-    const aPcm  = wavToPCM(aWav)
-    const aDur  = bytesToSeconds(aPcm.byteLength)
-    const aStart = cursor
+      const aPcm  = wavToPCM(aWav)
+      const aDur  = bytesToSeconds(aPcm.byteLength)
+      const aStart = cursor
 
-    pcmChunks.push(aPcm)
-    cursor += aDur
-    onProgress?.(i * 2 + 2, total)
+      pcmChunks.push(aPcm)
+      cursor += aDur
+      onProgress?.(i * 2 + 2, total)
 
-    timestamps.push({
-      index:         i,
-      questionStart: qStart,
-      questionEnd:   qStart + qDur,
-      answerStart:   aStart,
-      answerEnd:     aStart + aDur,
-    })
+      timestamps.push({
+        index:         i,
+        questionStart: qStart,
+        questionEnd:   qStart + qDur,
+        answerStart:   aStart,
+        answerEnd:     aStart + aDur,
+      })
 
-    // ── 4. 題目間停頓 1.5 秒 ─────────────────────────────────────────
-    if (i < questions.length - 1) {
-      pcmChunks.push(createSilencePCM(1.5))
-      cursor += 1.5
+      // ── 4. 題目間停頓 1.5 秒 + 請求間隔 ─────────────────────────────
+      if (i < questions.length - 1) {
+        pcmChunks.push(createSilencePCM(1.5))
+        cursor += 1.5
+        // 每題之間也等 400ms，讓 API 喘口氣
+        if (!(await cancellableSleep(400, cancelRef))) return null
+      }
     }
+  } catch (err) {
+    console.error('[Sprite] 生成失敗：', err.message)
+    // 回傳 null 讓 UI 顯示失敗狀態，而不是卡住
+    return null
   }
 
   if (cancelRef?.current) return null

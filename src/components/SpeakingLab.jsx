@@ -243,6 +243,7 @@ function PlayAllBar({ questions, tabId }) {
   const [playTime,  setPlayTime]  = useState(0)
   const [totalDur,  setTotalDur]  = useState(0)
   const [tsRef,     setTsRef]     = useState([])
+  const [genError,  setGenError]  = useState('')
 
   const cancelRef  = useRef(false)
   const audioRef   = useRef(null)
@@ -250,6 +251,7 @@ function PlayAllBar({ questions, tabId }) {
 
   // 掛載時檢查 IndexedDB 是否已有音檔
   useEffect(() => {
+    setGenError('')
     hasSprite(tabId).then(exists => setStatus(exists ? 'ready' : 'idle'))
     return () => {
       cancelRef.current = true
@@ -316,6 +318,7 @@ function PlayAllBar({ questions, tabId }) {
     const total = questions.length * 2
     setGenDone(0)
     setGenTotal(total)
+    setGenError('')
     setStatus('generating')
 
     const entry = await generateSprite(
@@ -328,9 +331,11 @@ function PlayAllBar({ questions, tabId }) {
     if (cancelRef.current) return  // 被取消
 
     if (entry) {
+      setGenError('')
       startPlayingEntry(entry)
     } else {
       setStatus('idle')
+      setGenError('音檔生成失敗（可能是 API 限速），請稍後再試')
     }
   }
 
@@ -394,6 +399,12 @@ function PlayAllBar({ questions, tabId }) {
             🔊 正在生成音檔… {genDone} / {genTotal} 段
           </span>
         </div>
+      )}
+
+      {genError && !isGenerating && (
+        <span className="sl-play-all-label" style={{ color: 'var(--again, #e74c3c)' }}>
+          {genError}
+        </span>
       )}
 
       {/* ── 播放進度條 ── */}
