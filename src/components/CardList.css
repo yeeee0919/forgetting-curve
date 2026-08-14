@@ -162,8 +162,9 @@
 }
 
 .cl-front {
+    font-family: var(--font-word);
     font-size: 1.5rem;
-    font-weight: 900;
+    font-weight: 700;
     color: var(--text-primary);
     line-height: 1.2;
     -webkit-font-smoothing: antialiased;

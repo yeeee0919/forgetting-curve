@@ -1,9 +1,8 @@
 /* =========================================
-   MemoFlip - Global Styles
-   Duolingo × Apple Design Language
+   toocheepfordutch — Canal Ink design system
    ========================================= */
 
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&display=swap');
 
 *,
 *::before,
@@ -14,11 +13,7 @@
 }
 
 :root {
-    /* =========================================
-       DESIGN TOKEN ARCHITECTURE (V6.0)
-       = ========================================= */
-
-    /* 1. Spacing System (Base 4) */
+    /* Spacing (base 4) */
     --space-xs: 4px;
     --space-sm: 8px;
     --space-md: 16px;
@@ -26,58 +21,74 @@
     --space-xl: 32px;
     --space-2xl: 48px;
 
-    /* 2. Radius System */
-    --radius-sm: 8px;
-    --radius-md: 12px;
-    --radius-lg: 20px;
-    --radius-xl: 28px;
+    /* Radius — prefer soft rectangles over pills */
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --radius-xl: 22px;
     --radius-full: 9999px;
 
-    /* 3. Color Semantic System */
-    --bg-canvas: #F5F5F7;
+    /* Canal Ink palette */
+    --brand-ink: #0B1F33;
+    --brand-accent: #F15A29;
+    --brand-accent-soft: rgba(241, 90, 41, 0.12);
+    --brand-primary: #0B8F8C;
+    --brand-primary-soft: rgba(11, 143, 140, 0.12);
+
+    --bg-canvas: #E8EEF4;
     --bg-surface: #FFFFFF;
-    --bg-elevated: rgba(245, 245, 247, 0.85);
-    /* For blur */
+    --bg-elevated: rgba(255, 255, 255, 0.78);
+    --bg-tint: rgba(11, 31, 51, 0.04);
 
-    --border-subtle: rgba(0, 0, 0, 0.05);
-    --border-default: #E0E0E5;
+    --border-subtle: rgba(11, 31, 51, 0.06);
+    --border-default: rgba(11, 31, 51, 0.12);
 
-    --brand-primary: #58CC02;
-    --brand-accent: #7C3AED;
+    --text-primary: #0B1F33;
+    --text-secondary: #5A6A7A;
+    --text-tertiary: #8B9AAB;
+    --text-on-accent: #FFFFFF;
 
-    --text-primary: #1D1D1F;
-    --text-secondary: #6E6E73;
-    --text-tertiary: #AEAEB2;
+    /* SRS rating */
+    --again: #E63946;
+    --again-bg: rgba(230, 57, 70, 0.1);
+    --hard: #D97706;
+    --hard-bg: rgba(217, 119, 6, 0.1);
+    --good: #0B8F8C;
+    --good-bg: rgba(11, 143, 140, 0.1);
+    --easy: #2A6FDB;
+    --easy-bg: rgba(42, 111, 219, 0.1);
 
-    /* Status/Rating Colors */
-    --again: #FF4B4B;
-    --again-bg: rgba(255, 75, 75, 0.1);
-    --hard: #FF9600;
-    --hard-bg: rgba(255, 150, 0, 0.1);
-    --good: #58CC02;
-    --good-bg: rgba(88, 204, 2, 0.1);
-    --easy: #1CB0F6;
-    --easy-bg: rgba(28, 176, 246, 0.1);
+    /* Elevation — single soft shadow */
+    --elevation-1: 0 1px 2px rgba(11, 31, 51, 0.05);
+    --elevation-2: 0 8px 28px rgba(11, 31, 51, 0.08);
+    --elevation-3: 0 18px 48px rgba(11, 31, 51, 0.12);
 
-    /* 4. Elevation System */
-    --elevation-1: 0 2px 8px rgba(0, 0, 0, 0.04);
-    --elevation-2: 0 8px 24px rgba(0, 0, 0, 0.08);
-    --elevation-3: 0 20px 60px rgba(0, 0, 0, 0.12);
-
-    /* 5. Motion System */
-    --spring-bounce: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    /* Motion */
+    --spring-bounce: cubic-bezier(0.22, 1, 0.36, 1);
     --spring-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+
+    /* Type */
+    --font-sans: 'Outfit', system-ui, sans-serif;
+    --font-word: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+}
+
+html {
+    color-scheme: light;
 }
 
 body {
-    /* 6. Typography System Reset */
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
-    background: var(--bg-canvas);
+    font-family: var(--font-sans);
     color: var(--text-primary);
     min-height: 100vh;
-    line-height: 1.6;
+    line-height: 1.55;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    background-color: var(--bg-canvas);
+    background-image:
+        radial-gradient(ellipse 90% 55% at 8% -8%, rgba(241, 90, 41, 0.11), transparent 55%),
+        radial-gradient(ellipse 70% 45% at 96% 4%, rgba(11, 143, 140, 0.1), transparent 50%),
+        linear-gradient(180deg, #DDE6F0 0%, #E8EEF4 38%, #EEF2F6 100%);
+    background-attachment: fixed;
 }
 
 button {
@@ -85,11 +96,11 @@ button {
     border: none;
     outline: none;
     font-family: inherit;
-    transition: transform 0.1s ease, opacity 0.2s ease;
+    transition: transform 0.12s var(--spring-smooth), opacity 0.2s ease, background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
 }
 
 button:active {
-    transform: scale(0.97);
+    transform: scale(0.98);
 }
 
 textarea,
@@ -97,9 +108,8 @@ input {
     font-family: inherit;
 }
 
-/* Scrollbar */
 ::-webkit-scrollbar {
-    width: 5px;
+    width: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -108,22 +118,21 @@ input {
 
 ::-webkit-scrollbar-thumb {
     background: var(--border-default);
-    border-radius: 4px;
+    border-radius: 3px;
 }
 
-/* 7. Word Root Highlighting Accent — 3 rotating colors */
-/* 紫色 (brand accent) */
+/* Word root accents */
 .word-root-0 {
     color: var(--brand-accent);
-    border-bottom: 2px dashed rgba(124, 58, 237, 0.45);
+    border-bottom: 2px dashed rgba(241, 90, 41, 0.4);
 }
-/* 藍色 (easy accent) */
+
 .word-root-1 {
-    color: #0891b2;
-    border-bottom: 2px dashed rgba(8, 145, 178, 0.45);
+    color: var(--easy);
+    border-bottom: 2px dashed rgba(42, 111, 219, 0.4);
 }
-/* 橘色 (warm accent) */
+
 .word-root-2 {
-    color: #d97706;
-    border-bottom: 2px dashed rgba(217, 119, 6, 0.45);
+    color: var(--hard);
+    border-bottom: 2px dashed rgba(217, 119, 6, 0.4);
 }

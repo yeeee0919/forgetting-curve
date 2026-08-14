@@ -68,7 +68,7 @@ export default function SettingsModal({ settings, onSave, onClose, onExport, onR
                             onChange={e => setKey(e.target.value)}
                         />
                         <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: 6, marginBottom: 0 }}>
-                            前往 <a href="https://platform.openai.com/api-keys" target="_blank" rel="noreferrer" style={{ color: 'rgba(167, 139, 250, 1)' }}>platform.openai.com</a> 取得。
+                            前往 <a href="https://platform.openai.com/api-keys" target="_blank" rel="noreferrer" style={{ color: 'rgba(241, 90, 41, 0.55)' }}>platform.openai.com</a> 取得。
                         </p>
                     </div>
 
@@ -82,7 +82,7 @@ export default function SettingsModal({ settings, onSave, onClose, onExport, onR
                             onChange={e => setGeminiKey(e.target.value)}
                         />
                         <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: 6, marginBottom: 0 }}>
-                            前往 <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" style={{ color: 'rgba(167, 139, 250, 1)' }}>Google AI Studio</a> 取得。
+                            前往 <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" style={{ color: 'rgba(241, 90, 41, 0.55)' }}>Google AI Studio</a> 取得。
                         </p>
                     </div>
 
@@ -96,7 +96,7 @@ export default function SettingsModal({ settings, onSave, onClose, onExport, onR
                             onChange={e => setElevenLabsKey(e.target.value)}
                         />
                         <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: 6, marginBottom: 0 }}>
-                            前往 <a href="https://elevenlabs.io/" target="_blank" rel="noreferrer" style={{ color: 'rgba(167, 139, 250, 1)' }}>ElevenLabs</a> 註冊取得 API Key。
+                            前往 <a href="https://elevenlabs.io/" target="_blank" rel="noreferrer" style={{ color: 'rgba(241, 90, 41, 0.55)' }}>ElevenLabs</a> 註冊取得 API Key。
                         </p>
                     </div>
 
@@ -120,7 +120,7 @@ export default function SettingsModal({ settings, onSave, onClose, onExport, onR
                                     padding: 'var(--space-xs) var(--space-md)',
                                     borderRadius: 'var(--radius-sm)',
                                     border: `1.5px solid ${voiceLang === lang ? 'var(--brand-accent)' : 'var(--border-default)'}`,
-                                    background: voiceLang === lang ? 'rgba(124, 58, 237, 0.08)' : 'var(--bg-canvas)',
+                                    background: voiceLang === lang ? 'rgba(241, 90, 41, 0.08)' : 'var(--bg-canvas)',
                                     color: voiceLang === lang ? 'var(--brand-accent)' : 'var(--text-secondary)',
                                     fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer',
                                 }}
@@ -173,8 +173,8 @@ export default function SettingsModal({ settings, onSave, onClose, onExport, onR
                         onClick={testVoice}
                         disabled={testPlaying}
                         style={{
-                            background: 'rgba(124, 58, 237, 0.08)',
-                            border: '1.5px solid rgba(167, 139, 250, 1)',
+                            background: 'rgba(241, 90, 41, 0.08)',
+                            border: '1.5px solid rgba(241, 90, 41, 0.55)',
                             borderRadius: 'var(--radius-md)', color: 'var(--brand-accent)',
                             padding: 'var(--space-sm) var(--space-md)', fontSize: '0.85rem',
                             fontWeight: 700, cursor: testPlaying ? 'default' : 'pointer',

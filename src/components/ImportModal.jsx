@@ -301,7 +301,7 @@ export default function ImportModal({ onImport, onClose, importing, error, hasAp
                         border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center;
                         cursor: pointer; font-size: 1rem; transition: all 0.2s;
                     }
-                    .im-icon-btn:hover, .im-icon-btn.active { border-color: rgba(167, 139, 250, 1); color: var(--brand-accent); background: rgba(124, 58, 237, 0.08); }
+                    .im-icon-btn:hover, .im-icon-btn.active { border-color: rgba(241, 90, 41, 0.55); color: var(--brand-accent); background: rgba(241, 90, 41, 0.08); }
                     .im-close-v4 { background: none; border: none; font-size: 1.3rem; color: var(--text-tertiary); cursor: pointer; padding: 4px; transition: color 0.2s; }
                     .im-close-v4:hover { color: var(--text-primary); }
 
@@ -315,16 +315,16 @@ export default function ImportModal({ onImport, onClose, importing, error, hasAp
                         font-size: 1.05rem; color: var(--text-primary); background: var(--bg-canvas); resize: none; line-height: 1.7;
                         transition: border-color 0.2s; height: 100%; /* FORCE 100% HEIGHT */
                     }
-                    .im-textarea-v4:focus { outline: none; border-color: rgba(167, 139, 250, 1); box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.08); }
+                    .im-textarea-v4:focus { outline: none; border-color: rgba(241, 90, 41, 0.55); box-shadow: 0 0 0 4px rgba(241, 90, 41, 0.08); }
                     
                     .im-paste-inbox-btn {
                         position: absolute; bottom: var(--space-md); right: var(--space-md);
                         background: var(--brand-accent); color: white; border: none; border-radius: var(--radius-sm);
                         padding: var(--space-sm) var(--space-lg); font-weight: 800; font-size: 0.9rem; cursor: pointer;
-                        box-shadow: 0 6px 16px rgba(124, 58, 237, 0.4); transition: all 0.2s;
+                        box-shadow: 0 6px 16px rgba(241, 90, 41, 0.4); transition: all 0.2s;
                         white-space: nowrap; z-index: 10;
                     }
-                    .im-paste-inbox-btn:hover { transform: translateY(-3px); filter: brightness(1.1); box-shadow: 0 8px 20px rgba(124, 58, 237, 0.5); }
+                    .im-paste-inbox-btn:hover { transform: translateY(-3px); filter: brightness(1.1); box-shadow: 0 8px 20px rgba(241, 90, 41, 0.5); }
                     
                     .im-field-hint { margin-top: var(--space-sm); font-size: 0.75rem; color: var(--text-secondary); font-weight: 600; flex-shrink: 0; }
 
@@ -343,7 +343,7 @@ export default function ImportModal({ onImport, onClose, importing, error, hasAp
                         padding: 6px var(--space-sm); border-radius: var(--radius-sm); transition: all 0.2s;
                         white-space: nowrap; display: flex; align-items: center; gap: 6px;
                     }
-                    .im-footer-link-btn:hover { color: var(--brand-accent); border-color: rgba(167, 139, 250, 1); background: rgba(124, 58, 237, 0.08); }
+                    .im-footer-link-btn:hover { color: var(--brand-accent); border-color: rgba(241, 90, 41, 0.55); background: rgba(241, 90, 41, 0.08); }
                     .im-footer-link-btn.success { color: var(--good); border-color: var(--good); background: var(--good-bg); }
 
                     .im-btn-v5 {

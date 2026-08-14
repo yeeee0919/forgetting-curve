@@ -11,13 +11,18 @@ import ListeningLab from './components/ListeningLab'
 import SpeakingLab from './components/SpeakingLab'
 import ImportModal from './components/ImportModal'
 import SettingsModal from './components/SettingsModal'
+import {
+    CHROME_EXTENSION_STORE_URL,
+    CHROME_EXTENSION_ZIP_URL,
+    hasChromeStoreListing,
+} from './config/extension'
 import './App.css'
 
 function getGreeting() {
     const h = new Date().getHours()
-    if (h < 12) return { text: '早安', emoji: '☀️' }
-    if (h < 18) return { text: '午安', emoji: '🌤️' }
-    return { text: '晚安', emoji: '🌙' }
+    if (h < 12) return '早安'
+    if (h < 18) return '午安'
+    return '晚安'
 }
 
 function useIsMobile() {
@@ -564,6 +569,58 @@ export default function App() {
     )
 }
 
+function ExtensionDownloadCard() {
+    const [showManual, setShowManual] = useState(false)
+
+    if (hasChromeStoreListing) {
+        return (
+            <section className="ext-card" aria-label="Chrome 擴充功能">
+                <div className="ext-card-copy">
+                    <p className="ext-card-kicker">Word Catcher</p>
+                    <h3>網頁選字，直接進 Inbox</h3>
+                    <p>在任何網頁反白單字，收集到 Toocheep 再複習。</p>
+                </div>
+                <a
+                    className="btn-primary ext-card-btn"
+                    href={CHROME_EXTENSION_STORE_URL}
+                    target="_blank"
+                    rel="noreferrer"
+                >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 8v8M8 12h8" /></svg>
+                    安裝 Chrome 擴充功能
+                </a>
+                <a className="ext-card-link" href="/privacy.html" target="_blank" rel="noreferrer">隱私權政策</a>
+            </section>
+        )
+    }
+
+    return (
+        <section className="ext-card" aria-label="Chrome 擴充功能">
+            <div className="ext-card-copy">
+                <p className="ext-card-kicker">Word Catcher</p>
+                <h3>下載 Chrome 擴充功能</h3>
+                <p>商店審核前可先手動安裝 zip；上架後會改為一鍵連到 Chrome 商店。</p>
+            </div>
+            <a className="btn-primary ext-card-btn" href={CHROME_EXTENSION_ZIP_URL} download>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" /></svg>
+                下載擴充功能（zip）
+            </a>
+            <button type="button" className="ext-card-toggle" onClick={() => setShowManual(v => !v)}>
+                {showManual ? '收合安裝說明' : '如何手動安裝？'}
+            </button>
+            {showManual && (
+                <ol className="ext-card-steps">
+                    <li>解壓縮下載的 zip</li>
+                    <li>開啟 <code>chrome://extensions</code></li>
+                    <li>打開右上角「開發人員模式」</li>
+                    <li>點「載入未封裝項目」，選解壓後的資料夾</li>
+                </ol>
+            )}
+            <a className="ext-card-link" href="/privacy.html" target="_blank" rel="noreferrer">隱私權政策</a>
+        </section>
+    )
+}
+
 function ProgressRing({ value, max }) {
     const r = 36
     const circ = 2 * Math.PI * r
@@ -583,7 +640,7 @@ function ProgressRing({ value, max }) {
             </svg>
             <div className="progress-ring-label">
                 <span className="progress-ring-num">{value}</span>
-                <span className="progress-ring-total">/{max}</span>
+                <span className="progress-ring-unit">片</span>
             </div>
         </div>
     )
@@ -594,180 +651,125 @@ function HomePage({
     inboxWords, onDeleteInboxWord, onClearInbox, weakCards, dismissWeakCard,
     clearAllWeakCards, activityLog, isMobile, sessionSize, dueCards, hasActiveSession
 }) {
-    const { text: greetingText, emoji: greetingEmoji } = getGreeting()
-    // 公式驗證：pool + buffer + mastered 應該等於 totalCards
+    const greetingText = getGreeting()
     const computedTotal = stats.pool + stats.buffer + stats.mastered
+    const bufferPct = bufferCapacity > 0 ? Math.min(100, (stats.buffer / bufferCapacity) * 100) : 0
+    const masteredPct = computedTotal > 0 ? Math.min(100, (stats.mastered / computedTotal) * 100) : 0
 
     return (
         <div className="home-layout">
             <div className="home-main">
-                <h1 className="home-greeting">
-                    {greetingEmoji} {greetingText}，<span>繼續學習吧！</span>
-                </h1>
+                <header className="home-hero">
+                    <p className="home-kicker">記憶漏斗</p>
+                    <h1 className="home-greeting">
+                        {greetingText}，<span>繼續學習吧</span>
+                    </h1>
+                    <p className="home-lede">
+                        {dueCount > 0
+                            ? `今天有 ${dueCount} 張待複習，建議先完成一輪 ${dueCards.length || sessionSize || 30} 張。`
+                            : computedTotal > 0
+                                ? '今日任務已清空，可以把新單字推進緩衝區。'
+                                : '匯入單字後，從總量池 → 緩衝區 → 已熟練一步步建立長期記憶。'}
+                    </p>
+                </header>
 
-                {/* 進度圈 */}
-                <div className="home-progress-section">
-                    <ProgressRing value={stats.mastered} max={computedTotal || 1} />
-                    <div className="home-progress-info">
-                        <div className="home-progress-title">🏆 已熟練 {stats.mastered} / {computedTotal} 張</div>
-                        <div className="home-progress-sub">
-                            讓更多單字升級到長期記憶！
+                <section className="memory-board" aria-label="學習進度">
+                    <div className="memory-due">
+                        <span className="memory-due-label">今日待複習</span>
+                        <span className={`memory-due-num ${dueCount > 0 ? 'hot' : ''}`}>{dueCount}</span>
+                        <span className="memory-due-hint">
+                            {stats.masteredDue > 0
+                                ? `含 ${stats.masteredDue} 張熟練到期`
+                                : stats.relearning > 0
+                                    ? `${stats.relearning} 張重學中`
+                                    : '新詞或空白'}
+                        </span>
+                    </div>
+
+                    <div className="memory-mastered">
+                        <ProgressRing value={stats.mastered} max={computedTotal} />
+                        <div className="memory-mastered-copy">
+                            <div className="memory-mastered-title">已熟練 {stats.mastered}<span> / {computedTotal}</span></div>
+                            <div className="memory-mastered-bar" aria-hidden="true">
+                                <div className="memory-mastered-fill" style={{ width: `${masteredPct}%` }} />
+                            </div>
+                            <p className="memory-mastered-sub">長期記憶中的卡片比例</p>
                         </div>
                     </div>
-                </div>
 
-                {/* 四張統計卡：公式分布 */}
-                <div className="stats-row">
-                    <div className="stat-card" style={{ borderTop: '3px solid var(--text-tertiary)' }}>
-                        <span className="stat-num" style={{ color: 'var(--text-secondary)' }}>{stats.pool}</span>
-                        <span className="stat-label">📥 總量池</span>
-                        <span style={{ fontSize: '0.68rem', color: 'var(--text-tertiary)', marginTop: '2px', display: 'block' }}>尚未開始</span>
-                    </div>
-                    <div className="stat-card" style={{ borderTop: '3px solid var(--hard)' }}>
-                        <span className="stat-num" style={{ color: 'var(--hard)' }}>
-                            {stats.buffer}<span style={{ fontSize: '0.85rem', opacity: 0.5, fontWeight: 700 }}>/{bufferCapacity}</span>
-                        </span>
-                        <span className="stat-label">🧠 緩衝區</span>
-                        <span style={{ fontSize: '0.68rem', color: 'var(--text-tertiary)', marginTop: '2px', display: 'block' }}>記憶建立中</span>
-                    </div>
-                    <div className="stat-card" style={{ borderTop: '3px solid var(--good)' }}>
-                        <span className="stat-num" style={{ color: 'var(--good)' }}>{stats.mastered}</span>
-                        <span className="stat-label">🏆 已熟練</span>
-                        <span style={{ fontSize: '0.68rem', color: 'var(--text-tertiary)', marginTop: '2px', display: 'block' }}>長期記憶</span>
-                    </div>
-                    <div className="stat-card" style={{ borderTop: '3px solid var(--again)' }}>
-                        <span className="stat-num" style={{ color: dueCount > 0 ? 'var(--again)' : 'var(--text-tertiary)' }}>{dueCount}</span>
-                        <span className="stat-label">⚡ 今日待複習</span>
-                        <span style={{ fontSize: '0.68rem', color: 'var(--text-tertiary)', marginTop: '2px', display: 'block' }}>
-                            {stats.masteredDue > 0 ? `含 ${stats.masteredDue} 張熟練到期` : stats.relearning > 0 ? `含 ${stats.relearning} 張重學中` : '新詞或空白'}
-                        </span>
-                    </div>
-                </div>
+                    <div className="memory-stages">
+                        <article className="memory-stage pool">
+                            <header>
+                                <h3>總量池</h3>
+                                <strong>{stats.pool}</strong>
+                            </header>
+                            <p>尚未開始的新進度</p>
+                        </article>
 
-                {/* 公式白話說明 */}
-                <div className="hint-box">
-                    <div style={{ marginBottom: '8px' }}>
-                        <strong>📐 公式：總量池 + 緩衝區 + 已熟練 = 總卡片</strong>
+                        <article className="memory-stage buffer">
+                            <header>
+                                <h3>緩衝區</h3>
+                                <strong>{stats.buffer}<span>/{bufferCapacity}</span></strong>
+                            </header>
+                            <div className="memory-buffer-meter">
+                                <div className="memory-buffer-fill" style={{ width: `${bufferPct}%` }} />
+                            </div>
+                            <div className="memory-buffer-meta">
+                                <span>新詞 {stats.learning}</span>
+                                <span>修復 {stats.relearning}</span>
+                            </div>
+                        </article>
+
+                        <article className="memory-stage mastered">
+                            <header>
+                                <h3>已熟練</h3>
+                                <strong>{stats.mastered}</strong>
+                            </header>
+                            <p>
+                                {stats.masteredDue > 0
+                                    ? `${stats.masteredDue} 張今日到期`
+                                    : '暫無到期卡片'}
+                            </p>
+                        </article>
                     </div>
-                    <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: '0.88rem', background: 'rgba(124,58,237,0.06)', borderRadius: '6px', padding: '8px 12px', marginBottom: '8px', color: 'var(--text-primary)', fontWeight: 700 }}>
-                        {stats.pool} + {stats.buffer} + {stats.mastered} = <span style={{ color: 'var(--brand-accent)' }}>{computedTotal}</span>
+
+                    <p className="memory-equation">
+                        <span>{stats.pool}</span> + <span>{stats.buffer}</span> + <span>{stats.mastered}</span>
+                        {' = '}
+                        <strong>{computedTotal}</strong>
                         {computedTotal !== totalCards && (
-                            <span style={{ color: 'var(--again)', marginLeft: '12px', fontWeight: 700 }}>
-                                ⚠️ 確存 {totalCards - computedTotal} 張狀態異常，將在下次啟動時自動修復
-                            </span>
+                            <em className="memory-equation-warn"> 另有 {totalCards - computedTotal} 張待修復</em>
                         )}
-                    </div>
-                    <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.65 }}>
-                        💡 <strong>已熟練為何會減少？</strong> 複習時選「完全沒印象」，該字就會從熟練區（長期記憶）<strong>退回緩衝區重學</strong>，熟練數下降、緩衝區上升。這是正常機制。
-                    </div>
-                    <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.65, marginTop: '4px' }}>
-                        💡 <strong>緩衝區有上限（{bufferCapacity} 個）</strong>。緩衝區满載時，新字就會暂停進入，最少要先將區內的字練熟。
-                    </div>
-                    {stats.relearning > 0 && (
-                        <div style={{ fontSize: '0.82rem', color: 'var(--hard)', lineHeight: 1.65, marginTop: '4px', fontWeight: 600 }}>
-                            🔄 目前有 {stats.relearning} 張字在「重學中」，10 分鐘後即會回到待複習任務中。
-                        </div>
-                    )}
-                </div>
-
-                {/* 漏斗視覺化 */}
-                <div className="funnel-container">
-                    <div className="funnel-layer pool">
-                        <div className="funnel-label-group">
-                            <div className="funnel-icon">📥</div>
-                            <div>
-                                <div className="funnel-title">總量池 (The Pool)</div>
-                                <div className="funnel-subtitle">尚未開始的新進度</div>
-                            </div>
-                        </div>
-                        <div className="funnel-number" style={{ color: 'var(--text-secondary)' }}>{stats.pool}</div>
-                    </div>
-
-                    <div className="funnel-connector"></div>
-
-                    <div className="funnel-layer buffer">
-                        <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: `${Math.min(100, (stats.buffer / bufferCapacity) * 100)}%`, background: 'var(--brand-primary)', opacity: 0.08, zIndex: 0 }}></div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', zIndex: 1, position: 'relative' }}>
-                            <div className="funnel-label-group">
-                                <div className="funnel-icon">🧠</div>
-                                <div>
-                                    <div className="funnel-title">大腦緩衝區 (Buffer)</div>
-                                    <div className="funnel-subtitle">{stats.buffer >= bufferCapacity ? '容量滿載' : `剩餘 ${bufferCapacity - stats.buffer} 個餘裕`}</div>
-                                </div>
-                            </div>
-                            <div className="funnel-number" style={{ color: 'var(--brand-accent)' }}>
-                                {stats.buffer}<span style={{ fontSize: '0.9rem', opacity: 0.5, fontWeight: 600 }}>/{bufferCapacity}</span>
-                            </div>
-                        </div>
-                        <div className="funnel-buffer-split" style={{ zIndex: 1, position: 'relative' }}>
-                            <div className="funnel-track">
-                                <div className="funnel-track-label">新詞背誦</div>
-                                <div className="funnel-track-val" style={{ color: 'var(--text-primary)' }}>{stats.learning}</div>
-                            </div>
-                            <div className="funnel-track">
-                                <div className="funnel-track-label">記憶修復</div>
-                                <div className="funnel-track-val" style={{ color: 'var(--again)' }}>{stats.relearning}</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="funnel-connector"></div>
-
-                    <div className="funnel-layer mastered">
-                        <div className="funnel-label-group">
-                            <div className="funnel-icon">🏆</div>
-                            <div>
-                                <div className="funnel-title">已熟練 (Mastered)</div>
-                                <div className="funnel-subtitle">
-                                    {stats.masteredDue > 0
-                                        ? <span style={{ color: 'var(--again)', fontWeight: 600 }}>⚡ {stats.masteredDue} 張今日到期複習</span>
-                                        : '全部在休息，暫無到期卡片'
-                                    }
-                                </div>
-                            </div>
-                        </div>
-                        <div style={{ textAlign: 'right' }}>
-                            <div className="funnel-number" style={{ color: 'var(--good)' }}>{stats.mastered}</div>
-                            {stats.masteredDue > 0 && (
-                                <div style={{ fontSize: '0.8rem', color: 'var(--again)', fontWeight: 700 }}>
-                                    {stats.masteredDue} 到期
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-
-                {dueCount > 0 && (
-                    <div style={{ textAlign: 'center', marginBottom: '16px', color: 'var(--again)', fontWeight: 600, fontSize: '0.95rem' }}>
-                        🔥 任務就緒：目前有 {dueCount} 個複習任務，先衝刺 {dueCards.length} 個吧！
-                    </div>
-                )}
+                    </p>
+                </section>
 
                 <div className="home-actions">
-                    { (dueCount > 0 || stats.pool > 0 || stats.buffer > 0 || hasActiveSession) ? (
-                        <button className="btn-primary large" onClick={onStartReview} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                    {(dueCount > 0 || stats.pool > 0 || stats.buffer > 0 || hasActiveSession) ? (
+                        <button className="btn-primary large" onClick={onStartReview}>
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="8" width="18" height="14" rx="2" ry="2"></rect><path d="M7 4h14v14"></path></svg>
                             {hasActiveSession ? '繼續未完成的複習' : `開始複習（每次 ${sessionSize || 30} 張）`}
                         </button>
                     ) : (
                         <div className="done-msg">
-                            <span style={{ color: 'var(--good)' }}>
-                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                            <span className="done-msg-icon">
+                                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
                             </span>
-                            <p>今天的複習與新單字都完成了！</p>
+                            <p>今天的複習與新單字都完成了</p>
                             <small>明天再來繼續加強</small>
                         </div>
                     )}
-                    <button className="btn-secondary" onClick={onImport} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                    <button className="btn-secondary" onClick={onImport}>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path></svg>
                         匯入新單字
                     </button>
                     {inboxWords.length > 0 && (
-                        <button className="btn-inbox" onClick={onImport} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginTop: '10px' }}>
+                        <button className="btn-inbox" onClick={onImport}>
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                            立刻解析 Catcher 收集的單字 ({inboxWords.length})
+                            解析 Catcher 收集（{inboxWords.length}）
                         </button>
                     )}
+
+                    <ExtensionDownloadCard />
                 </div>
             </div>
 
