@@ -92,9 +92,11 @@ export function ExtensionGuideModal({ open, onClose, installed }) {
                 <CatcherDemo />
 
                 <ol className="ext-guide-steps">
-                    <li>在任意網頁<strong>反白</strong>單字或句子</li>
-                    <li>點選單字旁出現的<strong>加號</strong></li>
-                    <li>回到 Toocheep，把 Inbox 匯入後開始複習</li>
+                    <li>在任意網頁<strong>反白</strong>單字</li>
+                    <li>選取旁出現<strong>加號</strong></li>
+                    <li><strong>點擊加號</strong></li>
+                    <li>出現翻譯<strong>框框</strong></li>
+                    <li>點<strong>收錄此單字</strong>，加入 Inbox</li>
                 </ol>
 
                 {installed ? (
@@ -129,19 +131,22 @@ function CatcherDemo() {
             </div>
             <div className="catcher-demo-page">
                 <p className="catcher-demo-line">
-                    De{' '}
+                    Voor welke partij ga jij{' '}
                     <span className="catcher-demo-hit">
-                        <span className="catcher-demo-word">fiets</span>
+                        <span className="catcher-demo-word">stemmen</span>
                         <span className="catcher-demo-plus">+</span>
-                    </span>{' '}
-                    staat voor de deur.
+                    </span>
+                    ?
                 </p>
-                <p className="catcher-demo-line muted">Ik ga morgen naar de markt.</p>
+                <p className="catcher-demo-line muted">Er zijn twee partijen betrokken bij het conflict.</p>
                 <div className="catcher-demo-popup">
-                    <span className="catcher-demo-nl">fiets</span>
-                    <span className="catcher-demo-arrow">→</span>
-                    <span className="catcher-demo-zh">腳踏車</span>
-                    <span className="catcher-demo-add">加入 Inbox</span>
+                    <div className="catcher-demo-popup-head">
+                        <span>偵測語言 → 繁體中文</span>
+                        <span className="catcher-demo-popup-open">打開單字卡</span>
+                    </div>
+                    <div className="catcher-demo-popup-word">stemmen</div>
+                    <div className="catcher-demo-popup-def">(verb) 投票、調音、聲音</div>
+                    <div className="catcher-demo-add">+ 收錄此單字</div>
                 </div>
                 <div className="catcher-demo-toast">已進 Inbox</div>
             </div>

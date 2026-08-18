@@ -142,8 +142,8 @@
 
 .catcher-demo-page {
     position: relative;
-    min-height: 168px;
-    padding: 36px 16px 28px;
+    min-height: 248px;
+    padding: 28px 16px 22px;
 }
 
 .catcher-demo-line {
@@ -164,66 +164,96 @@
 }
 
 .catcher-demo-word {
-    border-radius: 4px;
-    padding: 0 3px;
-    animation: catcher-highlight 6.4s ease infinite;
+    border-radius: 2px;
+    padding: 0 2px;
+    animation: catcher-highlight 8s ease infinite;
 }
 
 .catcher-demo-plus {
     position: absolute;
-    left: 50%;
-    top: -30px;
-    width: 26px;
-    height: 26px;
-    margin-left: -13px;
+    left: calc(100% + 2px);
+    top: calc(100% + 2px);
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
-    background: var(--brand-accent);
+    background: #5B5BD6;
     color: #fff;
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 600;
-    line-height: 24px;
+    line-height: 26px;
     text-align: center;
-    box-shadow: var(--elevation-2, 0 8px 20px rgba(42, 36, 28, 0.12));
+    box-shadow: 0 6px 14px rgba(91, 91, 214, 0.35);
     opacity: 0;
-    animation: catcher-plus 6.4s ease infinite;
+    z-index: 2;
+    animation: catcher-plus 8s ease infinite;
 }
 
 .catcher-demo-popup {
     position: absolute;
     left: 16px;
-    top: 78px;
+    right: 16px;
+    top: 92px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: #fff;
+    border: 1px solid var(--border-subtle);
+    border-radius: 14px;
+    padding: 12px 12px 10px;
+    box-shadow:
+        0 1px 0 rgba(42, 36, 28, 0.04),
+        0 16px 28px -10px rgba(42, 36, 28, 0.22);
+    opacity: 0;
+    pointer-events: none;
+    animation: catcher-popup 8s ease infinite;
+}
+
+.catcher-demo-popup-head {
     display: flex;
     align-items: center;
-    gap: 6px;
-    flex-wrap: wrap;
-    background: var(--bg-surface);
-    border: 1px solid var(--border-subtle);
-    border-radius: 10px;
-    padding: 8px 10px;
-    box-shadow: var(--elevation-2);
-    opacity: 0;
-    animation: catcher-popup 6.4s ease infinite;
-}
-
-.catcher-demo-nl {
-    font-family: var(--font-word, Georgia, serif);
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 0.7rem;
     font-weight: 600;
-    color: var(--brand-ink);
+    color: var(--text-tertiary);
 }
 
-.catcher-demo-arrow,
-.catcher-demo-zh {
-    font-size: 0.85rem;
+.catcher-demo-popup-open {
+    color: #3B6FE0;
+    background: rgba(59, 111, 224, 0.1);
+    border-radius: 6px;
+    padding: 3px 7px;
+    font-size: 0.68rem;
+}
+
+.catcher-demo-popup-word {
+    font-family: var(--font-word, Georgia, serif);
+    font-size: 1.35rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--brand-ink);
+    line-height: 1.1;
+}
+
+.catcher-demo-popup-def {
+    font-size: 0.78rem;
+    font-weight: 500;
     color: var(--text-secondary);
+    background: var(--bg-tint);
+    border-radius: 8px;
+    padding: 8px 10px;
+    line-height: 1.4;
 }
 
 .catcher-demo-add {
-    font-size: 0.72rem;
-    font-weight: 600;
+    font-size: 0.82rem;
+    font-weight: 700;
     color: #fff;
-    background: var(--brand-accent);
-    border-radius: 6px;
-    padding: 3px 8px;
+    background: #3B6FE0;
+    border-radius: 10px;
+    padding: 8px 10px;
+    text-align: center;
+    animation: catcher-add 8s ease infinite;
 }
 
 .catcher-demo-toast {
@@ -234,7 +264,7 @@
     font-weight: 700;
     color: var(--brand-accent);
     opacity: 0;
-    animation: catcher-toast 6.4s ease infinite;
+    animation: catcher-toast 8s ease infinite;
 }
 
 .catcher-demo-caption {
@@ -246,27 +276,36 @@
     color: var(--text-tertiary);
 }
 
+/* 8s：反白 → 加號 → 點加號 → 框框 → 點收錄 */
 @keyframes catcher-highlight {
-    0%, 12% { background: transparent; }
-    18%, 78% { background: rgba(241, 90, 41, 0.18); }
-    88%, 100% { background: transparent; }
+    0%, 10% { background: transparent; }
+    14%, 90% { background: #B5D5FF; }
+    96%, 100% { background: transparent; }
 }
 
 @keyframes catcher-plus {
-    0%, 22% { opacity: 0; transform: scale(0.6); }
-    28%, 42% { opacity: 1; transform: scale(1); }
-    48%, 100% { opacity: 0; transform: scale(0.6); }
+    0%, 20% { opacity: 0; transform: scale(0.55); }
+    26%, 38% { opacity: 1; transform: scale(1); }
+    42% { opacity: 1; transform: scale(0.86); }
+    46% { opacity: 1; transform: scale(1); }
+    50%, 100% { opacity: 0; transform: scale(0.55); }
 }
 
 @keyframes catcher-popup {
-    0%, 42% { opacity: 0; transform: translateY(6px); }
-    50%, 78% { opacity: 1; transform: translateY(0); }
-    88%, 100% { opacity: 0; transform: translateY(6px); }
+    0%, 48% { opacity: 0; transform: translateY(8px); }
+    54%, 86% { opacity: 1; transform: translateY(0); }
+    94%, 100% { opacity: 0; transform: translateY(6px); }
+}
+
+@keyframes catcher-add {
+    0%, 66% { transform: scale(1); filter: brightness(1); }
+    72% { transform: scale(0.97); filter: brightness(0.88); }
+    78%, 100% { transform: scale(1); filter: brightness(1); }
 }
 
 @keyframes catcher-toast {
-    0%, 72% { opacity: 0; transform: translateY(4px); }
-    80%, 90% { opacity: 1; transform: translateY(0); }
+    0%, 76% { opacity: 0; transform: translateY(4px); }
+    82%, 90% { opacity: 1; transform: translateY(0); }
     100% { opacity: 0; }
 }
 
@@ -274,12 +313,13 @@
     .catcher-demo-word,
     .catcher-demo-plus,
     .catcher-demo-popup,
+    .catcher-demo-add,
     .catcher-demo-toast {
         animation: none;
     }
 
     .catcher-demo-word {
-        background: rgba(241, 90, 41, 0.18);
+        background: #B5D5FF;
     }
 
     .catcher-demo-plus,
@@ -287,5 +327,9 @@
     .catcher-demo-toast {
         opacity: 1;
         transform: none;
+    }
+
+    .catcher-demo-plus {
+        opacity: 0;
     }
 }
