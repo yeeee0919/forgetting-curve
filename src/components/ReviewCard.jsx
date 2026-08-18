@@ -505,7 +505,7 @@ export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdat
                   </div>
                 )}
 
-                {!tipsOpen && <span className="rc-flip-hint">點擊查看答案 (空白鍵)</span>}
+                {!tipsOpen && <span className="rc-flip-hint">點擊查看答案<span className="rc-kbd-hint"> (空白鍵)</span></span>}
               </div>
             ) : (
               /* ─ 背面 ─ */
@@ -614,7 +614,7 @@ export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdat
           <div className={`rc-rating-wrap ${!flipped ? 'rc-rating-wrap-hidden' : ''}`}>
             {!flipped ? (
               <button className="rc-show-btn" onClick={() => { setFlipped(true); if (!isMobile) setTipsOpen(true); }}>
-                顯示答案 <span style={{ opacity: 0.5, fontSize: '0.8rem', marginLeft: '6px' }}>[Space]</span>
+                顯示答案 <span className="rc-kbd-hint" style={{ opacity: 0.5, fontSize: '0.8rem', marginLeft: '6px' }}>[Space]</span>
               </button>
             ) : (
               <>

@@ -159,7 +159,7 @@ function pickRandomIndices(total, pct) {
 // ────────────────────────────────────────────────────────────────────────────
 // Main Component
 // ────────────────────────────────────────────────────────────────────────────
-export default function ListeningLab({ onRate }) {
+export default function ListeningLab() {
     const [lesson, setLesson]           = useState(DEFAULT_LESSON)
     const [videoId, setVideoId]         = useState(DEFAULT_LESSON.youtube_id)
     const [inputUrl, setInputUrl]       = useState('')
@@ -167,8 +167,6 @@ export default function ListeningLab({ onRate }) {
     const [currentTime, setCurrentTime] = useState(0)
     const [subtitleBlur, setSubtitleBlur] = useState(0)
     const [showOverlay, setShowOverlay]         = useState(true)
-    const [chapterRatings, setChapterRatings]   = useState({})
-    const rated = chapterRatings[activeChapterIdx] || null
     const [popup, setPopup]             = useState(null)   // { label, tip, wordIdx }
     const [loopSentenceIdx, setLoopSentenceIdx] = useState(null)
 
@@ -373,17 +371,12 @@ export default function ListeningLab({ onRate }) {
                 setVideoId(data.youtube_id || videoId)
                 setActiveChapterIdx(0)
                 setHiddenIndices(new Set())
-                setChapterRatings({})
             } catch (err) { alert('JSON 格式有誤：' + err.message) }
         }
         reader.readAsText(file)
     }
 
     const jsonInputRef = useRef(null)
-    const handleRate = (rating) => { 
-        setChapterRatings(p => ({ ...p, [activeChapterIdx]: rating }))
-        onRate?.(rating, activeChapter?.chapter_title) 
-    }
     const [showSettings, setShowSettings]       = useState(false)
     const [showChapterGrid, setShowChapterGrid] = useState(false)
     const isHidden = (idx) => clozeLevel !== 'off' && hiddenIndices.has(idx)
@@ -463,21 +456,6 @@ export default function ListeningLab({ onRate }) {
                             </div>
                         )}
                     </div>
-
-                    {/* Floating rating */}
-                    <div className="ll2-floating-rating">
-                        <span className="ll2-rating-label">自我評定</span>
-                        <button className={`ll2-rate-btn easy  ${rated==='easy' ?'sel':''}`} onClick={() => handleRate('easy')} >🟢 會了</button>
-                        <button className={`ll2-rate-btn hard  ${rated==='hard' ?'sel':''}`} onClick={() => handleRate('hard')} >🟡 模糊</button>
-                        <button className={`ll2-rate-btn again ${rated==='again'?'sel':''}`} onClick={() => handleRate('again')}>🔴 重聽</button>
-                        {rated && (
-                            <span className="ll2-rated-msg">
-                                {rated==='easy'&&'✅ 聽力無障礙！'}
-                                {rated==='hard'&&'📝 模糊，稍後再練。'}
-                                {rated==='again'&&'🔁 將安排重聽。'}
-                            </span>
-                        )}
-                    </div>
                 </div>
 
                 {/* ─── RIGHT: script (33%) ──────────────────────────────── */}
@@ -511,7 +489,6 @@ export default function ListeningLab({ onRate }) {
                             <div className="ll2-settings-backdrop" onClick={() => setShowChapterGrid(false)} />
                             <div className="ll2-chapter-dropdown">
                                 {lesson.chapters.map((ch, idx) => {
-                                    const rating = chapterRatings[idx]
                                     return (
                                         <button key={idx}
                                             className={`ll2-ch-list-item ${idx===activeChapterIdx?'active':''}`}
@@ -521,11 +498,6 @@ export default function ListeningLab({ onRate }) {
                                                 <span className="ll2-ch-grid-num">{idx+1}</span>
                                                 <span className="ll2-ch-grid-title">{ch.chapter_title.replace(/\s*\(\d+:\d+\)/,'')}</span>
                                             </div>
-                                            {rating && (
-                                                <span className="ll2-ch-rating-indicator" title="你先前的評定">
-                                                    {rating === 'easy' ? '🟢' : rating === 'hard' ? '🟡' : '🔴'}
-                                                </span>
-                                            )}
                                         </button>
                                     )
                                 })}

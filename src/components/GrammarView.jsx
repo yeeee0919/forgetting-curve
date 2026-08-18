@@ -157,6 +157,18 @@ export default function GrammarView() {
     return (
         <div className="grammar-split-layout">
 
+            <label className="grammar-mobile-picker">
+                <span>文法單元</span>
+                <select
+                    value={selectedCategory || ''}
+                    onChange={e => handleCategoryClick(e.target.value)}
+                >
+                    {GRAMMAR_CATEGORIES.filter(c => !c.isHeader).map(cat => (
+                        <option key={cat.id} value={cat.id}>{cat.title}</option>
+                    ))}
+                </select>
+            </label>
+
             {/* 左側：分類選單 (Sidebar) */}
             <div className="grammar-sidebar">
                 <div className="grammar-sidebar-header">
@@ -238,6 +250,7 @@ export default function GrammarView() {
                     display: flex;
                     width: 100%;
                     height: 100%; /* 確保可以填滿父容器 (app-content) */
+                    min-height: 0;
                     overflow: hidden;
                     background: var(--bg-body);
                 }
@@ -451,25 +464,76 @@ export default function GrammarView() {
                     border: 1px dashed var(--border);
                 }
 
-                /* RWD: 手機版自動改為上下堆疊或隱藏側邊欄 (這邊做簡單上下堆疊) */
+                /* RWD: 手機改用下拉選單，講義佔滿剩餘高度 */
+                .grammar-mobile-picker {
+                    display: none;
+                }
                 @media (max-width: 768px) {
                     .grammar-split-layout {
                         flex-direction: column;
-                        overflow-y: auto;
+                        overflow: hidden;
+                    }
+                    .grammar-mobile-picker {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 6px;
+                        padding: 10px 12px;
+                        background: var(--bg-surface, var(--bg-card));
+                        border-bottom: 1px solid var(--border-subtle, var(--border));
+                        flex-shrink: 0;
+                    }
+                    .grammar-mobile-picker span {
+                        font-size: 0.72rem;
+                        font-weight: 700;
+                        letter-spacing: 0.04em;
+                        text-transform: uppercase;
+                        color: var(--text-tertiary, var(--text-muted));
+                    }
+                    .grammar-mobile-picker select {
+                        width: 100%;
+                        min-height: 44px;
+                        border: 1.5px solid var(--border-default, var(--border));
+                        border-radius: 10px;
+                        background: var(--bg-canvas, #fff);
+                        color: var(--text-primary, var(--text));
+                        font-size: 0.95rem;
+                        font-weight: 700;
+                        padding: 0 12px;
                     }
                     .grammar-sidebar {
-                        width: 100%;
-                        max-height: 250px; /* 手機版限制選單高度 */
-                        border-right: none;
-                        border-bottom: 1px solid var(--border);
+                        display: none;
                     }
                     .grammar-main {
-                        padding: 16px;
-                        min-height: 500px;
-                        overflow: visible;
+                        padding: 10px;
+                        min-height: 0;
+                        overflow: hidden;
                     }
                     .ppt-viewer-container {
-                        min-height: 400px;
+                        min-height: 0;
+                        border-radius: 12px;
+                    }
+                    .ppt-viewer-header {
+                        flex-direction: column;
+                        align-items: stretch;
+                        gap: 8px;
+                        padding: 8px 10px;
+                    }
+                    .ppt-viewer-title {
+                        font-size: 0.95rem;
+                    }
+                    .ppt-viewer-controls {
+                        width: 100%;
+                        justify-content: space-between;
+                        gap: 6px;
+                    }
+                    .ppt-btn-small {
+                        padding: 8px 10px;
+                        font-size: 0.8rem;
+                        flex: 1;
+                        text-align: center;
+                    }
+                    .ppt-slide-wrapper {
+                        min-height: 0;
                     }
                     .ppt-btn {
                         padding: 8px 16px;

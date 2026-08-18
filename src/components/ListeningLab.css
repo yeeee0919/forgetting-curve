@@ -236,48 +236,6 @@
     text-shadow: none;
 }
 
-/* Floating Rating */
-.ll2-floating-rating {
-    position: absolute;
-    bottom: 24px;
-    right: 24px;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border: 1px solid #e2e8f0;
-    border-radius: 30px;
-    padding: 8px 12px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-    z-index: 10;
-}
-.ll2-rating-label { font-size: 0.7rem; font-weight: 700; color: #64748b; text-transform: uppercase; padding: 0 6px; }
-
-.ll2-rate-btn {
-    padding: 6px 14px;
-    border-radius: 20px;
-    border: 1px solid transparent;
-    font-size: 0.75rem;
-    font-weight: 700;
-    cursor: pointer;
-    background: #f1f5f9;
-    color: #475569;
-    transition: all 0.2s;
-}
-.ll2-rate-btn:hover { transform: translateY(-2px); }
-.ll2-rate-btn.easy:hover, .ll2-rate-btn.easy.sel  { background: #d1fae5; border-color: #10b981; color: #047857; }
-.ll2-rate-btn.hard:hover, .ll2-rate-btn.hard.sel  { background: #fef3c7; border-color: #f59e0b; color: #b45309; }
-.ll2-rate-btn.again:hover,.ll2-rate-btn.again.sel { background: #fee2e2; border-color: #ef4444; color: #b91c1c; }
-
-.ll2-rated-msg {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: #64748b;
-    padding-left: 8px;
-    animation: fadeIn 0.3s;
-}
-
 /* ─── RIGHT: Script Navigator (33%) ─────────────────────────────────────── */
 .ll2-right-col {
     flex: 0 0 33%;
@@ -386,7 +344,6 @@
 .ll2-ch-list-item.active .ll2-ch-grid-num { background: #6366f1; color: #fff; }
 .ll2-ch-grid-title { font-size: 0.85rem; color: #334155; font-weight: 500; }
 .ll2-ch-list-item-left { display: flex; align-items: center; gap: 12px; }
-.ll2-ch-rating-indicator { font-size: 0.85rem; }
 
 /* Script Flow (Medium Reader Style) */
 .ll2-script-flow {
@@ -515,6 +472,114 @@
 @keyframes fadeInDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+@media (max-width: 860px) {
+    .ll2-container {
+        height: 100%;
+        min-height: 0;
+    }
+
+    .ll2-topbar {
+        padding: 8px 12px;
+    }
+
+    .ll2-topbar-logo {
+        font-size: 0.78rem;
+    }
+
+    .ll2-body {
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .ll2-player-col {
+        flex: 0 0 auto;
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        max-height: 34vh;
+    }
+
+    .ll2-right-col {
+        flex: 1 1 auto;
+        width: 100%;
+        min-height: 0;
+        border-left: none;
+        border-top: 1px solid #e2e8f0;
+    }
+
+    .ll2-settings-drawer {
+        width: calc(100% - 16px);
+        left: 8px;
+        right: 8px;
+        top: 46px;
+    }
+
+    .ll2-url-form {
+        flex-direction: column;
+    }
+
+    .ll2-url-input,
+    .ll2-url-btn {
+        width: 100%;
+        height: 40px;
+    }
+
+    .ll2-video-controls {
+        left: 6px;
+        right: 6px;
+        bottom: 6px;
+        gap: 8px;
+        padding: 6px 8px;
+        border-radius: 12px;
+        flex-wrap: wrap;
+    }
+
+    .ll2-overlay-toggle-btn {
+        font-size: 0.7rem;
+    }
+
+    .ll2-blur-control {
+        padding-left: 8px;
+        gap: 6px;
+    }
+
+    .ll2-blur-slider {
+        width: 64px;
+    }
+
+    .ll2-overlay-bar {
+        width: 94%;
+        padding: 8px 10px;
+        bottom: 18%;
+        gap: 4px;
+    }
+
+    .ll2-ov-word {
+        font-size: 0.95rem;
+    }
+
+    .ll2-chapter-nav,
+    .ll2-cloze-header {
+        padding: 8px 10px;
+    }
+
+    .ll2-cloze-header {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .ll2-script-flow {
+        padding: 12px 12px 24px;
+        gap: 14px;
+    }
+
+    .ll2-popup {
+        left: 8px;
+        right: 8px;
+        bottom: 8px;
+        padding: 12px;
+    }
+}
 
 /* Legacy compat */
 .ll-container, .ll-upload-bar, .ll-video-wrap { display: none !important; }

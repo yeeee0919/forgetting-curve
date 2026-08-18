@@ -392,7 +392,7 @@ export default function App() {
     }
 
     return (
-        <div className={`app ${view === 'review' ? 'hide-tabbar' : ''}`}>
+        <div className="app">
 
             {/* Top Header - Redesigned for unified visual identity */}
             <header className="app-header">
@@ -461,78 +461,71 @@ export default function App() {
                     <GrammarView settings={settings} />
                 )}
                 {view === 'lab' && (
-                    <ListeningLab
-                        onRate={(rating, cardId) => {
-                            // TODO: wire into SRS when ready
-                            console.log('Lab rating:', rating, cardId)
-                        }}
-                    />
+                    <ListeningLab />
                 )}
                 {view === 'speaking' && (
                     <SpeakingLab />
                 )}
             </main>
 
-            {/* Bottom Tab Bar */}
-            {view !== 'review' && (
-                <nav className="tabbar">
-                    <button
-                        className={`tabbar-item ${view === 'home' ? 'active' : ''}`}
-                        onClick={() => setView('home')}
-                    >
-                        <span className="tabbar-icon">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-                        </span>
-                        首頁
-                    </button>
-                    <button
-                        className={`tabbar-item ${view === 'review' ? 'active' : ''}`}
-                        onClick={() => setView('review')}
-                    >
-                        <span className="tabbar-icon">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="8" width="18" height="14" rx="2" ry="2"></rect><path d="M7 4h14v14"></path></svg>
-                        </span>
-                        複習
-                        {dueCount > 0 && <span className="tabbar-badge">{Math.min(dueCount, sessionState.sessionSize || 30)}</span>}
-                    </button>
-                    <button
-                        className={`tabbar-item ${view === 'library' ? 'active' : ''}`}
-                        onClick={() => setView('library')}
-                    >
-                        <span className="tabbar-icon">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-                        </span>
-                        卡片庫
-                    </button>
-                    <button
-                        className={`tabbar-item ${view === 'grammar' ? 'active' : ''}`}
-                        onClick={() => setView('grammar')}
-                    >
-                        <span className="tabbar-icon">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
-                        </span>
-                        文法
-                    </button>
-                    <button
-                        className={`tabbar-item ${view === 'lab' ? 'active' : ''}`}
-                        onClick={() => setView('lab')}
-                    >
-                        <span className="tabbar-icon">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
-                        </span>
-                        精聽
-                    </button>
-                    <button
-                        className={`tabbar-item ${view === 'speaking' ? 'active' : ''}`}
-                        onClick={() => setView('speaking')}
-                    >
-                        <span className="tabbar-icon">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
-                        </span>
-                        口說
-                    </button>
-                </nav>
-            )}
+            {/* Side / Bottom Tab Bar */}
+            <nav className="tabbar">
+                <button
+                    className={`tabbar-item ${view === 'home' ? 'active' : ''}`}
+                    onClick={() => setView('home')}
+                >
+                    <span className="tabbar-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                    </span>
+                    首頁
+                </button>
+                <button
+                    className={`tabbar-item ${view === 'review' ? 'active' : ''}`}
+                    onClick={() => setView('review')}
+                >
+                    <span className="tabbar-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="8" width="18" height="14" rx="2" ry="2"></rect><path d="M7 4h14v14"></path></svg>
+                    </span>
+                    複習
+                    {dueCount > 0 && <span className="tabbar-badge">{Math.min(dueCount, sessionState.sessionSize || 30)}</span>}
+                </button>
+                <button
+                    className={`tabbar-item ${view === 'library' ? 'active' : ''}`}
+                    onClick={() => setView('library')}
+                >
+                    <span className="tabbar-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                    </span>
+                    卡片庫
+                </button>
+                <button
+                    className={`tabbar-item ${view === 'grammar' ? 'active' : ''}`}
+                    onClick={() => setView('grammar')}
+                >
+                    <span className="tabbar-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+                    </span>
+                    文法
+                </button>
+                <button
+                    className={`tabbar-item ${view === 'lab' ? 'active' : ''}`}
+                    onClick={() => setView('lab')}
+                >
+                    <span className="tabbar-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+                    </span>
+                    精聽
+                </button>
+                <button
+                    className={`tabbar-item ${view === 'speaking' ? 'active' : ''}`}
+                    onClick={() => setView('speaking')}
+                >
+                    <span className="tabbar-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+                    </span>
+                    口說
+                </button>
+            </nav>
 
 
             {showImport && (
@@ -673,6 +666,35 @@ function HomePage({
                     </p>
                 </header>
 
+                <div className="home-actions">
+                    {(dueCount > 0 || stats.pool > 0 || stats.buffer > 0 || hasActiveSession) ? (
+                        <button className="btn-primary large" onClick={onStartReview}>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="8" width="18" height="14" rx="2" ry="2"></rect><path d="M7 4h14v14"></path></svg>
+                            {hasActiveSession ? '繼續複習' : `開始複習（${sessionSize || 30} 張）`}
+                        </button>
+                    ) : (
+                        <div className="done-msg">
+                            <span className="done-msg-icon">
+                                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                            </span>
+                            <p>今天的複習與新單字都完成了</p>
+                            <small>明天再來繼續加強</small>
+                        </div>
+                    )}
+                    <button className="btn-secondary" onClick={onImport}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path></svg>
+                        匯入新單字
+                    </button>
+                    {inboxWords.length > 0 && (
+                        <button className="btn-inbox" onClick={onImport}>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                            解析 Catcher 收集（{inboxWords.length}）
+                        </button>
+                    )}
+
+                    <ExtensionDownloadCard />
+                </div>
+
                 <section className="memory-board" aria-label="學習進度">
                     <div className="memory-due">
                         <span className="memory-due-label">今日待複習</span>
@@ -742,35 +764,6 @@ function HomePage({
                         )}
                     </p>
                 </section>
-
-                <div className="home-actions">
-                    {(dueCount > 0 || stats.pool > 0 || stats.buffer > 0 || hasActiveSession) ? (
-                        <button className="btn-primary large" onClick={onStartReview}>
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="8" width="18" height="14" rx="2" ry="2"></rect><path d="M7 4h14v14"></path></svg>
-                            {hasActiveSession ? '繼續未完成的複習' : `開始複習（每次 ${sessionSize || 30} 張）`}
-                        </button>
-                    ) : (
-                        <div className="done-msg">
-                            <span className="done-msg-icon">
-                                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                            </span>
-                            <p>今天的複習與新單字都完成了</p>
-                            <small>明天再來繼續加強</small>
-                        </div>
-                    )}
-                    <button className="btn-secondary" onClick={onImport}>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path></svg>
-                        匯入新單字
-                    </button>
-                    {inboxWords.length > 0 && (
-                        <button className="btn-inbox" onClick={onImport}>
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                            解析 Catcher 收集（{inboxWords.length}）
-                        </button>
-                    )}
-
-                    <ExtensionDownloadCard />
-                </div>
             </div>
 
             {!isMobile && weakCards.length > 0 && (

@@ -489,11 +489,15 @@
 /* ── Responsive ── */
 @media (max-width: 860px) {
   .sl-header {
-    padding: 16px 16px 0;
+    padding: 12px 12px 0;
   }
 
   .sl-title {
-    font-size: 1.3rem;
+    font-size: 1.15rem;
+  }
+
+  .sl-subtitle {
+    font-size: 0.8rem;
   }
 
   .sl-tab-label {
@@ -501,14 +505,22 @@
   }
 
   .sl-tab {
-    padding: 10px 14px;
+    padding: 8px 10px;
     flex-direction: column;
-    gap: 4px;
-    font-size: 0.75rem;
+    gap: 2px;
+    font-size: 0.72rem;
   }
 
   .sl-tab-count {
     display: none;
+  }
+
+  .sl-content {
+    padding: 12px 12px 24px;
+  }
+
+  .sl-card {
+    padding: 14px;
   }
 
   .sl-story-photos {
@@ -516,15 +528,15 @@
   }
 
   .sl-story-img {
-    height: 110px;
+    height: 96px;
   }
 
   .sl-comparison-img {
-    height: 160px;
+    height: 140px;
   }
 
   .sl-photo-img {
-    height: 180px;
+    height: 160px;
   }
 }
 
