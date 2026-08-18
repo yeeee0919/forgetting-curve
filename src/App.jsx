@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { getCards, saveCards, getSettings, saveSettings, generateId, getSessionState, saveSessionState } from './services/storage'
 import { initCard, scheduleCard, buildSessionSequence, migrateCards, getStatusLabel } from './services/srs'
 import { parseTextToCards, parseTextToCardsGemini } from './services/ai'
+import { mergeIncomingCards, toCardContent } from './services/cardFields'
 import { getInboxWords, deleteInboxWord, clearInbox, getCloudCards, upsertCloudCards, deleteCloudCard } from './services/supabase'
 
 import ReviewCard from './components/ReviewCard'
@@ -11,11 +12,10 @@ import ListeningLab from './components/ListeningLab'
 import SpeakingLab from './components/SpeakingLab'
 import ImportModal from './components/ImportModal'
 import SettingsModal from './components/SettingsModal'
-import {
-    CHROME_EXTENSION_STORE_URL,
-    CHROME_EXTENSION_ZIP_URL,
-    hasChromeStoreListing,
-} from './config/extension'
+import Icon from './components/Icons'
+import { ExtensionDownloadCard, ExtensionGuideModal } from './components/WordCatcherPromo'
+import { useExtensionInstalled } from './hooks/useExtensionInstalled'
+import { HIDE_EXT_CARD_KEY } from './config/extension'
 import './App.css'
 
 function getGreeting() {
@@ -43,6 +43,8 @@ export default function App() {
     const [view, setView] = useState('home')
     const [showImport, setShowImport] = useState(false)
     const [showSettings, setShowSettings] = useState(false)
+    const [showExtGuide, setShowExtGuide] = useState(false)
+    const extensionInstalled = useExtensionInstalled()
     const [importing, setImporting] = useState(false)
     const [importError, setImportError] = useState('')
     const [syncId, setSyncId] = useState(localStorage.getItem('memoflip_sync_id') || '')
@@ -205,28 +207,20 @@ export default function App() {
                 parsed = await parseTextToCards(text, settings.openaiKey)
             }
             if (!parsed.length) throw new Error('沒有解析到任何單字，請確認格式')
-            const existingFronts = new Set(cards.map(c => c.front.toLowerCase().trim()))
-            const newParsed = parsed.filter(p => !existingFronts.has(p.front.toLowerCase().trim()))
-            const duplicates = parsed.length - newParsed.length
-            const newCards = newParsed.map(p => ({
+            const incoming = parsed.map(p => ({
                 id: generateId(),
-                front: p.front || '',
-                back: p.back || '',
-                phonetic: p.phonetic || '',
-                example_1: p.example_1 || p.example || '',
-                example_trans_1: p.example_trans_1 || p.example_trans || '',
-                example_2: p.example_2 || '',
-                example_trans_2: p.example_trans_2 || '',
-                language: p.language || 'en',
-                tips: p.tips || null,
-                roots: p.roots || [],
+                ...toCardContent(p),
                 createdAt: Date.now(),
                 ...initCard(),
             }))
-            updateCards([...cards, ...newCards])
+            const { cards: next, added, updated, relearned } = mergeIncomingCards(cards, incoming)
+            if (dueCards.length + added > 150) {
+                alert(`【負荷預警】你目前將有超過 150 張卡片待複習，建議這批單字分 3 天分批排入，以免負擔過重而產生放棄感！\n目前將為你照常匯入，但我們強烈建議控制每日新字數量。`)
+            }
+            updateCards(next)
             if (onSuccess) onSuccess()
             setShowImport(false)
-            return { added: newCards.length, duplicates }
+            return { added, updated, relearned }
         } catch (err) {
             setImportError(err.message)
             throw err
@@ -236,34 +230,12 @@ export default function App() {
     }
 
     const handleImportDirect = (newCards) => {
-        let updated = 0
-        const merged = cards.map(existing => {
-            const incoming = newCards.find(
-                c => c.front.toLowerCase().trim() === existing.front.toLowerCase().trim()
-            )
-            if (!incoming) return existing
-            updated++
-            return {
-                ...existing,
-                tips: incoming.tips ?? existing.tips,
-                roots: incoming.roots ?? existing.roots,
-                phonetic: incoming.phonetic || existing.phonetic,
-                example_1: incoming.example_1 || incoming.example || existing.example_1 || existing.example,
-                example_trans_1: incoming.example_trans_1 || incoming.example_trans || existing.example_trans_1 || existing.example_trans,
-                example_2: incoming.example_2 || existing.example_2,
-                example_trans_2: incoming.example_trans_2 || existing.example_trans_2,
-            }
-        })
-        const existingFronts = new Set(cards.map(c => c.front.toLowerCase().trim()))
-        const brandNew = newCards.filter(c => !existingFronts.has(c.front.toLowerCase().trim()))
-        const newTotal = merged.length + brandNew.length
-        
-        // 負載預警
-        if (dueCards.length + brandNew.length > 150) {
+        const { cards: next, added, updated, relearned } = mergeIncomingCards(cards, newCards)
+        if (dueCards.length + added > 150) {
             alert(`【負荷預警】你目前將有超過 150 張卡片待複習，建議這批單字分 3 天分批排入，以免負擔過重而產生放棄感！\n目前將為你照常匯入，但我們強烈建議控制每日新字數量。`)
         }
-        updateCards([...merged, ...brandNew])
-        return { added: brandNew.length, updated }
+        updateCards(next)
+        return { added, updated, relearned }
     }
 
     const handleRate = useCallback((cardId, rating) => {
@@ -404,6 +376,15 @@ export default function App() {
                         <span className="logo-text">toocheep<span className="logo-sub">fordutch</span></span>
                     </div>
                     <div className="header-actions">
+                        {!isMobile && (
+                            <button
+                                className={`icon-btn ${extensionInstalled ? '' : 'ext-pending'}`}
+                                onClick={() => setShowExtGuide(true)}
+                                title="Word Catcher 擴充功能"
+                            >
+                                <Icon name="puzzle" size={18} />
+                            </button>
+                        )}
                         <button className="icon-btn primary-glow" onClick={() => setShowImport(true)} title="匯入單字">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path></svg>
                         </button>
@@ -435,6 +416,8 @@ export default function App() {
                         sessionSize={sessionState.sessionSize}
                         dueCards={dueCards}
                         hasActiveSession={!!sessionState.activeSession}
+                        extensionInstalled={extensionInstalled}
+                        onOpenExtGuide={() => setShowExtGuide(true)}
                     />
 
                 )}
@@ -558,59 +541,12 @@ export default function App() {
                     onManualSync={() => handleSync(syncId)}
                 />
             )}
+            <ExtensionGuideModal
+                open={showExtGuide}
+                onClose={() => setShowExtGuide(false)}
+                installed={extensionInstalled}
+            />
         </div>
-    )
-}
-
-function ExtensionDownloadCard() {
-    const [showManual, setShowManual] = useState(false)
-
-    if (hasChromeStoreListing) {
-        return (
-            <section className="ext-card" aria-label="Chrome 擴充功能">
-                <div className="ext-card-copy">
-                    <p className="ext-card-kicker">Word Catcher</p>
-                    <h3>網頁選字，直接進 Inbox</h3>
-                    <p>在任何網頁反白單字，收集到 Toocheep 再複習。</p>
-                </div>
-                <a
-                    className="btn-primary ext-card-btn"
-                    href={CHROME_EXTENSION_STORE_URL}
-                    target="_blank"
-                    rel="noreferrer"
-                >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 8v8M8 12h8" /></svg>
-                    安裝 Chrome 擴充功能
-                </a>
-                <a className="ext-card-link" href="/privacy.html" target="_blank" rel="noreferrer">隱私權政策</a>
-            </section>
-        )
-    }
-
-    return (
-        <section className="ext-card" aria-label="Chrome 擴充功能">
-            <div className="ext-card-copy">
-                <p className="ext-card-kicker">Word Catcher</p>
-                <h3>下載 Chrome 擴充功能</h3>
-                <p>商店審核前可先手動安裝 zip；上架後會改為一鍵連到 Chrome 商店。</p>
-            </div>
-            <a className="btn-primary ext-card-btn" href={CHROME_EXTENSION_ZIP_URL} download>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" /></svg>
-                下載擴充功能（zip）
-            </a>
-            <button type="button" className="ext-card-toggle" onClick={() => setShowManual(v => !v)}>
-                {showManual ? '收合安裝說明' : '如何手動安裝？'}
-            </button>
-            {showManual && (
-                <ol className="ext-card-steps">
-                    <li>解壓縮下載的 zip</li>
-                    <li>開啟 <code>chrome://extensions</code></li>
-                    <li>打開右上角「開發人員模式」</li>
-                    <li>點「載入未封裝項目」，選解壓後的資料夾</li>
-                </ol>
-            )}
-            <a className="ext-card-link" href="/privacy.html" target="_blank" rel="noreferrer">隱私權政策</a>
-        </section>
     )
 }
 
@@ -642,9 +578,25 @@ function ProgressRing({ value, max }) {
 function HomePage({
     totalCards, stats, bufferCapacity, dueCount, onStartReview, onImport,
     inboxWords, onDeleteInboxWord, onClearInbox, weakCards, dismissWeakCard,
-    clearAllWeakCards, activityLog, isMobile, sessionSize, dueCards, hasActiveSession
+    clearAllWeakCards, activityLog, isMobile, sessionSize, dueCards, hasActiveSession,
+    extensionInstalled, onOpenExtGuide,
 }) {
     const greetingText = getGreeting()
+    const [hideExtCard, setHideExtCard] = useState(() => {
+        try {
+            return localStorage.getItem(HIDE_EXT_CARD_KEY) === '1'
+        } catch {
+            return false
+        }
+    })
+
+    useEffect(() => {
+        const onHide = () => setHideExtCard(true)
+        window.addEventListener('memoflip-hide-ext-card', onHide)
+        return () => window.removeEventListener('memoflip-hide-ext-card', onHide)
+    }, [])
+
+    const showExtCard = !isMobile && !extensionInstalled && !hideExtCard
     const computedTotal = stats.pool + stats.buffer + stats.mastered
     const bufferPct = bufferCapacity > 0 ? Math.min(100, (stats.buffer / bufferCapacity) * 100) : 0
     const masteredPct = computedTotal > 0 ? Math.min(100, (stats.mastered / computedTotal) * 100) : 0
@@ -692,7 +644,9 @@ function HomePage({
                         </button>
                     )}
 
-                    <ExtensionDownloadCard />
+                    {showExtCard && (
+                        <ExtensionDownloadCard onOpenGuide={onOpenExtGuide} />
+                    )}
                 </div>
 
                 <section className="memory-board" aria-label="學習進度">
@@ -787,7 +741,7 @@ function HomePage({
                                     className="sticky-close"
                                     onClick={() => dismissWeakCard(card.id)}
                                     title="暫停隱藏"
-                                >✕</button>
+                                ><Icon name="x" size={12} /></button>
                                 <div className="sticky-front">{card.front}</div>
                                 <div className="sticky-back">{card.back}</div>
                             </div>
@@ -828,7 +782,7 @@ function HomePage({
                                     style={{ opacity: 0.4, transform: 'scale(0.85)' }}
                                     onMouseOver={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = 'scale(1)'; }}
                                     onMouseOut={e => { e.currentTarget.style.opacity = '0.4'; e.currentTarget.style.transform = 'scale(0.85)'; }}
-                                >✕</button>
+                                ><Icon name="x" size={12} /></button>
                             </div>
                         ))}
                         {inboxWords.length > 18 && (

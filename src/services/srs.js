@@ -147,6 +147,25 @@ function _make(interval, easeFactor, repetitions, now, status, step) {
 }
 
 /**
+ * 匯入同一詞的新詞形時：熟練卡送進重學（等同複習時按「忘記」），其餘狀態不動。
+ */
+export function lapseToRelearning(card) {
+    if (!card || card.status !== STATUS.REVIEW) return card
+    const now = Date.now()
+    const newEF = Math.max(1.3, (card.easeFactor || 2.5) - 0.2)
+    return {
+        ...card,
+        interval: RELEARNING_STEPS[0],
+        easeFactor: newEF,
+        repetitions: 0,
+        dueDate: now + RELEARNING_STEPS[0],
+        status: STATUS.RELEARNING,
+        step: 0,
+        lastReviewInterval: card.interval || 0,
+    }
+}
+
+/**
  * 計算按鈕上方顯示的預覽文字
  */
 export function previewLabel(card, rating) {
@@ -183,23 +202,22 @@ export function migrateCards(cards, bufferCapacity = 50) {
             newStatus = STATUS.REVIEW;
         }
 
-        // 【字根修復 (Root Healing)】：
-        // 取得目前最新解析出的字根，若與快取 roots 不一致，則清空快取以套用最新規則。
+        // 【字根修復】：只保留確實出現在 front 裡的片段，不再清空整份 roots
         let newRoots = c.roots;
         if (newRoots && Array.isArray(newRoots)) {
             const freshRoots = getCardRoots(c);
             const freshSet = new Set(freshRoots.map(r => r.toLowerCase()));
-            const cachedSet = new Set(newRoots.map(r => r.toLowerCase()));
+            const cachedSet = new Set(newRoots.map(r => String(r).toLowerCase()));
             const mismatch = freshSet.size !== cachedSet.size ||
                 [...freshSet].some(r => !cachedSet.has(r));
             if (mismatch) {
-                newRoots = null;
+                newRoots = freshRoots;
                 updated = true;
             }
         }
 
         if (c.status !== newStatus) updated = true;
-        return { ...c, status: newStatus, roots: newRoots === null ? undefined : newRoots };
+        return { ...c, status: newStatus, roots: newRoots };
     });
 
     // 自動修剪緩衝區 (Buffer Pruning) - 嚴格執行 50 個名額制

@@ -22,3 +22,8 @@ export const CHROME_EXTENSION_ZIP_URL = '/extensions/toocheep-word-catcher.zip'
 export const hasChromeStoreListing = Boolean(
   CHROME_EXTENSION_STORE_URL && /^https?:\/\//i.test(CHROME_EXTENSION_STORE_URL)
 )
+
+/** Chrome Web Store 上的擴充功能 ID（與商店 URL 最後一段相同）。 */
+export const CHROME_EXTENSION_ID = 'doidjaenokgobflpfbeehhfmigjpkici'
+
+export const HIDE_EXT_CARD_KEY = 'memoflip_hide_ext_card'

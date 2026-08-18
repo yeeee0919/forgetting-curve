@@ -285,12 +285,11 @@
     background: var(--brand-accent);
     color: var(--text-on-accent);
     border: 1px solid transparent;
-    box-shadow: var(--elevation-1);
 }
 
 .icon-btn.primary-glow:hover {
-    filter: brightness(1.05);
-    transform: translateY(-1px);
+    background: #d94e22;
+    transform: none;
 }
 
 .icon-btn.primary-glow:active {
@@ -298,18 +297,17 @@
 }
 
 .icon-btn {
-    width: 38px;
-    height: 38px;
-    border-radius: var(--radius-md);
+    width: var(--icon-btn-size);
+    height: var(--icon-btn-size);
+    border-radius: var(--radius-full);
     background: var(--bg-surface);
     border: 1px solid var(--border-default);
-    box-shadow: var(--elevation-1);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 1rem;
-    color: var(--text-secondary);
-    transition: all 0.2s var(--spring-smooth);
+    color: var(--text-primary);
+    transition: background 0.15s var(--spring-smooth), color 0.15s var(--spring-smooth);
 }
 
 .icon-btn:hover {
@@ -799,9 +797,9 @@
 
 
 .sticky-note {
-    --sticky-paper: #FFF3A3;
-    --sticky-ink: #3D3428;
-    --sticky-muted: #6B6154;
+    --sticky-paper: #FFFDF6;
+    --sticky-ink: #2A241C;
+    --sticky-muted: #5C5348;
     background: var(--sticky-paper);
     color: var(--sticky-ink);
     padding: 14px 12px 12px;
@@ -822,17 +820,17 @@
 
 .sticky-note:nth-child(3n + 1) {
     transform: rotate(-1.4deg);
-    --sticky-paper: #FFF3A3;
+    --sticky-paper: #FFFDF6;
 }
 
 .sticky-note:nth-child(3n + 2) {
     transform: rotate(1.3deg);
-    --sticky-paper: #FFD9B5;
+    --sticky-paper: #FFF8F1;
 }
 
 .sticky-note:nth-child(3n + 3) {
     transform: rotate(-0.6deg);
-    --sticky-paper: #D8F0E4;
+    --sticky-paper: #F3F8F5;
 }
 
 .sticky-note:hover {
@@ -1100,71 +1098,69 @@
     font-weight: 500;
 }
 
-/* ── Buttons ── */
+/* ── Buttons (Claude DESIGN.md geometry) ── */
 .btn-primary {
     background: var(--brand-accent);
     color: var(--text-on-accent);
-    padding: var(--space-md) var(--space-xl);
-    border-radius: var(--radius-md);
-    font-size: 1rem;
-    font-weight: 700;
+    padding: var(--btn-pad);
+    height: var(--btn-height);
+    border-radius: var(--radius-btn);
+    font-size: 0.875rem;
+    font-weight: 500;
     width: 100%;
-    box-shadow: 0 4px 16px rgba(241, 90, 41, 0.28);
-    letter-spacing: 0.01em;
-    transition: all 0.2s var(--spring-smooth);
+    letter-spacing: 0;
+    transition: background 0.15s var(--spring-smooth), transform 0.12s var(--spring-smooth);
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: var(--space-sm);
+    gap: 8px;
 }
 
 .btn-primary:hover {
-    opacity: 0.92;
-    transform: translateY(-1px);
+    background: #d94e22;
 }
 
 .btn-primary:active {
-    transform: scale(0.96);
+    background: #c2471d;
+    transform: scale(0.98);
 }
 
 .btn-primary:disabled {
     opacity: 0.45;
     cursor: not-allowed;
     transform: none;
-    box-shadow: none;
 }
 
 .btn-primary.large {
-    padding: var(--space-md) var(--space-lg);
-    font-size: 1.1rem;
+    height: 44px;
+    font-size: 0.9375rem;
 }
 
 .btn-secondary {
     background: var(--bg-surface);
-    color: var(--text-secondary);
-    border: 1.5px solid var(--border-default);
-    padding: var(--space-md) var(--space-lg);
-    border-radius: var(--radius-md);
-    font-size: 0.95rem;
-    font-weight: 700;
+    color: var(--text-primary);
+    border: 1px solid var(--border-default);
+    padding: var(--btn-pad);
+    height: var(--btn-height);
+    border-radius: var(--radius-btn);
+    font-size: 0.875rem;
+    font-weight: 500;
     width: 100%;
-    transition: all 0.2s var(--spring-smooth);
+    transition: background 0.15s var(--spring-smooth), border-color 0.15s var(--spring-smooth), transform 0.12s var(--spring-smooth);
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: var(--space-sm);
+    gap: 8px;
 }
 
 .btn-secondary:hover {
-    background: rgba(241, 90, 41, 0.08);
-    /* --brand-accent-bg equivalent */
-    border-color: rgba(241, 90, 41, 0.5);
-    /* --accent-light equivalent */
-    color: var(--brand-accent);
+    background: var(--bg-tint);
+    border-color: var(--border-default);
+    color: var(--text-primary);
 }
 
 .btn-secondary:active {
-    transform: scale(0.96);
+    transform: scale(0.98);
 }
 
 /* ── Modal ── */
@@ -1220,20 +1216,170 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: var(--space-lg);
+    gap: 8px;
 }
 
 .modal-header h2 {
-    font-size: 1.2rem;
-    font-weight: 900;
+    font-size: 1.1rem;
+    font-weight: 600;
+    flex: 1;
+    text-align: center;
+}
+
+.sm-header-spacer {
+    width: var(--icon-btn-size);
+    height: var(--icon-btn-size);
+    flex-shrink: 0;
+}
+
+.sm-home,
+.sm-page {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.sm-id-card {
+    background: var(--bg-tint);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: var(--space-md);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.sm-id-hint,
+.sm-help,
+.sm-id-meta {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+    line-height: 1.45;
+    margin: 0;
+}
+
+.sm-help a {
+    color: var(--brand-accent);
+}
+
+.sm-id-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.sm-id-actions .btn-primary,
+.sm-id-actions .btn-secondary {
+    width: 100%;
+}
+
+.sm-list {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: var(--bg-surface);
+}
+
+.sm-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    text-align: left;
+    padding: 14px 16px;
+    background: transparent;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-subtle);
+    min-height: 56px;
+}
+
+.sm-row:last-child {
+    border-bottom: none;
+}
+
+.sm-row:hover {
+    background: var(--bg-tint);
+}
+
+.sm-row .ui-icon {
+    color: var(--text-tertiary);
+}
+
+.sm-row-text {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.sm-row-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.sm-row-meta {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.sm-lang-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.sm-chip {
+    height: 36px;
+    padding: 0 12px;
+    border-radius: var(--radius-btn);
+    border: 1px solid var(--border-default);
+    background: var(--bg-surface);
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.sm-chip.on {
+    border-color: var(--brand-accent);
+    background: var(--brand-accent-soft);
+    color: var(--brand-accent);
+}
+
+.sm-rate {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.sm-rate label,
+.sm-rate span {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.sm-warn {
+    font-size: 0.82rem;
+    color: var(--hard);
+    background: var(--hard-bg);
+    border-radius: var(--radius-btn);
+    padding: var(--space-sm) var(--space-md);
+    margin: 0;
+    line-height: 1.45;
 }
 
 .close-btn {
-    width: 32px;
-    height: 32px;
+    width: var(--icon-btn-size);
+    height: var(--icon-btn-size);
     border-radius: var(--radius-full);
-    background: var(--border-subtle);
-    color: var(--text-secondary);
-    font-size: 1rem;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    color: var(--text-primary);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1298,29 +1444,29 @@
 
 .btn-inbox {
     width: 100%;
-    padding: var(--space-md);
+    padding: var(--btn-pad);
+    height: var(--btn-height);
     background: var(--brand-ink);
     color: var(--text-on-accent);
     border: none;
-    border-radius: var(--radius-md);
-    font-size: 0.95rem;
-    font-weight: 700;
+    border-radius: var(--radius-btn);
+    font-size: 0.875rem;
+    font-weight: 500;
     cursor: pointer;
-    transition: all 0.2s var(--spring-smooth);
-    box-shadow: var(--elevation-1);
+    transition: background 0.15s var(--spring-smooth), transform 0.12s var(--spring-smooth);
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: var(--space-sm);
+    gap: 8px;
 }
 
 .btn-inbox:hover {
-    transform: translateY(-1px);
-    filter: brightness(1.08);
+    filter: none;
+    background: #163047;
 }
 
 .btn-inbox:active {
-    transform: translateY(0);
+    transform: scale(0.98);
 }
 
 /* Extension download card */

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { qaQuestions, photoQuestions, comparisonQuestions, storyQuestions } from '../data/speakingQuestions'
 import { speakDutch, stopTTS, preloadDutch } from '../services/tts'
 import { hasSprite, getSprite, generateSprite, createSpriteAudio, getCurrentInfo } from '../services/audioSprite'
+import Icon from './Icons'
 import './SpeakingLab.css'
 
 // ─── Sub-components ──────────────────────────────────────────────
@@ -55,18 +56,9 @@ function PlayButton({ text }) {
         disabled={isLoading}
       >
         {isLoading ? (
-          <svg className="sl-spinner" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
-            <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
-            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
-          </svg>
+          <Icon name="clock" size={16} className="sl-spinner" />
         ) : (
-          <svg width="16" height="16" viewBox="0 0 24 24" fill={isPlaying ? "currentColor" : "currentColor"} stroke="none">
-            {isPlaying ? (
-              <path d="M6 4h4v16H6zM14 4h4v16h-4z" />
-            ) : (
-              <path d="M8 5v14l11-7z" />
-            )}
-          </svg>
+          <Icon name={isPlaying ? 'pause' : 'play'} size={16} />
         )}
       </button>
       <div className="sl-play-rate">0.75x</div>
@@ -396,7 +388,7 @@ function PlayAllBar({ questions, tabId }) {
               style={{ width: `${genTotal > 0 ? (genDone / genTotal) * 100 : 0}%` }} />
           </div>
           <span className="sl-play-all-label">
-            🔊 正在生成音檔… {genDone} / {genTotal} 段
+            正在生成音檔… {genDone} / {genTotal} 段
           </span>
         </div>
       )}
@@ -428,10 +420,10 @@ function PlayAllBar({ questions, tabId }) {
 // ─── Main Component ─────────────────────────────────────────────
 
 const TABS = [
-  { id: 'qa',         label: '1. 問答題',     icon: '💬' },
-  { id: 'photo',      label: '2. 描述圖片',   icon: '🖼️' },
-  { id: 'comparison', label: '3. 對比選擇',   icon: '⚖️' },
-  { id: 'story',      label: '4. 看圖講故事', icon: '📖' },
+  { id: 'qa',         label: '1. 問答題',     icon: 'message' },
+  { id: 'photo',      label: '2. 描述圖片',   icon: 'image' },
+  { id: 'comparison', label: '3. 對比選擇',   icon: 'scale' },
+  { id: 'story',      label: '4. 看圖講故事', icon: 'book' },
 ]
 
 export default function SpeakingLab() {
@@ -488,7 +480,7 @@ export default function SpeakingLab() {
       <div className="sl-header">
         <div className="sl-header-inner">
           <h1 className="sl-title">
-            <span className="sl-title-icon">🎙️</span>
+            <Icon name="mic" size={22} />
             口語練習
           </h1>
           <p className="sl-subtitle">荷蘭語 A2 等級口說訓練 · 自主練習</p>
@@ -507,7 +499,7 @@ export default function SpeakingLab() {
               className={`sl-tab ${activeTab === tab.id ? 'active' : ''}`}
               onClick={() => setActiveTab(tab.id)}
             >
-              <span className="sl-tab-icon">{tab.icon}</span>
+              <span className="sl-tab-icon"><Icon name={tab.icon} size={16} /></span>
               <span className="sl-tab-label">{tab.label}</span>
               <span className="sl-tab-count">{countMap[tab.id]} 題</span>
             </button>

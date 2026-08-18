@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import Icon from './Icons'
 
 const GRAMMAR_CATEGORIES = [
     // === 第一階段：基礎地基 (A0 - A1) ===
@@ -10,12 +11,14 @@ const GRAMMAR_CATEGORIES = [
     {
         id: 'a0-v2-regel',
         title: '動詞 V2 規則 (De V2-regel)',
-        description: '直述句中有限動詞的位置'
+        description: '直述句中有限動詞的位置',
+        ready: true
     },
     {
         id: 'a0-inversie',
         title: '倒裝 (Inversie)',
-        description: '強調成分移至句首時的結構變化'
+        description: '強調成分移至句首時的結構變化',
+        ready: true
     },
     {
         id: 'a0-nouns-articles',
@@ -35,7 +38,8 @@ const GRAMMAR_CATEGORIES = [
     {
         id: 'a0-separable-verbs',
         title: '分離動詞 (Scheidbare werkwoorden)',
-        description: '字首拆解至句尾的初步概念'
+        description: '字首拆解至句尾的初步概念',
+        ready: true
     },
 
     // === 第二階段：結構擴充 (A2) ===
@@ -135,13 +139,31 @@ const GRAMMAR_CATEGORIES = [
     }
 ]
 
+const VISIBLE_CATEGORIES = (() => {
+    const out = []
+    let pendingHeader = null
+    for (const cat of GRAMMAR_CATEGORIES) {
+        if (cat.isHeader) {
+            pendingHeader = cat
+            continue
+        }
+        if (!cat.ready) continue
+        if (pendingHeader) {
+            out.push(pendingHeader)
+            pendingHeader = null
+        }
+        out.push(cat)
+    }
+    return out
+})()
+
 export default function GrammarView() {
-    // 預設選中第一個有效分類（非 header）
-    const firstValidCategory = GRAMMAR_CATEGORIES.find(c => !c.isHeader);
+    // 預設選中第一個已有講義的單元
+    const firstValidCategory = VISIBLE_CATEGORIES.find(c => !c.isHeader);
     const [selectedCategory, setSelectedCategory] = useState(firstValidCategory ? firstValidCategory.id : null)
     const [page, setPage] = useState(1)
 
-    const category = GRAMMAR_CATEGORIES.find(c => c.id === selectedCategory)
+    const category = VISIBLE_CATEGORIES.find(c => c.id === selectedCategory)
 
     useEffect(() => {
         setPage(1)
@@ -163,7 +185,7 @@ export default function GrammarView() {
                     value={selectedCategory || ''}
                     onChange={e => handleCategoryClick(e.target.value)}
                 >
-                    {GRAMMAR_CATEGORIES.filter(c => !c.isHeader).map(cat => (
+                    {VISIBLE_CATEGORIES.filter(c => !c.isHeader).map(cat => (
                         <option key={cat.id} value={cat.id}>{cat.title}</option>
                     ))}
                 </select>
@@ -172,10 +194,10 @@ export default function GrammarView() {
             {/* 左側：分類選單 (Sidebar) */}
             <div className="grammar-sidebar">
                 <div className="grammar-sidebar-header">
-                    <h2>📖 文法分級講義</h2>
+                    <h2>文法分級講義</h2>
                 </div>
                 <div className="grammar-category-list">
-                    {GRAMMAR_CATEGORIES.map(cat => {
+                    {VISIBLE_CATEGORIES.map(cat => {
                         if (cat.isHeader) {
                             return (
                                 <div key={cat.id} className="grammar-category-header">
@@ -191,7 +213,7 @@ export default function GrammarView() {
                                 className={`grammar-category-item ${isActive ? 'active' : ''}`}
                                 onClick={() => handleCategoryClick(cat.id)}
                             >
-                                <div className="cat-icon">{isActive ? '📂' : '📄'}</div>
+                                <div className="cat-icon"><Icon name={isActive ? 'folder' : 'file'} size={16} /></div>
                                 <div className="cat-text">
                                     <div className="cat-title">{cat.title}</div>
                                     <div className="cat-desc">{cat.description}</div>
@@ -223,7 +245,7 @@ export default function GrammarView() {
                                     className="ppt-btn-small outline"
                                     title="在新分頁開啟"
                                 >
-                                    ↗
+                                    <Icon name="arrowUpRight" size={14} />
                                 </a>
                             </div>
                         </div>
@@ -322,7 +344,11 @@ export default function GrammarView() {
                     border-color: rgba(108, 99, 255, 0.3);
                 }
                 .cat-icon {
-                    font-size: 1.2rem;
+                    display: flex;
+                    color: var(--text-tertiary);
+                }
+                .grammar-category-item.active .cat-icon {
+                    color: var(--brand-accent);
                 }
                 .cat-text {
                     flex: 1;
@@ -391,16 +417,20 @@ export default function GrammarView() {
                     text-align: center;
                 }
                 .ppt-btn-small {
-                    background: var(--accent);
+                    background: var(--brand-accent, var(--accent));
                     color: white;
                     border: none;
-                    padding: 6px 14px;
-                    border-radius: 16px;
-                    font-size: 0.9rem;
-                    font-weight: 600;
+                    padding: 0 14px;
+                    height: 36px;
+                    border-radius: 8px;
+                    font-size: 0.875rem;
+                    font-weight: 500;
                     cursor: pointer;
-                    transition: all 0.2s;
+                    transition: background 0.15s;
                     text-decoration: none;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
                 }
                 .ppt-btn-small:hover:not(:disabled) {
                     background: var(--accent-hover, #4f46e5);
@@ -412,14 +442,14 @@ export default function GrammarView() {
                     cursor: not-allowed;
                 }
                 .ppt-btn-small.outline {
-                    background: transparent;
-                    color: var(--accent);
-                    border: 1px solid var(--accent);
-                    padding: 5px 10px;
+                    background: var(--bg-surface, transparent);
+                    color: var(--text-primary);
+                    border: 1px solid var(--border-default, var(--accent));
+                    padding: 0 10px;
                 }
                 .ppt-btn-small.outline:hover {
-                    background: var(--accent);
-                    color: white;
+                    background: var(--bg-tint, #f5f5f5);
+                    color: var(--text-primary);
                 }
 
                 .ppt-slide-wrapper {

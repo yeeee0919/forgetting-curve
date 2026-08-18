@@ -2,6 +2,8 @@ import './ReviewCard.css'
 import { useState, useEffect, useRef } from 'react'
 import { RATING, previewLabel, getStatusLabel } from '../services/srs'
 import { getCardRoots, segmentWord } from '../services/wordUtils'
+import { parseFormEntry } from '../services/cardFields'
+import Icon from './Icons'
 
 const LANG_MAP = {
   nl: 'nl-NL', en: 'en-US', ja: 'ja-JP',
@@ -100,6 +102,26 @@ const RATINGS = [
     label: '完全記得', short: '記得', color: 'var(--easy)', bg: 'var(--easy-bg)', border: 'transparent', main: false
   },
 ]
+
+function FormChips({ card }) {
+  const parsed = (card.forms || []).map(parseFormEntry).filter(f => f.value)
+  if (!parsed.length) return null
+  const front = (card.front || '').toLowerCase()
+  if (parsed.length === 1 && parsed[0].value.toLowerCase() === front) return null
+  return (
+    <div className="rc-forms" onPointerDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()}>
+      {parsed.map((f, i) => {
+        const current = f.value.toLowerCase() === front
+        return (
+          <span key={`${f.value}-${i}`} className={`rc-form-chip${current ? ' is-current' : ''}`}>
+            {f.label ? <span className="rc-form-label">{f.label}</span> : null}
+            {f.value}
+          </span>
+        )
+      })}
+    </div>
+  )
+}
 
 export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdateNote, sessionState, updateSession, isMobile }) {
   const [sessionCards, setSessionCards] = useState(() => {
@@ -405,7 +427,7 @@ export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdat
           onClick={toggleAutoPlay}
           title={autoPlay ? '關閉自動發音' : '開啟自動發音'}
         >
-          {autoPlay ? '🔊' : '🔇'}
+          <Icon name={autoPlay ? 'volume' : 'volumeOff'} size={18} />
         </button>
 
         {/* 耳朵聽模式按鈕 */}
@@ -414,7 +436,7 @@ export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdat
           onClick={toggleEarMode}
           title={earMode ? '關閉耳朵聽模式' : '開啟耳朵聽模式 (只聽發音，鼠標懸停顯字)'}
         >
-          {earMode ? '👂' : '👁️'}
+          <Icon name={earMode ? 'ear' : 'eye'} size={18} />
         </button>
       </div>
 
@@ -441,7 +463,7 @@ export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdat
                   onClick={(e) => { e.stopPropagation(); handleDeleteCard(); }}
                   title="從卡片庫刪除此單字"
                 >
-                  🗑️
+                  <Icon name="trash" size={16} />
                 </button>
                 <div className="rc-status-badge" style={{ background: statusInfo.bg, color: statusInfo.color }}>
                   {statusInfo.label}
@@ -466,9 +488,10 @@ export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdat
                       onClick={e => { e.stopPropagation(); speak(card.front, card.language) }}
                       title="聽發音"
                     >
-                      🔊
+                      <Icon name="volume" size={16} />
                     </button>
                   </div>
+                  <FormChips card={card} />
                 </div>
 
                 {(card.example_1 || card.example) && (
@@ -478,7 +501,7 @@ export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdat
                       className="rc-speak-icon-btn small"
                       onClick={e => { e.stopPropagation(); speak(card.example_1 || card.example, card.language) }}
                       title="聽例句"
-                    >🔊</button>
+                    ><Icon name="volume" size={14} /></button>
                   </div>
                 )}
                 {card.example_2 && (
@@ -488,7 +511,7 @@ export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdat
                       className="rc-speak-icon-btn small"
                       onClick={e => { e.stopPropagation(); speak(card.example_2, card.language) }}
                       title="聽例句"
-                    >🔊</button>
+                    ><Icon name="volume" size={14} /></button>
                   </div>
                 )}
 
@@ -498,7 +521,7 @@ export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdat
                       className={`rc-tips-btn ${tipsOpen ? 'open' : ''}`}
                       onClick={() => setTipsOpen(o => !o)}
                     >
-                      <span>💡 記憶提示</span>
+                      <span>記憶提示</span>
                       <span className="rc-tips-chevron">{tipsOpen ? '▲' : '▼'}</span>
                     </button>
                     {tipsOpen && <div className="rc-tips-content" style={{ userSelect: 'text' }}>{card.tips}</div>}
@@ -515,7 +538,7 @@ export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdat
                   onClick={(e) => { e.stopPropagation(); handleDeleteCard(); }}
                   title="從卡片庫刪除此單字"
                 >
-                  🗑️
+                  <Icon name="trash" size={16} />
                 </button>
                 <div className="rc-status-badge" style={{ background: statusInfo.bg, color: statusInfo.color }}>
                   {statusInfo.label}
@@ -540,7 +563,7 @@ export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdat
                     onClick={e => { e.stopPropagation(); speak(card.front, card.language) }}
                     title="聽發音"
                   >
-                    🔊
+                    <Icon name="volume" size={14} />
                   </button>
                 </div>
 
@@ -556,7 +579,7 @@ export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdat
                         className="rc-speak-icon-btn small"
                         onClick={e => { e.stopPropagation(); speak(card.example_1 || card.example, card.language) }}
                         title="聽例句"
-                      >🔊</button>
+                      ><Icon name="volume" size={14} /></button>
                     </div>
                     <p className="rc-ex-trans" style={{ userSelect: 'text' }}>{card.example_trans_1 || card.example_trans}</p>
                   </div>
@@ -569,7 +592,7 @@ export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdat
                         className="rc-speak-icon-btn small"
                         onClick={e => { e.stopPropagation(); speak(card.example_2, card.language) }}
                         title="聽例句"
-                      >🔊</button>
+                      ><Icon name="volume" size={14} /></button>
                     </div>
                     <p className="rc-ex-trans">{card.example_trans_2}</p>
                   </div>
@@ -581,7 +604,7 @@ export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdat
                     className={`rc-tips-btn ${tipsOpen ? 'open' : ''}`}
                     onClick={() => setTipsOpen(o => !o)}
                   >
-                    <span>💡 記憶提示與筆記</span>
+                    <span>記憶提示與筆記</span>
                     <span className="rc-tips-chevron">{tipsOpen ? '▲' : '▼'}</span>
                   </button>
                 {tipsOpen && (
@@ -669,7 +692,7 @@ export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdat
         <div className={`pomodoro-widget ${pomodoroMode}`}>
           {pomodoroMode === 'idle' && (
             <>
-              <div className="pomodoro-label">🍅 計時</div>
+              <div className="pomodoro-label"><Icon name="clock" size={14} /> 計時</div>
               <div className="pomodoro-presets">
                 {POMODORO_PRESETS.map(min => (
                   <button
@@ -696,7 +719,7 @@ export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdat
                   />
                 </svg>
                 <span className="pomodoro-time">
-                  {pomodoroMode === 'done' ? '✅' : formatTime(pomodoroLeft)}
+                  {pomodoroMode === 'done' ? <Icon name="check" size={16} /> : formatTime(pomodoroLeft)}
                 </span>
               </div>
               {pomodoroMode === 'done' && (

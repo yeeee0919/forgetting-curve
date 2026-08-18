@@ -1,10 +1,19 @@
 import { useState, useEffect } from 'react'
+import Icon from './Icons'
 
 const LANG_MAP = {
     nl: 'nl', en: 'en', ja: 'ja', de: 'de', fr: 'fr', ko: 'ko', es: 'es',
 }
 
+const PAGE_TITLE = {
+    home: '設定',
+    api: 'API 金鑰',
+    voice: '發音',
+    backup: '資料備份',
+}
+
 export default function SettingsModal({ settings, onSave, onClose, onExport, onRestore, syncId, onSyncIdChange, lastSynced, onManualSync }) {
+    const [page, setPage] = useState('home')
     const [key, setKey] = useState(settings.openaiKey || '')
     const [geminiKey, setGeminiKey] = useState(settings.geminiKey || '')
     const [elevenLabsKey, setElevenLabsKey] = useState(settings.elevenLabsKey || '')
@@ -13,21 +22,28 @@ export default function SettingsModal({ settings, onSave, onClose, onExport, onR
     const [voiceLang, setVoiceLang] = useState('nl')
     const [rate, setRate] = useState(settings.speechRate ?? 0.35)
     const [testPlaying, setTestPlaying] = useState(false)
+    const [copied, setCopied] = useState(false)
 
-    // 載入系統可用的語音
     useEffect(() => {
-        const load = () => {
-            const all = window.speechSynthesis.getVoices()
-            setVoices(all)
-        }
+        const load = () => setVoices(window.speechSynthesis.getVoices())
         load()
         window.speechSynthesis.onvoiceschanged = load
     }, [])
 
-    // 依選擇的語言過濾語音
     const filteredVoices = voices.filter(v =>
         v.lang.toLowerCase().startsWith(voiceLang.toLowerCase())
     )
+
+    const saveDetails = () => {
+        localStorage.setItem('memoflip_voice_name', selectedVoice)
+        localStorage.setItem('memoflip_speech_rate', String(rate))
+        onSave({ ...settings, openaiKey: key, geminiKey, elevenLabsKey, voiceName: selectedVoice, speechRate: rate })
+    }
+
+    const goHome = () => {
+        saveDetails()
+        setPage('home')
+    }
 
     const testVoice = () => {
         window.speechSynthesis.cancel()
@@ -48,236 +64,186 @@ export default function SettingsModal({ settings, onSave, onClose, onExport, onR
         window.speechSynthesis.speak(utter)
     }
 
+    const copySyncId = async () => {
+        if (!syncId) return
+        try {
+            await navigator.clipboard.writeText(syncId)
+            setCopied(true)
+            setTimeout(() => setCopied(false), 1600)
+        } catch {
+            /* ignore */
+        }
+    }
+
+    const keySummary = [
+        key && 'OpenAI',
+        geminiKey && 'Gemini',
+        elevenLabsKey && 'ElevenLabs',
+    ].filter(Boolean)
+
     return (
         <div className="modal-overlay" onClick={onClose}>
-            <div className="modal" onClick={e => e.stopPropagation()}>
+            <div className="modal sm-modal" onClick={e => e.stopPropagation()}>
                 <div className="modal-header">
-                    <h2>⚙️ 設定</h2>
-                    <button className="close-btn" onClick={onClose}>✕</button>
-                </div>
-
-                {/* API Keys */}
-                <div style={{ display: 'flex', gap: 'var(--space-md)', flexDirection: 'column', marginBottom: 'var(--space-lg)' }}>
-                    <div className="form-group" style={{ marginBottom: 0 }}>
-                        <label className="form-label">OpenAI API Key</label>
-                        <input
-                            className="form-input"
-                            type="password"
-                            placeholder="sk-..."
-                            value={key}
-                            onChange={e => setKey(e.target.value)}
-                        />
-                        <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: 6, marginBottom: 0 }}>
-                            前往 <a href="https://platform.openai.com/api-keys" target="_blank" rel="noreferrer" style={{ color: 'rgba(241, 90, 41, 0.55)' }}>platform.openai.com</a> 取得。
-                        </p>
-                    </div>
-
-                    <div className="form-group" style={{ marginBottom: 0 }}>
-                        <label className="form-label">Google Gemini API Key</label>
-                        <input
-                            className="form-input"
-                            type="password"
-                            placeholder="AIzaSy..."
-                            value={geminiKey}
-                            onChange={e => setGeminiKey(e.target.value)}
-                        />
-                        <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: 6, marginBottom: 0 }}>
-                            前往 <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" style={{ color: 'rgba(241, 90, 41, 0.55)' }}>Google AI Studio</a> 取得。
-                        </p>
-                    </div>
-
-                    <div className="form-group" style={{ marginBottom: 0 }}>
-                        <label className="form-label">ElevenLabs API Key (選填，高品質發音)</label>
-                        <input
-                            className="form-input"
-                            type="password"
-                            placeholder="sk_..."
-                            value={elevenLabsKey}
-                            onChange={e => setElevenLabsKey(e.target.value)}
-                        />
-                        <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: 6, marginBottom: 0 }}>
-                            前往 <a href="https://elevenlabs.io/" target="_blank" rel="noreferrer" style={{ color: 'rgba(241, 90, 41, 0.55)' }}>ElevenLabs</a> 註冊取得 API Key。
-                        </p>
-                    </div>
-
-                    <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: 0 }}>
-                        Key 儲存在本機，不會上傳至任何其他伺服器。
-                    </p>
-                </div>
-
-                {/* 發音設定 */}
-                <div className="form-group">
-                    <label className="form-label">🔊 發音語音設定</label>
-
-                    {/* ... (rest of voice settings are unchanged) ... */}
-                    {/* 語言選擇 */}
-                    <div style={{ display: 'flex', gap: 'var(--space-sm)', marginBottom: 'var(--space-sm)', flexWrap: 'wrap' }}>
-                        {Object.keys(LANG_MAP).map(lang => (
-                            <button
-                                key={lang}
-                                onClick={() => { setVoiceLang(lang); setSelectedVoice('') }}
-                                style={{
-                                    padding: 'var(--space-xs) var(--space-md)',
-                                    borderRadius: 'var(--radius-sm)',
-                                    border: `1.5px solid ${voiceLang === lang ? 'var(--brand-accent)' : 'var(--border-default)'}`,
-                                    background: voiceLang === lang ? 'rgba(241, 90, 41, 0.08)' : 'var(--bg-canvas)',
-                                    color: voiceLang === lang ? 'var(--brand-accent)' : 'var(--text-secondary)',
-                                    fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer',
-                                }}
-                            >
-                                {lang.toUpperCase()}
-                            </button>
-                        ))}
-                    </div>
-
-                    {/* 語音清單 */}
-                    {filteredVoices.length === 0 ? (
-                        <div style={{ fontSize: '0.8rem', color: '#ff9f43', padding: 'var(--space-sm) var(--space-md)', background: 'rgba(255,159,67,0.1)', borderRadius: 'var(--radius-sm)' }}>
-                            ⚠️ 你的系統沒有安裝 {voiceLang.toUpperCase()} 語音。<br />
-                            請到「系統設定 → 輔助使用 → 語音內容」下載。
-                        </div>
+                    {page !== 'home' ? (
+                        <button className="close-btn" onClick={goHome} title="返回">
+                            <Icon name="chevronLeft" size={18} />
+                        </button>
                     ) : (
-                        <select
-                            className="form-input"
-                            value={selectedVoice}
-                            onChange={e => setSelectedVoice(e.target.value)}
-                            style={{ marginBottom: 10 }}
-                        >
-                            <option value="">自動選擇最佳語音</option>
-                            {filteredVoices.map(v => (
-                                <option key={v.name} value={v.name}>
-                                    {v.name} — {v.lang} {v.localService ? '(本機)' : '(線上)'}
-                                </option>
-                            ))}
-                        </select>
+                        <span className="sm-header-spacer" />
                     )}
-
-                    {/* 語速 */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', marginBottom: 'var(--space-sm)' }}>
-                        <label style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
-                            語速：{rate}x
-                        </label>
-                        <input
-                            type="range" min="0.2" max="1.0" step="0.05"
-                            value={rate}
-                            onChange={e => setRate(parseFloat(e.target.value))}
-                            style={{ flex: 1 }}
-                        />
-                        <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
-                            0.2（最慢）～ 1.0（正常）
-                        </span>
-                    </div>
-
-                    {/* 試聽 */}
-                    <button
-                        onClick={testVoice}
-                        disabled={testPlaying}
-                        style={{
-                            background: 'rgba(241, 90, 41, 0.08)',
-                            border: '1.5px solid rgba(241, 90, 41, 0.55)',
-                            borderRadius: 'var(--radius-md)', color: 'var(--brand-accent)',
-                            padding: 'var(--space-sm) var(--space-md)', fontSize: '0.85rem',
-                            fontWeight: 700, cursor: testPlaying ? 'default' : 'pointer',
-                            opacity: testPlaying ? 0.6 : 1,
-                        }}
-                    >
-                        {testPlaying ? '▶ 播放中...' : '🔊 試聽這個語音'}
+                    <h2>{PAGE_TITLE[page]}</h2>
+                    <button className="close-btn" onClick={() => { saveDetails(); onClose() }}>
+                        <Icon name="x" size={16} />
                     </button>
                 </div>
 
-                <button
-                    className="btn-primary"
-                    onClick={() => {
-                        localStorage.setItem('memoflip_voice_name', selectedVoice)
-                        localStorage.setItem('memoflip_speech_rate', String(rate))
-                        const newSettings = { ...settings, openaiKey: key, geminiKey, elevenLabsKey, voiceName: selectedVoice, speechRate: rate }
-                        onSave(newSettings)
-                        onClose()
-                    }}
-                >
-                    儲存設定
-                </button>
-
-                {/* 雲端同步 */}
-                <div style={{ marginTop: 'var(--space-xl)', paddingTop: 'var(--space-lg)', borderTop: '2px dashed var(--border-default)' }}>
-                    <h3 style={{ fontSize: '0.95rem', marginBottom: 'var(--space-xs)', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        ☁️ 雲端同步 (跨裝置)
-                    </h3>
-                    <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: 'var(--space-md)' }}>
-                        輸入相同的同步 ID 即可在電腦與手機間同步字卡。
-                    </p>
-                    <div style={{ display: 'flex', gap: 'var(--space-md)', alignItems: 'center', flexWrap: 'wrap' }}>
-                        <input
-                            type="text"
-                            className="input-v5"
-                            placeholder="輸入自定義同步 ID (例如: my-secret-key)"
-                            value={syncId}
-                            onChange={(e) => onSyncIdChange(e.target.value)}
-                            style={{ flex: 2, minWidth: '200px', height: '40px' }}
-                        />
-                        <button
-                            className="btn-primary"
-                            style={{ flex: 1, height: '40px', whiteSpace: 'nowrap' }}
-                            onClick={onManualSync}
-                            disabled={!syncId}
-                        >
-                            🔄 立即同步
-                        </button>
-                    </div>
-                    {lastSynced && (
-                        <p style={{ fontSize: '0.7rem', color: 'var(--success)', marginTop: '8px' }}>
-                            上次同步時間：{new Date(lastSynced).toLocaleString()}
-                        </p>
-                    )}
-                </div>
-
-                {/* 資料遷移備份 */}
-
-                <div style={{ marginTop: 'var(--space-xl)', paddingTop: 'var(--space-lg)', borderTop: '2px dashed var(--border-default)' }}>
-                    <h3 style={{ fontSize: '0.95rem', marginBottom: 'var(--space-md)', color: 'var(--text-primary)' }}>📦 資料備份與還原</h3>
-                    <div style={{ display: 'flex', gap: 'var(--space-md)', flexWrap: 'wrap' }}>
-                        <button
-                            className="btn-secondary"
-                            style={{ flex: '1 1 120px', fontSize: '0.85rem', height: '40px' }}
-                            onClick={onExport}
-                        >
-                            📤 匯出備份 (JSON)
-                        </button>
-                        <div style={{ flex: '1 1 120px', position: 'relative' }}>
-
-                            <button
-                                className="btn-secondary"
-                                style={{ width: '100%', fontSize: '0.85rem', height: '40px' }}
-                                onClick={() => document.getElementById('restore-input').click()}
-                            >
-                                📥 還原備份
-                            </button>
+                {page === 'home' && (
+                    <div className="sm-home">
+                        <section className="sm-id-card">
+                            <p className="form-label">用戶 ID</p>
+                            <p className="sm-id-hint">電腦與手機輸入同一個 ID，就能同步字卡。</p>
                             <input
-                                id="restore-input"
-                                type="file"
-                                accept=".json"
-                                style={{ display: 'none' }}
-                                onChange={(e) => {
-                                    const file = e.target.files[0]
-                                    if (!file) return
-                                    const reader = new FileReader()
-                                    reader.onload = (event) => {
-                                        try {
-                                            const data = JSON.parse(event.target.result)
-                                            onRestore(data)
-                                        } catch (err) {
-                                            alert('讀取備份檔案失敗：' + err.message)
-                                        }
-                                    }
-                                    reader.readAsText(file)
-                                }}
+                                type="text"
+                                className="form-input"
+                                placeholder="例如 my-dutch-id"
+                                value={syncId}
+                                onChange={(e) => onSyncIdChange(e.target.value)}
                             />
-                        </div>
+                            <div className="sm-id-actions">
+                                <button className="btn-secondary" onClick={copySyncId} disabled={!syncId}>
+                                    <Icon name={copied ? 'check' : 'copy'} size={16} />
+                                    {copied ? '已複製' : '複製 ID'}
+                                </button>
+                                <button className="btn-primary" onClick={onManualSync} disabled={!syncId}>
+                                    立即同步
+                                </button>
+                            </div>
+                            {lastSynced && (
+                                <p className="sm-id-meta">上次同步：{new Date(lastSynced).toLocaleString()}</p>
+                            )}
+                        </section>
+
+                        <nav className="sm-list">
+                            <button type="button" className="sm-row" onClick={() => setPage('api')}>
+                                <span className="sm-row-text">
+                                    <span className="sm-row-title">API 金鑰</span>
+                                    <span className="sm-row-meta">
+                                        {keySummary.length ? `已設定 ${keySummary.join('、')}` : '匯入單字與高品質發音需要'}
+                                    </span>
+                                </span>
+                                <Icon name="chevronRight" size={18} />
+                            </button>
+                            <button type="button" className="sm-row" onClick={() => setPage('voice')}>
+                                <span className="sm-row-text">
+                                    <span className="sm-row-title">發音</span>
+                                    <span className="sm-row-meta">{voiceLang.toUpperCase()} · {rate}x</span>
+                                </span>
+                                <Icon name="chevronRight" size={18} />
+                            </button>
+                            <button type="button" className="sm-row" onClick={() => setPage('backup')}>
+                                <span className="sm-row-text">
+                                    <span className="sm-row-title">資料備份</span>
+                                    <span className="sm-row-meta">匯出或還原字卡</span>
+                                </span>
+                                <Icon name="chevronRight" size={18} />
+                            </button>
+                        </nav>
                     </div>
-                    <p style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginTop: 'var(--space-sm)' }}>
-                        可以用來將資料從 localhost 遷移到 Vercel 或是備份到雲端。
-                    </p>
-                </div>
+                )}
+
+                {page === 'api' && (
+                    <div className="sm-page">
+                        <div className="form-group">
+                            <label className="form-label">OpenAI API Key</label>
+                            <input className="form-input" type="password" placeholder="sk-..." value={key} onChange={e => setKey(e.target.value)} />
+                            <p className="sm-help">前往 <a href="https://platform.openai.com/api-keys" target="_blank" rel="noreferrer">platform.openai.com</a> 取得。</p>
+                        </div>
+                        <div className="form-group">
+                            <label className="form-label">Google Gemini API Key</label>
+                            <input className="form-input" type="password" placeholder="AIzaSy..." value={geminiKey} onChange={e => setGeminiKey(e.target.value)} />
+                            <p className="sm-help">前往 <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer">Google AI Studio</a> 取得。</p>
+                        </div>
+                        <div className="form-group">
+                            <label className="form-label">ElevenLabs API Key（選填）</label>
+                            <input className="form-input" type="password" placeholder="sk_..." value={elevenLabsKey} onChange={e => setElevenLabsKey(e.target.value)} />
+                            <p className="sm-help">前往 <a href="https://elevenlabs.io/" target="_blank" rel="noreferrer">ElevenLabs</a> 取得高品質發音。</p>
+                        </div>
+                        <p className="sm-help">Key 只存在這台裝置，不會上傳。</p>
+                        <button className="btn-primary" onClick={goHome}>儲存</button>
+                    </div>
+                )}
+
+                {page === 'voice' && (
+                    <div className="sm-page">
+                        <div className="sm-lang-row">
+                            {Object.keys(LANG_MAP).map(lang => (
+                                <button
+                                    key={lang}
+                                    type="button"
+                                    className={`sm-chip ${voiceLang === lang ? 'on' : ''}`}
+                                    onClick={() => { setVoiceLang(lang); setSelectedVoice('') }}
+                                >
+                                    {lang.toUpperCase()}
+                                </button>
+                            ))}
+                        </div>
+
+                        {filteredVoices.length === 0 ? (
+                            <p className="sm-warn">系統沒有 {voiceLang.toUpperCase()} 語音。請到「系統設定 → 輔助使用 → 語音內容」下載。</p>
+                        ) : (
+                            <select className="form-input" value={selectedVoice} onChange={e => setSelectedVoice(e.target.value)}>
+                                <option value="">自動選擇最佳語音</option>
+                                {filteredVoices.map(v => (
+                                    <option key={v.name} value={v.name}>
+                                        {v.name} — {v.lang} {v.localService ? '(本機)' : '(線上)'}
+                                    </option>
+                                ))}
+                            </select>
+                        )}
+
+                        <div className="sm-rate">
+                            <label>語速 {rate}x</label>
+                            <input type="range" min="0.2" max="1.0" step="0.05" value={rate} onChange={e => setRate(parseFloat(e.target.value))} />
+                            <span>0.2 最慢 · 1.0 正常</span>
+                        </div>
+
+                        <button className="btn-secondary" onClick={testVoice} disabled={testPlaying}>
+                            <Icon name="volume" size={16} />
+                            {testPlaying ? '播放中…' : '試聽'}
+                        </button>
+                        <button className="btn-primary" onClick={goHome}>儲存</button>
+                    </div>
+                )}
+
+                {page === 'backup' && (
+                    <div className="sm-page">
+                        <p className="sm-id-hint">把字卡備份成 JSON，或從舊檔還原。</p>
+                        <button className="btn-secondary" onClick={onExport}>匯出備份</button>
+                        <button className="btn-secondary" onClick={() => document.getElementById('restore-input').click()}>
+                            還原備份
+                        </button>
+                        <input
+                            id="restore-input"
+                            type="file"
+                            accept=".json"
+                            style={{ display: 'none' }}
+                            onChange={(e) => {
+                                const file = e.target.files[0]
+                                if (!file) return
+                                const reader = new FileReader()
+                                reader.onload = (event) => {
+                                    try {
+                                        onRestore(JSON.parse(event.target.result))
+                                    } catch (err) {
+                                        alert('讀取備份檔案失敗：' + err.message)
+                                    }
+                                }
+                                reader.readAsText(file)
+                            }}
+                        />
+                    </div>
+                )}
             </div>
         </div>
     )

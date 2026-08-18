@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import './ListeningLab.css'
+import Icon from './Icons'
 
 // ────────────────────────────────────────────────────────────────────────────
 // Linguistic Popup Dictionary
@@ -160,15 +161,15 @@ function pickRandomIndices(total, pct) {
 // Main Component
 // ────────────────────────────────────────────────────────────────────────────
 export default function ListeningLab() {
-    const [lesson, setLesson]           = useState(DEFAULT_LESSON)
-    const [videoId, setVideoId]         = useState(DEFAULT_LESSON.youtube_id)
-    const [inputUrl, setInputUrl]       = useState('')
+    const lesson = DEFAULT_LESSON
+    const videoId = DEFAULT_LESSON.youtube_id
     const [activeChapterIdx, setActiveChapterIdx] = useState(0)
     const [currentTime, setCurrentTime] = useState(0)
     const [subtitleBlur, setSubtitleBlur] = useState(0)
     const [showOverlay, setShowOverlay]         = useState(true)
     const [popup, setPopup]             = useState(null)   // { label, tip, wordIdx }
     const [loopSentenceIdx, setLoopSentenceIdx] = useState(null)
+    const [showChapterGrid, setShowChapterGrid] = useState(false)
 
     // Cloze Test
     const CLOZE_LEVELS = { low: 0.15, mid: 0.40, high: 0.75 }
@@ -187,7 +188,7 @@ export default function ListeningLab() {
 
     // ── YouTube player ──────────────────────────────────────────────────────
     const handleTimeUpdate = useCallback((t) => setCurrentTime(t), [])
-    const { ready, seekTo, pauseVideo, playVideo, getPlayerState } = useYouTubePlayer('yt-player-div', videoId, handleTimeUpdate)
+    const { seekTo, pauseVideo, playVideo, getPlayerState } = useYouTubePlayer('yt-player-div', videoId, handleTimeUpdate)
 
     // ── Active sentence from playback time ────────────────────────────
     const activeSentenceIdx = sentences.findIndex(s => currentTime >= s.start && currentTime <= s.end + 0.3)
@@ -347,79 +348,10 @@ export default function ListeningLab() {
         }
     }
 
-    const parseVideoId = (url) => {
-        try { return new URL(url).searchParams.get('v') || url.trim() }
-        catch { return url.trim() }
-    }
-
-    const handleUrlSubmit = (e) => {
-        e.preventDefault()
-        if (!inputUrl.trim()) return
-        setVideoId(parseVideoId(inputUrl))
-        setInputUrl('')
-    }
-
-    const handleJsonUpload = (e) => {
-        const file = e.target.files?.[0]
-        if (!file) return
-        const reader = new FileReader()
-        reader.onload = (ev) => {
-            try {
-                const data = JSON.parse(ev.target.result)
-                if (!data.chapters) throw new Error('缺少 chapters 欄位')
-                setLesson(data)
-                setVideoId(data.youtube_id || videoId)
-                setActiveChapterIdx(0)
-                setHiddenIndices(new Set())
-            } catch (err) { alert('JSON 格式有誤：' + err.message) }
-        }
-        reader.readAsText(file)
-    }
-
-    const jsonInputRef = useRef(null)
-    const [showSettings, setShowSettings]       = useState(false)
-    const [showChapterGrid, setShowChapterGrid] = useState(false)
     const isHidden = (idx) => clozeLevel !== 'off' && hiddenIndices.has(idx)
 
     return (
         <div className="ll2-container">
-            <div className="ll2-topbar">
-                <span className="ll2-topbar-logo">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
-                    </svg>
-                    精聽實驗室
-                </span>
-
-                <div className="ll2-topbar-right">
-                    {!ready && videoId && <span className="ll2-status-chip loading">載入中…</span>}
-                    {ready  && <span className="ll2-status-chip ready">▶ 就緒</span>}
-                    <button className={`ll2-settings-btn ${showSettings?'active':''}`} onClick={() => setShowSettings(p=>!p)} title="設定">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-
-            {showSettings && (
-                <>
-                    <div className="ll2-settings-backdrop" onClick={() => setShowSettings(false)} />
-                    <div className="ll2-settings-drawer">
-                        <form className="ll2-url-form" onSubmit={handleUrlSubmit}>
-                            <input className="ll2-url-input" type="text" placeholder="貼上 YouTube 網址或影片 ID…"
-                                value={inputUrl} onChange={e => setInputUrl(e.target.value)} />
-                            <button className="ll2-url-btn" type="submit">載入</button>
-                        </form>
-                        <label className="ll2-url-btn" style={{cursor:'pointer',display:'flex',alignItems:'center',gap:5}}>
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                            載入 JSON
-                            <input type="file" accept=".json" style={{display:'none'}} ref={jsonInputRef} onChange={handleJsonUpload} />
-                        </label>
-                    </div>
-                </>
-            )}
-
             <div className="ll2-body">
                 <div className="ll2-player-col">
                     <div className="ll2-player-wrap">
@@ -428,7 +360,7 @@ export default function ListeningLab() {
                         {/* Bottom Left Video Controls */}
                         <div className="ll2-video-controls">
                             <button className={`ll2-overlay-toggle-btn ${showOverlay?'active':''}`} onClick={() => setShowOverlay(p=>!p)} title="顯示/隱藏影片字幕">
-                                {showOverlay ? '👁 影片字幕開啟' : '👁‍🗨 影片字幕關閉'}
+                                {showOverlay ? '影片字幕開啟' : '影片字幕關閉'}
                             </button>
                             <div className="ll2-blur-control">
                                 <label>模糊度</label>
@@ -463,12 +395,12 @@ export default function ListeningLab() {
 
                     {/* Chapter nav bar */}
                     <div className="ll2-chapter-nav">
-                        <button className="ll2-ch-arrow" onClick={() => selectChapter(Math.max(0, activeChapterIdx-1))} disabled={activeChapterIdx===0}>‹</button>
+                        <button className="ll2-ch-arrow" onClick={() => selectChapter(Math.max(0, activeChapterIdx-1))} disabled={activeChapterIdx===0}><Icon name="chevronLeft" size={18} /></button>
                         <div className="ll2-ch-info" onClick={() => setShowChapterGrid(p=>!p)}>
                             <span className="ll2-ch-name">{activeChapter?.chapter_title?.replace(/\s*\(\d+:\d+\)/,'')}</span>
                             <span className="ll2-ch-count">{activeChapterIdx+1} / {lesson.chapters.length} ▾</span>
                         </div>
-                        <button className="ll2-ch-arrow" onClick={() => selectChapter(Math.min(lesson.chapters.length-1, activeChapterIdx+1))} disabled={activeChapterIdx===lesson.chapters.length-1}>›</button>
+                        <button className="ll2-ch-arrow" onClick={() => selectChapter(Math.min(lesson.chapters.length-1, activeChapterIdx+1))} disabled={activeChapterIdx===lesson.chapters.length-1}><Icon name="chevronRight" size={18} /></button>
                     </div>
 
                     {/* Cloze test controls */}
@@ -555,7 +487,7 @@ export default function ListeningLab() {
                         {/* Linguistic popup */}
                         {popup && (
                             <div className="ll2-popup" onClick={e => e.stopPropagation()}>
-                                <button className="ll2-popup-close" onClick={() => setPopup(null)}>✕</button>
+                                <button className="ll2-popup-close" onClick={() => setPopup(null)}><Icon name="x" size={16} /></button>
                                 <div className="ll2-popup-label">{popup.label}</div>
                                 <div className="ll2-popup-tip">{popup.tip}</div>
                             </div>

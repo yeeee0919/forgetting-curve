@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import './CardList.css'
 import { getCardRoots, segmentWord } from '../services/wordUtils'
+import Icon from './Icons'
 
 export default function CardList({ cards, onDelete }) {
     const [hasCopied, setHasCopied] = useState(false)
@@ -21,9 +22,9 @@ export default function CardList({ cards, onDelete }) {
     if (cards.length === 0) {
         return (
             <div className="cl-empty">
-                <div style={{ fontSize: '3rem' }}>📭</div>
+                <div className="cl-empty-icon"><Icon name="inbox" size={36} /></div>
                 <p>還沒有任何卡片</p>
-                <small>點右上角 ✨ 匯入新單字</small>
+                <small>點右上角匯入新單字</small>
             </div>
         )
     }
@@ -58,7 +59,7 @@ export default function CardList({ cards, onDelete }) {
                         onClick={handleCopyAll}
                         title="複製所有單字"
                     >
-                        {hasCopied ? '✅ 已複製' : '📋 複製全部單字'}
+                        {hasCopied ? <><Icon name="check" size={14} /> 已複製</> : <><Icon name="copy" size={14} /> 複製全部單字</>}
                     </button>
                     <span className="cl-count">{cards.length} 張</span>
                 </div>
@@ -91,7 +92,7 @@ export default function CardList({ cards, onDelete }) {
                                 <span className="cl-status" style={statusStyle[s] || statusStyle.learning}>
                                     {statusLabel[s] || '學習中'}
                                 </span>
-                                <button className="cl-delete-btn" onClick={() => onDelete(card.id)} title="刪除">✕</button>
+                                <button className="cl-delete-btn" onClick={() => onDelete(card.id)} title="刪除"><Icon name="x" size={14} /></button>
                             </div>
                         </div>
                     )

@@ -1,205 +1,27 @@
 /**
  * 字根字首字尾工具函式
+ * 著色只相信卡片上的 roots，且必須是 front 裡連續出現的片段。
  */
 
+export function sanitizeRoots(roots, front) {
+    if (!Array.isArray(roots) || !front) return []
+    const frontLower = String(front).toLowerCase()
+    const out = []
+    for (const r of roots) {
+        const root = String(r || '').toLowerCase().trim()
+        if (root.length < 2 || root === frontLower) continue
+        if (frontLower.includes(root) && !out.includes(root)) out.push(root)
+    }
+    return out
+}
+
 /**
- * 取得卡片的字根字首清單
- * 優先讀取結構化的 roots 欄位，若無則嘗試從 tips 欄位的【字源分析】解析
- * @param {Object} card - 卡片物件
- * @returns {Array<string>} 字根清單
+ * 取得卡片的字根清單：以 AI 給的 roots 為準，丢掉沒出現在 front 裡的片段。
+ * 不再從 tips 抽字，也不再自行猜切前綴後綴。
  */
 export function getCardRoots(card) {
     if (!card) return []
-
-    const frontLower = (card.front || '').toLowerCase()
-
-    // 1. 優先從 tips【字源分析】解析字根（比快取 roots 更可信）
-    const tipsRoots = []
-    if (card.tips && typeof card.tips === 'string') {
-        // 不被「。」截斷，但避開下一個「【」區段，例如【生動聯想】
-        const match = card.tips.match(/【字源分析】[:：]\s*([^\n\r→【]+)/)
-        if (match) {
-            const etymologyText = match[1]
-            const words = etymologyText.match(/[a-zA-Z\u00C0-\u017F]+/g)
-            if (words) {
-                for (const w of words) {
-                    const root = w.toLowerCase()
-                    if (root.length < 2 || root === frontLower) continue
-
-                    // 1.1 如果直接包含於單字中
-                    if (frontLower.includes(root)) {
-                        if (!tipsRoots.includes(root)) {
-                            tipsRoots.push(root)
-                        }
-                    }
-                    // 1.2 否則若是以 -en 結尾的動詞原型，嘗試尋找去 en 的詞幹 (stem)
-                    // 例如: nemen -> nem (ondernemer 裡有 nem)
-                    else if (root.endsWith('en') && root.length >= 4) {
-                        const stem = root.slice(0, -2)
-                        if (stem.length >= 2 && stem !== frontLower && frontLower.includes(stem)) {
-                            if (!tipsRoots.includes(stem)) {
-                                tipsRoots.push(stem)
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    // 若 tips 成功解析出字根，直接使用（跳過快取 roots，避免舊資料污染）
-    let roots = tipsRoots.length > 0 ? [...tipsRoots] : []
-
-    // 2. 若 tips 無結果，才從結構化 roots 欄位讀取快取
-    if (roots.length === 0 && card.roots && Array.isArray(card.roots)) {
-        for (const r of card.roots) {
-            const root = r.toLowerCase()
-            if (root.length >= 2 && root !== frontLower && frontLower.includes(root)) {
-                if (!roots.includes(root)) {
-                    roots.push(root)
-                }
-            }
-        }
-    }
-
-    // 3. 若已取得字根（來自 tips 或 快取），執行「字根二次拆分」優化
-    // 目的：將較大的字根（如 godsdienst, vrijheid）進一步拆分為更細的語意單位
-    const prefixes = ['aange', 'uitge', 'onder', 'om', 'te', 'ge', 'be', 'ver', 'her', 'ont', 'mis', 'voor', 'naar', 'kenteken', 'tegen', 'opge', 'op', 'aan', 'uit', 'in', 'af', 'mee', 'toe', 'door', 'over', 'rond', 'samen', 'terug', 'thuis', 'vast', 'weg', 'binnen', 'buiten', 'neer', 'zij', 'god'];
-    const suffixes = ['kundige', 'lijk', 'baar', 'ig', 'isch', 'heid', 'ing', 'schap', 'igheid', 'plaat', 'duiker', 'schakelen', 'liggers', 'en', 'feest', 'dienst'];
-
-    if (roots.length > 0) {
-        let changed = true;
-        while (changed) {
-            changed = false;
-            const nextRoots = [];
-            for (const r of roots) {
-                let split = false;
-                // 優先嘗試複合詞尾的後綴二次拆分（僅使用 100% 安全的複合詞尾，避免派生字尾拼寫巧合造成的誤拆）
-                const compoundSuffixes = ['feest', 'dienst'];
-                for (const suf of compoundSuffixes) {
-                    if (r.endsWith(suf) && r !== suf) {
-                        let stem = r.slice(0, -suf.length);
-                        // 容忍連接音 s
-                        if (stem.endsWith('s') && stem.length >= 3) {
-                            stem = stem.slice(0, -1);
-                        }
-                        if (stem.length >= 3) {
-                            nextRoots.push(stem);
-                            nextRoots.push(suf);
-                            split = true;
-                            changed = true;
-                            break;
-                        }
-                    }
-                }
-                if (!split) {
-                    // 嘗試前綴二次拆分
-                    for (const pre of prefixes) {
-                        if (pre.length >= 3 && r.startsWith(pre) && r !== pre) {
-                            const rest = r.slice(pre.length);
-                            if (rest.length >= 2) {
-                                nextRoots.push(pre);
-                                nextRoots.push(rest);
-                                split = true;
-                                changed = true;
-                                break;
-                            }
-                        }
-                    }
-                }
-                if (!split) {
-                    nextRoots.push(r);
-                }
-            }
-            // 去重
-            const unique = [];
-            for (const r of nextRoots) {
-                if (!unique.includes(r)) unique.push(r);
-            }
-            roots = unique;
-        }
-    }
-
-    // 4. 若仍未取得根字，或仍有未解析的部分，嘗試以常見荷蘭語前綴與後綴做切割 (備援)
-    if (roots.length === 0) {
-        let remaining = (card.front || '').toLowerCase();
-        // 前綴檢查 (允許多個連續前綴)
-        while (true) {
-            let matched = false;
-            for (const pre of prefixes) {
-                if (remaining.startsWith(pre) && !roots.includes(pre)) {
-                    roots.push(pre);
-                    remaining = remaining.slice(pre.length);
-                    matched = true;
-                    break;
-                }
-            }
-            if (!matched) break;
-        }
-        // 後綴檢查：剩餘部分必須 >= 3 字母才允許切，避免對短字誤判
-        for (const suf of suffixes) {
-            if (remaining.endsWith(suf) && !roots.includes(suf) && remaining.length - suf.length >= 3) {
-                roots.push(suf);
-                remaining = remaining.slice(0, -suf.length);
-                break;
-            }
-        }
-        // 若仍有剩餘且未被列為根字，加入最後的根字
-        if (remaining && remaining.length > 0 && !roots.includes(remaining)) {
-            roots.push(remaining);
-        }
-    }
-
-    // 5. 「能分開就分開」與「派生後綴細分」優化：
-    // 5.1 若有大字根能被其他兩個小字根組合而成（含常見連接音），則移除大字根並保留小字根。
-    // 5.2 若大字根去掉其中一個小字根後，剩下部分是常見的派生後綴（如 -heid, -lijk），也拆分之。
-    if (roots.length >= 2) {
-        const toRemove = new Set();
-        const toAdd = [];
-        for (const r1 of roots) {
-            for (const r2 of roots) {
-                if (r1 === r2) continue;
-                if (r1.startsWith(r2)) {
-                    const rest = r1.slice(r2.length);
-                    
-                    // 情況一：剩餘部分等於另一個已知的字根 r3 (含連接音)
-                    let matchedR3 = false;
-                    for (const r3 of roots) {
-                        if (r3 === r1 || r3 === r2) continue;
-                        if (rest === r3 || rest === 's' + r3 || rest === 'e' + r3 || rest === 'en' + r3) {
-                            matchedR3 = true;
-                            break;
-                        }
-                    }
-                    
-                    // 情況二：剩餘部分本身就是一個常見後綴 (含連接音)
-                    let isSuffix = false;
-                    let matchedSuf = null;
-                    for (const suf of suffixes) {
-                        if (rest === suf || rest === 's' + suf) {
-                            isSuffix = true;
-                            matchedSuf = suf;
-                            break;
-                        }
-                    }
-                    
-                    if (matchedR3 || isSuffix) {
-                        toRemove.add(r1);
-                        if (isSuffix && matchedSuf) {
-                            toAdd.push(matchedSuf);
-                        }
-                        break;
-                    }
-                }
-            }
-        }
-        roots = roots.filter(r => !toRemove.has(r));
-        for (const a of toAdd) {
-            if (!roots.includes(a)) roots.push(a);
-        }
-    }
-
-    return roots
+    return sanitizeRoots(card.roots, card.front)
 }
 
 /**
@@ -233,7 +55,7 @@ export function segmentWord(word, roots) {
         if (a.start !== b.start) {
             return a.start - b.start
         }
-        return (b.end - b.start) - (a.end - a.start)
+        return (b.end - a.start) - (a.end - a.start)
     })
 
     // 3. 過濾掉重疊的匹配（只保留左邊最長的匹配項目）
@@ -251,24 +73,21 @@ export function segmentWord(word, roots) {
     let lastIndex = 0
     let rootCounter = 0
     for (const match of activeMatches) {
-        // 匹配前方的非字根文字
         if (match.start > lastIndex) {
             result.push({ text: word.slice(lastIndex, match.start), isRoot: false, rootIndex: -1 })
         }
-        // 字根部分，每個字根有獨立的 rootIndex 供 UI 選色
         result.push({ text: word.slice(match.start, match.end), isRoot: true, rootIndex: rootCounter })
         rootCounter++
         lastIndex = match.end
     }
 
-    // 剩餘後方的文字
     if (lastIndex < word.length) {
         result.push({ text: word.slice(lastIndex), isRoot: false, rootIndex: -1 })
     }
 
     return result
 }
+
 export function generateRoots(card) {
-    // Alias for getCardRoots to maintain backward compatibility
-    return getCardRoots(card);
+    return getCardRoots(card)
 }

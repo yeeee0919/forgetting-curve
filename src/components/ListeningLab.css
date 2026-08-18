@@ -7,121 +7,19 @@
     display: flex;
     flex-direction: column;
     height: calc(100vh - 112px);
-    background: #f8fafc; /* Light background */
+    background: #f8fafc;
     overflow: hidden;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     color: #0f172a;
+    position: relative;
 }
 
-/* ── Topbar ─────────────────────────────────────────────────────────────── */
-.ll2-topbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 20px;
-    background: #ffffff;
-    border-bottom: 1px solid #e2e8f0;
-    flex-shrink: 0;
-    z-index: 20;
-}
-
-.ll2-topbar-logo {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.85rem;
-    font-weight: 800;
-    color: #4f46e5;
-    letter-spacing: 0.03em;
-    white-space: nowrap;
-}
-
-.ll2-topbar-right {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.ll2-settings-btn {
-    background: transparent;
-    border: none;
-    color: #64748b;
-    cursor: pointer;
-    padding: 6px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-}
-.ll2-settings-btn:hover, .ll2-settings-btn.active {
-    color: #0f172a;
-    background: #f1f5f9;
-}
-
-.ll2-status-chip {
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    white-space: nowrap;
-}
-.ll2-status-chip.loading { background: #fef3c7; color: #d97706; }
-.ll2-status-chip.ready   { background: #d1fae5; color: #059669; }
-
-/* ── Settings Drawer & Backdrop ─────────────────────────────────────────── */
 .ll2-settings-backdrop {
     position: absolute;
     inset: 0;
-    z-index: 25; /* Below drawer, above everything else */
+    z-index: 25;
     background: transparent;
 }
-
-.ll2-settings-drawer {
-    position: absolute;
-    top: 50px;
-    right: 20px;
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    z-index: 30;
-    width: 320px;
-    animation: fadeInDown 0.2s ease;
-}
-
-.ll2-url-form { display: flex; gap: 8px; }
-.ll2-url-input {
-    flex: 1;
-    height: 32px;
-    border-radius: 6px;
-    border: 1px solid #cbd5e1;
-    background: #ffffff;
-    color: #0f172a;
-    padding: 0 10px;
-    font-size: 0.8rem;
-    outline: none;
-}
-.ll2-url-input:focus { border-color: #6366f1; }
-.ll2-url-btn {
-    height: 32px;
-    padding: 0 14px;
-    border-radius: 6px;
-    border: none;
-    background: #4f46e5;
-    color: #fff;
-    font-size: 0.8rem;
-    font-weight: 600;
-    cursor: pointer;
-    white-space: nowrap;
-}
-.ll2-url-btn:hover { background: #6366f1; }
-
 
 /* ── Body Split ─────────────────────────────────────────────────────────── */
 .ll2-body {
@@ -479,14 +377,6 @@
         min-height: 0;
     }
 
-    .ll2-topbar {
-        padding: 8px 12px;
-    }
-
-    .ll2-topbar-logo {
-        font-size: 0.78rem;
-    }
-
     .ll2-body {
         flex-direction: column;
         overflow: hidden;
@@ -505,23 +395,6 @@
         min-height: 0;
         border-left: none;
         border-top: 1px solid #e2e8f0;
-    }
-
-    .ll2-settings-drawer {
-        width: calc(100% - 16px);
-        left: 8px;
-        right: 8px;
-        top: 46px;
-    }
-
-    .ll2-url-form {
-        flex-direction: column;
-    }
-
-    .ll2-url-input,
-    .ll2-url-btn {
-        width: 100%;
-        height: 40px;
     }
 
     .ll2-video-controls {

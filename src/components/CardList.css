@@ -54,14 +54,15 @@
 .cl-sort-select {
     background: var(--bg-surface);
     color: var(--text-primary);
-    border: 2px solid var(--border-default);
-    padding: var(--space-xs) var(--space-sm);
-    border-radius: var(--radius-sm);
-    font-size: 0.85rem;
-    font-weight: 700;
+    border: 1px solid var(--border-default);
+    padding: 0 12px;
+    height: var(--btn-height);
+    border-radius: var(--radius-btn);
+    font-size: 0.875rem;
+    font-weight: 500;
     cursor: pointer;
     outline: none;
-    transition: border-color 0.2s;
+    transition: border-color 0.15s;
 }
 
 .cl-sort-select:focus,
@@ -71,22 +72,23 @@
 
 .cl-copy-btn {
     background: var(--bg-surface);
-    color: var(--brand-accent);
-    border: 2px solid var(--border-default);
-    padding: var(--space-xs) var(--space-sm);
-    border-radius: var(--radius-sm);
-    font-size: 0.85rem;
-    font-weight: 800;
+    color: var(--text-primary);
+    border: 1px solid var(--border-default);
+    padding: 0 12px;
+    height: var(--btn-height);
+    border-radius: var(--radius-btn);
+    font-size: 0.875rem;
+    font-weight: 500;
     display: flex;
     align-items: center;
-    gap: var(--space-xs);
-    transition: all 0.2s var(--spring-bounce);
+    gap: 8px;
+    transition: background 0.15s var(--spring-smooth);
     cursor: pointer;
 }
 
 .cl-copy-btn:hover {
-    background: var(--bg-canvas);
-    border-color: var(--brand-accent);
+    background: var(--bg-tint);
+    border-color: var(--border-default);
 }
 
 .cl-copy-btn:active {
@@ -285,18 +287,17 @@
 }
 
 .cl-delete-btn {
-    width: var(--space-xl);
-    height: var(--space-xl);
+    width: var(--icon-btn-size);
+    height: var(--icon-btn-size);
     border-radius: var(--radius-full);
-    background: var(--bg-canvas);
-    border: 2px solid var(--border-default);
-    color: var(--text-tertiary);
-    font-size: 0.9rem;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    color: var(--text-primary);
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.2s var(--spring-bounce);
+    transition: background 0.15s, color 0.15s;
     margin-top: auto;
 }
 
@@ -320,7 +321,12 @@
     padding: calc(var(--space-2xl) * 2) 0;
     text-align: center;
     color: var(--text-secondary);
-    font-weight: 800;
+    font-weight: 500;
+}
+
+.cl-empty-icon {
+    color: var(--text-tertiary);
+    margin-bottom: var(--space-sm);
 }
 
 .cl-empty p {

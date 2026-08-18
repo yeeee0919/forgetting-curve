@@ -21,12 +21,17 @@
     --space-xl: 32px;
     --space-2xl: 48px;
 
-    /* Radius — prefer soft rectangles over pills */
+    /* Radius — Claude: 8px buttons, 12px cards */
     --radius-sm: 6px;
     --radius-md: 10px;
     --radius-lg: 16px;
     --radius-xl: 22px;
     --radius-full: 9999px;
+    --radius-btn: 8px;
+    --btn-height: 40px;
+    --btn-pad: 12px 20px;
+    --icon-btn-size: 36px;
+    --icon-stroke: 1.75;
 
     /* Canal Ink palette */
     --brand-ink: #0B1F33;
@@ -89,6 +94,20 @@ body {
         radial-gradient(ellipse 70% 45% at 96% 4%, rgba(11, 143, 140, 0.1), transparent 50%),
         linear-gradient(180deg, #DDE6F0 0%, #E8EEF4 38%, #EEF2F6 100%);
     background-attachment: fixed;
+}
+
+.ui-icon {
+    display: block;
+    flex-shrink: 0;
+}
+
+button .ui-icon,
+a .ui-icon,
+.tabbar-icon svg,
+.icon-btn svg {
+    stroke-width: var(--icon-stroke);
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
 
 button {

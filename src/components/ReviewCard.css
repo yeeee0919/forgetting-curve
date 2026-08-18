@@ -139,18 +139,17 @@
 }
 
 .rc-autoplay-btn {
-    width: 38px;
-    height: 38px;
+    width: var(--icon-btn-size);
+    height: var(--icon-btn-size);
     border-radius: var(--radius-full);
     background: var(--bg-surface);
-    border: 1.5px solid var(--border-default);
-    box-shadow: var(--elevation-1);
-    font-size: 1.1rem;
+    border: 1px solid var(--border-default);
+    color: var(--text-primary);
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    transition: all 0.2s var(--spring-bounce);
+    transition: background 0.15s var(--spring-smooth), border-color 0.15s var(--spring-smooth);
 }
 
 .rc-autoplay-btn:active {
@@ -259,6 +258,39 @@
     gap: var(--space-sm);
 }
 
+.rc-forms {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 10px;
+    max-width: 100%;
+}
+
+.rc-form-chip {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    background: var(--bg-canvas);
+    border: 1px solid var(--border-default);
+    border-radius: 999px;
+    padding: 3px 8px;
+    line-height: 1.2;
+}
+
+.rc-form-chip.is-current {
+    color: var(--brand-accent);
+    border-color: rgba(241, 90, 41, 0.45);
+    background: rgba(241, 90, 41, 0.08);
+}
+
+.rc-form-label {
+    font-weight: 600;
+    opacity: 0.7;
+    margin-right: 4px;
+    font-size: 0.65rem;
+}
+
 .rc-word {
     font-family: var(--font-word);
     font-size: 2.8rem;
@@ -363,24 +395,22 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--bg-canvas);
-    border: 1.5px solid var(--border-default);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
     border-radius: var(--radius-full);
     color: var(--text-primary);
-    font-size: 1.2rem;
-    width: 36px;
-    height: 36px;
-    transition: all 0.2s var(--spring-bounce);
+    width: var(--icon-btn-size);
+    height: var(--icon-btn-size);
+    transition: background 0.15s var(--spring-smooth);
     cursor: pointer;
 }
 
 .rc-speak-icon-btn.small {
     width: 28px;
     height: 28px;
-    font-size: 0.9rem;
-    border: none;
+    border: 1px solid var(--border-default);
     background: var(--bg-surface);
-    box-shadow: var(--elevation-1);
+    box-shadow: none;
 }
 
 .rc-speak-icon-btn:hover {
@@ -476,16 +506,16 @@
 /* Show answer btn */
 .rc-show-btn {
     width: 100%;
-    padding: var(--space-md);
+    height: var(--btn-height);
+    padding: var(--btn-pad);
     background: var(--bg-surface);
-    border: 2px solid var(--border-default);
-    border-radius: var(--radius-md);
-    color: var(--text-secondary);
-    font-size: 1rem;
-    font-weight: 800;
-    letter-spacing: 0.01em;
-    box-shadow: var(--elevation-1);
-    transition: all 0.2s var(--spring-bounce);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-btn);
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    font-weight: 500;
+    letter-spacing: 0;
+    transition: background 0.15s var(--spring-smooth);
 }
 
 .rc-show-btn:hover {
@@ -1000,9 +1030,12 @@
 
 .pomodoro-label {
     font-size: 0.72rem;
-    font-weight: 800;
+    font-weight: 500;
     color: var(--text-secondary, #888);
     letter-spacing: 0.03em;
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .pomodoro-presets {
@@ -1106,19 +1139,18 @@
 
 /* ── 耳朵聽模式 (聽力專注模式) ── */
 .rc-ear-mode-btn {
-    width: 38px;
-    height: 38px;
+    width: var(--icon-btn-size);
+    height: var(--icon-btn-size);
     border-radius: var(--radius-full);
     background: var(--bg-surface);
-    border: 1.5px solid var(--border-default);
-    box-shadow: var(--elevation-1);
-    font-size: 1.1rem;
+    border: 1px solid var(--border-default);
+    color: var(--text-primary);
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
     cursor: pointer;
-    transition: all 0.2s var(--spring-bounce);
+    transition: background 0.15s var(--spring-smooth), border-color 0.15s var(--spring-smooth);
 }
 
 .rc-ear-mode-btn:active {
@@ -1133,6 +1165,7 @@
 /* 聽力模式下隱藏文字但保留 Placeholder 感 (模糊效果) */
 .rc-ear-mode-active .rc-word,
 .rc-ear-mode-active .rc-phonetic,
+.rc-ear-mode-active .rc-forms,
 .rc-ear-mode-active span {
     filter: blur(6px);
     opacity: 0.35 !important;
@@ -1143,6 +1176,7 @@
 /* 懸停於該區塊時，漸變顯示文字 */
 .rc-ear-mode-active:hover .rc-word,
 .rc-ear-mode-active:hover .rc-phonetic,
+.rc-ear-mode-active:hover .rc-forms,
 .rc-ear-mode-active:hover span {
     filter: blur(0px);
     opacity: 1 !important;

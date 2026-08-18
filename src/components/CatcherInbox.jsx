@@ -3,6 +3,7 @@ import { supabase } from '../services/supabase'
 import { parseTempInboxItemToCardGemini } from '../services/ai'
 import { generateId } from '../services/storage'
 import { initCard } from '../services/srs'
+import { toCardContent } from '../services/cardFields'
 import './CatcherInbox.css'
 
 export default function CatcherInbox({ settings, onNeedKey, onImportDirect }) {
@@ -50,19 +51,9 @@ export default function CatcherInbox({ settings, onNeedKey, onImportDirect }) {
             // 呼叫 AI 鍊金術 Prompt，把原本擴充功能抓到的多重意思傳進去當參考
             const parsed = await parseTempInboxItemToCardGemini(item.word, item.context_sentence, settings.geminiKey, item.translation)
 
-            // 組裝準備寫入 LocalStorage 的完整卡片格式
             const newCard = {
                 id: generateId(),
-                front: parsed.front || item.word,
-                back: parsed.back || '',
-                phonetic: parsed.phonetic || '',
-                part_of_speech: parsed.part_of_speech || '',
-                example_1: parsed.example_1 || '',
-                example_trans_1: parsed.example_trans_1 || '',
-                example_2: parsed.example_2 || '',
-                example_trans_2: parsed.example_trans_2 || '',
-                language: parsed.language || 'nl',
-                tips: parsed.tips || '',
+                ...toCardContent({ ...parsed, front: parsed.front || item.word }),
                 createdAt: Date.now(),
                 ...initCard(),
             }
@@ -90,16 +81,12 @@ export default function CatcherInbox({ settings, onNeedKey, onImportDirect }) {
         try {
             const newCard = {
                 id: generateId(),
-                front: item.word,
-                back: item.translation || '',
-                phonetic: '',
-                part_of_speech: '',
-                example_1: item.context_sentence || '',
-                example_trans_1: '',
-                example_2: '',
-                example_trans_2: '',
-                language: 'nl',
-                tips: '來自擴充功能 (無 AI 鍊金)',
+                ...toCardContent({
+                    front: item.word,
+                    back: item.translation || '',
+                    example_1: item.context_sentence || '',
+                    tips: '來自擴充功能 (無 AI 鍊金)',
+                }),
                 createdAt: Date.now(),
                 ...initCard(),
             }
@@ -163,7 +150,7 @@ export default function CatcherInbox({ settings, onNeedKey, onImportDirect }) {
                                         </>
                                     ) : (
                                         <>
-                                            ⚡ 快速收錄
+                                            快速收錄
                                         </>
                                     )}
                                 </button>
@@ -180,7 +167,7 @@ export default function CatcherInbox({ settings, onNeedKey, onImportDirect }) {
                                         </>
                                     ) : (
                                         <>
-                                            🤖 AI 鍊金
+                                            AI 解析
                                         </>
                                     )}
                                 </button>

@@ -1,8 +1,11 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { getInboxWords, deleteInboxWord, clearInbox } from '../services/supabase'
 import { generateId } from '../services/storage'
 import { initCard } from '../services/srs'
-import { generateRoots } from '../services/wordUtils'
+import { EXTERNAL_JSON_PROMPT } from '../services/cardPrompt'
+import { parseCardsJsonStrict, countCardsInJson } from '../services/jsonImport'
+import { toCardContent } from '../services/cardFields'
+import Icon from './Icons'
 
 export default function ImportModal({ onImport, onClose, importing, error, hasApiKey, onNeedKey, onImportDirect }) {
     const [tab, setTab] = useState('ai')
@@ -62,21 +65,10 @@ export default function ImportModal({ onImport, onClose, importing, error, hasAp
         setJsonError('')
         setResult(null)
         try {
-            const parsed = JSON.parse(jsonText)
-            const arr = Array.isArray(parsed) ? parsed : (parsed.cards || parsed.items || [])
-            if (!arr.length) throw new Error('陣列是空的')
+            const arr = parseCardsJsonStrict(jsonText)
             const cards = arr.map(p => ({
                 id: generateId(),
-                front: p.front || '',
-                back: p.back || '',
-                phonetic: p.phonetic || '',
-                example_1: p.example_1 || p.example || '',
-                example_trans_1: p.example_trans_1 || p.example_trans || '',
-                example_2: p.example_2 || '',
-                example_trans_2: p.example_trans_2 || '',
-                language: p.language || 'en',
-                tips: p.tips || null,
-                roots: p.roots && p.roots.length ? p.roots : generateRoots(p),
+                ...toCardContent(p),
                 createdAt: Date.now(),
                 ...initCard(),
             }))
@@ -88,31 +80,12 @@ export default function ImportModal({ onImport, onClose, importing, error, hasAp
         }
     }
 
-    const CHATGPT_PROMPT = `你是一位精通語言學、認知心理學與記憶法的語言學教授。
-請把以下單字列表整理成 JSON 格式陣列，每個物件必須包含這些欄位：
-
-- front: 原文（外語單字）
-- back: 中文翻譯（若單字有超過一個以上的常用意思，請務必把多個意思都列出來，用「、」分隔）
-- part_of_speech: 詞性標註（例如：n., v., adj., adv.，若無或不確定請留空字串 ""）
-- phonetic: 音標（IPA 格式，不確定可留空字串 ""）
-- example_1: 一個簡單、生活化、高頻使用的例句（用 front 的語言）
-- example_trans_1: 例句 1 的中文翻譯
-- example_2: 一個稍微進階、帶有不同語意或慣用法、或不同時態的例句
-- example_trans_2: 例句 2 的中文翻譯
-- language: 語言代碼（荷蘭語=nl, 英文=en, 日文=ja, 德文=de, 法文=fr, 韓文=ko）
-- tips: 教授級的記憶提示。請嚴格包含以下兩個部分，並使用指定的標籤開頭：
-  【字源分析】：拆解字根、字首、字尾，解釋它的歷史或構詞邏輯。
-  【生動聯想】：基於發音（諧音）或字形，利用大腦的「荒謬記憶效應（Bizarre Effect）」，創造一個極度生動、甚至有點荒謬的畫面或小故事情境，將外語發音與中文意思強烈連結起來。
-- roots: 字根字首字尾的拆解陣列 (Array of strings)。請將該單字中具有代表性的字根、字首或字尾分別提取出來，以「字串陣列 (Array of strings)」的形式列出，用來在 UI 中著色字根。例如，對於 "uiterlijk" 為 ["uit", "erlijk"]；對於 "abnormal" 為 ["ab", "norm"]；對於 "reaction" 為 ["re", "act"]；對於 "structure" 為 ["struct"]。若該字無明顯字根字首，請輸出空陣列 []。
-
-回覆只要純 JSON 陣列，不要其他說明文字。
-
-單字列表：
-（←在這裡貼上你的單字，然後送出）`
+    const detectedCount = countCardsInJson(jsonText)
 
     const getPromptForExternal = () => {
         const content = text.trim()
-        return content ? `${CHATGPT_PROMPT}\n\n單字列表：\n${content}` : CHATGPT_PROMPT
+        if (!content) return EXTERNAL_JSON_PROMPT
+        return EXTERNAL_JSON_PROMPT.replace('（←在這裡貼上你的單字，然後送出）', content)
     }
 
     const openChatGPT = () => {
@@ -138,20 +111,20 @@ export default function ImportModal({ onImport, onClose, importing, error, hasAp
                 {/* Header with Dual Tabs - Compressed for space */}
                 <div className="im-header">
                     <div className="im-header-main">
-                        <h2 className="im-title">✨ 匯入單字</h2>
+                        <h2 className="im-title">匯入單字</h2>
                         <div className="im-tabs-horizontal">
                             <button className={`im-tab-h ${tab === 'ai' ? 'active' : ''}`} onClick={() => setTab('ai')}>
-                                🤖 AI 自動解析
+                                AI 自動解析
                             </button>
                             <button className={`im-tab-h ${tab === 'manual' ? 'active' : ''}`} onClick={() => setTab('manual')}>
-                                📄 手動 / JSON
+                                手動 / JSON
                             </button>
                         </div>
                     </div>
                     <div className="im-header-actions">
                         <div className="im-settings-wrapper">
                             <button className={`im-icon-btn ${showSettings ? 'active' : ''}`} onClick={() => setShowSettings(!showSettings)} title="設定">
-                                ⚙️
+                                <Icon name="settings" size={16} />
                             </button>
                             {showSettings && (
                                 <div className="im-settings-dropdown">
@@ -168,7 +141,7 @@ export default function ImportModal({ onImport, onClose, importing, error, hasAp
                                 </div>
                             )}
                         </div>
-                        <button className="im-close-v4" onClick={onClose}>✕</button>
+                        <button className="im-close-v4" onClick={onClose}><Icon name="x" size={16} /></button>
                     </div>
                 </div>
 
@@ -201,21 +174,19 @@ export default function ImportModal({ onImport, onClose, importing, error, hasAp
                                 <div style={{ fontWeight: 800, color: 'var(--text-primary)', fontSize: '0.8rem' }}>💡 外部 AI 處理步驟：</div>
                                 <div style={{ display: 'flex', gap: '6px' }}><span>1️⃣</span><span>點擊下方按鈕「複製提示並前往 AI」。</span></div>
                                 <div style={{ display: 'flex', gap: '6px' }}><span>2️⃣</span><span>在 ChatGPT 或 Gemini 對話框中直接貼上，讓 AI 自動解析單字。</span></div>
-                                <div style={{ display: 'flex', gap: '6px' }}><span>3️⃣</span><span>等待 AI 處理完成，複製整段「JSON 程式碼」，並貼回下方的黑色輸入框中。</span></div>
+                                <div style={{ display: 'flex', gap: '6px' }}><span>3️⃣</span><span>把 AI 的整段回覆貼回下方（連說明或程式碼框都可以，匯入框會自己挖 JSON）。</span></div>
                             </div>
                             <textarea
                                 className="im-textarea-v4 im-code-editor"
-                                placeholder='[
-  {
-    "front": "word",
-    "back": "翻譯",
-    "phonetic": "/.../",
-    "example_1": "..."
-  }
-]'
+                                placeholder='可直接貼上 ChatGPT / Gemini 的整段回覆'
                                 value={jsonText}
                                 onChange={e => setJsonText(e.target.value)}
                             />
+                            {detectedCount > 0 && (
+                                <div className="im-field-hint" style={{ marginTop: '8px', color: 'var(--good)' }}>
+                                    辨識到 {detectedCount} 張卡
+                                </div>
+                            )}
                             {jsonError && <div className="im-error-v4">{jsonError}</div>}
                         </div>
                     )}
@@ -227,12 +198,10 @@ export default function ImportModal({ onImport, onClose, importing, error, hasAp
                         {tab === 'manual' && (
                             <div className="im-external-ai-group">
                                 <button className={`im-footer-link-btn ${copiedTarget === 'chatgpt' ? 'success' : ''}`} onClick={openChatGPT}>
-                                    {copiedTarget === 'chatgpt' ? '✅ 已複製提示詞' : '💬 複製提示並開啟 ChatGPT'}
-                                    {copiedTarget !== 'chatgpt' && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3" /></svg>}
+                                    {copiedTarget === 'chatgpt' ? <><Icon name="check" size={14} /> 已複製提示詞</> : <>複製提示並開啟 ChatGPT <Icon name="arrowUpRight" size={14} /></>}
                                 </button>
                                 <button className={`im-footer-link-btn ${copiedTarget === 'gemini' ? 'success' : ''}`} onClick={openGemini}>
-                                    {copiedTarget === 'gemini' ? '✅ 已複製提示詞' : '✨ 複製提示並開啟 Gemini'}
-                                    {copiedTarget !== 'gemini' && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3" /></svg>}
+                                    {copiedTarget === 'gemini' ? <><Icon name="check" size={14} /> 已複製提示詞</> : <>複製提示並開啟 Gemini <Icon name="arrowUpRight" size={14} /></>}
                                 </button>
                             </div>
                         )}
@@ -245,7 +214,7 @@ export default function ImportModal({ onImport, onClose, importing, error, hasAp
                             onClick={tab === 'manual' ? handleJsonSubmit : handleAiSubmit}
                             disabled={importing || (tab === 'manual' ? !jsonText.trim() : !text.trim())}
                         >
-                            {importing ? '🤖 魔法解析中...' : '匯入'}
+                            {importing ? '解析中…' : '匯入'}
                         </button>
                     </div>
                 </div>
@@ -254,7 +223,7 @@ export default function ImportModal({ onImport, onClose, importing, error, hasAp
                 {(error || result) && (
                     <div className="im-status-bar">
                         {error && <div className="im-error-v4">{error}</div>}
-                        {result && <div className="im-success-v4">✅ 成功匯入 {result.added} 張 {result.updated > 0 && `(更新 ${result.updated} 張)`}</div>}
+                        {result && <div className="im-success-v4">成功匯入 {result.added} 張{result.updated > 0 ? `（更新 ${result.updated} 張` : ''}{result.relearned > 0 ? `，${result.relearned} 張進入重學` : ''}{result.updated > 0 ? '）' : ''}</div>}
                     </div>
                 )}
 
@@ -297,13 +266,13 @@ export default function ImportModal({ onImport, onClose, importing, error, hasAp
 
                     .im-header-actions { display: flex; align-items: center; gap: var(--space-sm); margin-top: 0; }
                     .im-icon-btn {
-                        background: var(--bg-canvas); border: 1px solid var(--border-default); width: 32px; height: 32px;
-                        border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center;
-                        cursor: pointer; font-size: 1rem; transition: all 0.2s;
+                        background: var(--bg-surface); border: 1px solid var(--border-default); width: 36px; height: 36px;
+                        border-radius: 9999px; display: flex; align-items: center; justify-content: center;
+                        cursor: pointer; color: var(--text-primary); transition: background 0.15s, border-color 0.15s;
                     }
-                    .im-icon-btn:hover, .im-icon-btn.active { border-color: rgba(241, 90, 41, 0.55); color: var(--brand-accent); background: rgba(241, 90, 41, 0.08); }
-                    .im-close-v4 { background: none; border: none; font-size: 1.3rem; color: var(--text-tertiary); cursor: pointer; padding: 4px; transition: color 0.2s; }
-                    .im-close-v4:hover { color: var(--text-primary); }
+                    .im-icon-btn:hover, .im-icon-btn.active { border-color: var(--border-default); color: var(--text-primary); background: var(--bg-tint); }
+                    .im-close-v4 { background: var(--bg-surface); border: 1px solid var(--border-default); width: 36px; height: 36px; border-radius: 9999px; color: var(--text-primary); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s; }
+                    .im-close-v4:hover { background: var(--bg-tint); color: var(--text-primary); }
 
                     .im-body { flex: 1; padding: var(--space-lg) var(--space-lg); display: flex; flex-direction: column; background: var(--bg-surface); overflow: hidden; }
                     
