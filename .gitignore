@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local KNM quiz screenshots (transcribed into src/data/knmQuiz.js)
+knm-quiz-screenshots/

@@ -1,9 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import Icon from './Icons'
+import { useState } from 'react'
 import { KNM_SECTIONS } from '../data/knmContent'
-
-const QUIZ_URL =
-    'https://notebook.google.com/notebook/b62c7bc3-52fd-4f3c-abd6-0d38b8b27138/artifact/9999ebc8-8ae1-4afe-af64-f0f9a8c30be1'
+import KnmQuiz from './KnmQuiz'
 
 function Block({ block }) {
     if (block.type === 'p') {
@@ -99,42 +96,12 @@ function Block({ block }) {
 }
 
 export default function KnmView() {
-    const iframeRef = useRef(null)
-    const [embedState, setEmbedState] = useState('loading')
     const [activeId, setActiveId] = useState(KNM_SECTIONS[0].id)
-
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            setEmbedState((s) => (s === 'loading' ? 'blocked' : s))
-        }, 8000)
-        return () => clearTimeout(timer)
-    }, [])
-
-    const handleIframeError = useCallback(() => {
-        setEmbedState('blocked')
-    }, [])
-
-    const handleIframeLoad = useCallback(() => {
-        const iframe = iframeRef.current
-        if (!iframe) return
-        try {
-            const nested = iframe.contentWindow?.length ?? 0
-            if (nested === 0) {
-                setEmbedState('blocked')
-                return
-            }
-            setEmbedState('ok')
-        } catch {
-            setEmbedState('ok')
-        }
-    }, [])
 
     const jumpTo = (id) => {
         setActiveId(id)
         document.getElementById(`knm-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
-
-    const showFallback = embedState === 'blocked'
 
     return (
         <div className="knm-layout">
@@ -182,50 +149,9 @@ export default function KnmView() {
             <section className="knm-pane knm-quiz" aria-label="KNM 考題">
                 <header className="knm-pane-header knm-quiz-header">
                     <h2>考題</h2>
-                    <a
-                        className="knm-open-btn"
-                        href={QUIZ_URL}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                    >
-                        在新分頁開啟
-                        <Icon name="arrowUpRight" size={14} />
-                    </a>
                 </header>
                 <div className="knm-quiz-body">
-                    {!showFallback && (
-                        <iframe
-                            ref={iframeRef}
-                            className="knm-iframe"
-                            src={QUIZ_URL}
-                            title="KNM 考題"
-                            onLoad={handleIframeLoad}
-                            onError={handleIframeError}
-                            allow="clipboard-write"
-                        />
-                    )}
-                    {embedState === 'loading' && (
-                        <div className="knm-fallback knm-loading-hint" aria-live="polite">
-                            正在載入考題…
-                        </div>
-                    )}
-                    {showFallback && (
-                        <div className="knm-fallback">
-                            <p className="knm-fallback-title">無法在此頁鑲嵌考題</p>
-                            <p className="knm-fallback-copy">
-                                Google NotebookLM 不允許把考題嵌進別的網站，作答也需要登入 Google 帳號。請在新分頁開啟。
-                            </p>
-                            <a
-                                className="knm-fallback-cta"
-                                href={QUIZ_URL}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                            >
-                                在新分頁開啟考題
-                                <Icon name="arrowUpRight" size={16} />
-                            </a>
-                        </div>
-                    )}
+                    <KnmQuiz />
                 </div>
             </section>
 
@@ -288,27 +214,6 @@ export default function KnmView() {
                     align-items: center;
                     justify-content: space-between;
                     gap: 12px;
-                }
-
-                .knm-open-btn {
-                    display: inline-flex;
-                    align-items: center;
-                    gap: 6px;
-                    height: 32px;
-                    padding: 0 12px;
-                    border-radius: var(--radius-btn);
-                    border: 1px solid var(--border-default);
-                    background: var(--bg-surface);
-                    color: var(--text-primary);
-                    font-size: 0.78rem;
-                    font-weight: 600;
-                    text-decoration: none;
-                    white-space: nowrap;
-                    transition: background 0.15s var(--spring-smooth);
-                }
-
-                .knm-open-btn:hover {
-                    background: var(--bg-tint);
                 }
 
                 .knm-study-body {
@@ -621,72 +526,10 @@ export default function KnmView() {
                     position: relative;
                     flex: 1;
                     min-height: 0;
-                    background: var(--bg-canvas);
-                }
-
-                .knm-iframe {
-                    display: block;
-                    width: 100%;
-                    height: 100%;
-                    border: none;
+                    overflow: hidden;
                     background: var(--bg-surface);
-                }
-
-                .knm-fallback {
-                    position: absolute;
-                    inset: 0;
                     display: flex;
                     flex-direction: column;
-                    align-items: center;
-                    justify-content: center;
-                    gap: 10px;
-                    padding: 32px 24px;
-                    text-align: center;
-                    background: var(--bg-surface);
-                }
-
-                .knm-loading-hint {
-                    background: transparent;
-                    pointer-events: none;
-                    color: var(--text-tertiary);
-                    font-size: 0.9rem;
-                    font-weight: 600;
-                }
-
-                .knm-fallback-title {
-                    margin: 0;
-                    font-size: 1.05rem;
-                    font-weight: 800;
-                    color: var(--text-primary);
-                }
-
-                .knm-fallback-copy {
-                    margin: 0;
-                    max-width: 28em;
-                    font-size: 0.9rem;
-                    line-height: 1.55;
-                    color: var(--text-secondary);
-                }
-
-                .knm-fallback-cta {
-                    display: inline-flex;
-                    align-items: center;
-                    gap: 8px;
-                    margin-top: 8px;
-                    height: var(--btn-height);
-                    padding: var(--btn-pad);
-                    border-radius: var(--radius-btn);
-                    background: var(--brand-accent);
-                    color: var(--text-on-accent);
-                    font-size: 0.92rem;
-                    font-weight: 700;
-                    text-decoration: none;
-                    box-shadow: var(--elevation-1);
-                    transition: transform 0.15s var(--spring-smooth);
-                }
-
-                .knm-fallback-cta:hover {
-                    transform: translateY(-1px);
                 }
 
                 @media (max-width: 768px) {
