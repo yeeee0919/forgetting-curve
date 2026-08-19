@@ -8,6 +8,7 @@ import { getInboxWords, deleteInboxWord, clearInbox, getCloudCards, upsertCloudC
 import ReviewCard from './components/ReviewCard'
 import CardList from './components/CardList'
 import GrammarView from './components/GrammarView'
+import KnmView from './components/KnmView'
 import ListeningLab from './components/ListeningLab'
 import SpeakingLab from './components/SpeakingLab'
 import ImportModal from './components/ImportModal'
@@ -396,7 +397,7 @@ export default function App() {
             </header>
 
             {/* Main Content */}
-            <main className={`app-content ${view === 'home' || view === 'grammar' || view === 'review' || view === 'speaking' ? 'wide' : ''} ${view === 'lab' ? 'lab-fullscreen' : ''} ${view === 'speaking' ? 'speaking-fullscreen' : ''}`}>
+            <main className={`app-content ${view === 'home' || view === 'grammar' || view === 'review' || view === 'speaking' || view === 'knm' ? 'wide' : ''} ${view === 'lab' ? 'lab-fullscreen' : ''} ${view === 'speaking' ? 'speaking-fullscreen' : ''} ${view === 'knm' ? 'knm-fullscreen' : ''}`}>
                 {view === 'home' && (
                     <HomePage
                         totalCards={cards.length}
@@ -442,6 +443,9 @@ export default function App() {
                 )}
                 {view === 'grammar' && (
                     <GrammarView settings={settings} />
+                )}
+                {view === 'knm' && (
+                    <KnmView />
                 )}
                 {view === 'lab' && (
                     <ListeningLab />
@@ -489,6 +493,15 @@ export default function App() {
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
                     </span>
                     文法
+                </button>
+                <button
+                    className={`tabbar-item ${view === 'knm' ? 'active' : ''}`}
+                    onClick={() => setView('knm')}
+                >
+                    <span className="tabbar-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 21h18"/><path d="M5 21V8l7-4 7 4v13"/><path d="M9 21v-6h6v6"/><path d="M9 10h.01"/><path d="M15 10h.01"/></svg>
+                    </span>
+                    KNM
                 </button>
                 <button
                     className={`tabbar-item ${view === 'lab' ? 'active' : ''}`}

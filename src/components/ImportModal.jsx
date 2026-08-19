@@ -359,190 +359,314 @@ export default function ImportModal({ onImport, onClose, importing, error, hasAp
                     .im-code-editor { font-family: 'JetBrains Mono', monospace; background: #1a1a1a; color: #e0e0e0; }
 
                     .im-flow-demo { flex-shrink: 0; margin-bottom: 10px; }
-                    .im-flow-stage {
-                        position: relative;
-                        height: 148px;
-                        border: 1px solid var(--border-subtle);
+                    .im-flow-window {
+                        width: 100%;
+                        aspect-ratio: 16 / 9;
+                        max-height: 268px;
+                        border: 1px solid var(--border-default);
                         border-radius: 12px;
                         overflow: hidden;
-                        background: var(--bg-tint);
+                        background: #fff;
+                        box-shadow: var(--elevation-1);
+                        display: flex;
+                        flex-direction: column;
                     }
-                    .im-flow-frame {
-                        position: absolute;
-                        inset: 0;
-                        padding: 10px 12px;
-                        opacity: 0;
-                        pointer-events: none;
+                    .im-browser-bar {
+                        flex-shrink: 0;
+                        height: 34px;
+                        display: flex;
+                        align-items: center;
+                        gap: 10px;
+                        padding: 0 12px;
+                        background: #F3F5F7;
+                        border-bottom: 1px solid var(--border-subtle);
                     }
-                    .im-flow-frame.app { animation: imFlowApp 12s ease-in-out infinite; }
-                    .im-flow-frame.gpt { animation: imFlowGpt 12s ease-in-out infinite; }
-                    @keyframes imFlowApp {
-                        0%, 14% { opacity: 1; }
-                        18%, 74% { opacity: 0; }
-                        78%, 92% { opacity: 1; }
-                        96%, 100% { opacity: 0; }
+                    .im-browser-dots {
+                        width: 42px; height: 10px; flex-shrink: 0; border-radius: 99px;
+                        background: linear-gradient(90deg, #ff5f57 0 10px, #febc2e 16px 26px, #28c840 32px 42px);
+                        background-repeat: no-repeat;
                     }
-                    @keyframes imFlowGpt {
-                        0%, 15% { opacity: 0; }
-                        19%, 73% { opacity: 1; }
-                        77%, 100% { opacity: 0; }
-                    }
-                    .im-flow-app-top {
-                        font-size: 0.68rem; font-weight: 800; color: var(--brand-accent); margin-bottom: 6px;
-                    }
-                    .im-flow-app-box {
+                    .im-browser-omni {
                         position: relative;
-                        height: 72px;
-                        border-radius: 8px;
-                        background: #1a1a1a;
-                        color: #9aa4ad;
-                        padding: 8px 10px;
-                        font-size: 0.72rem;
+                        flex: 1;
+                        height: 22px;
+                        border-radius: 99px;
+                        background: #fff;
+                        border: 1px solid var(--border-subtle);
                         overflow: hidden;
                     }
-                    .im-flow-placeholder { animation: imFlowPlaceholder 12s ease-in-out infinite; }
+                    .im-url {
+                        position: absolute; inset: 0;
+                        display: flex; align-items: center;
+                        padding: 0 10px;
+                        font-size: 0.72rem; font-weight: 600; color: var(--text-primary);
+                        opacity: 0;
+                    }
+                    .im-url.app { animation: imUrlApp 14s ease-in-out infinite; }
+                    .im-url.gpt { animation: imUrlGpt 14s ease-in-out infinite; }
+                    @keyframes imUrlApp {
+                        0%, 14% { opacity: 1; } 18%, 76% { opacity: 0; } 80%, 94% { opacity: 1; } 97%, 100% { opacity: 0; }
+                    }
+                    @keyframes imUrlGpt {
+                        0%, 16% { opacity: 0; } 20%, 74% { opacity: 1; } 78%, 100% { opacity: 0; }
+                    }
+                    .im-browser-page { position: relative; flex: 1; min-height: 0; background: #F7F8FA; }
+                    .im-view { position: absolute; inset: 0; opacity: 0; pointer-events: none; }
+                    .im-view.app { animation: imViewApp 14s ease-in-out infinite; padding: 10px 12px; }
+                    .im-view.chat { animation: imViewChat 14s ease-in-out infinite; display: flex; flex-direction: column; }
+                    @keyframes imViewApp {
+                        0%, 15% { opacity: 1; } 19%, 76% { opacity: 0; } 80%, 94% { opacity: 1; } 97%, 100% { opacity: 0; }
+                    }
+                    @keyframes imViewChat {
+                        0%, 16% { opacity: 0; } 20%, 74% { opacity: 1; } 78%, 100% { opacity: 0; }
+                    }
+                    .im-mini-modal {
+                        height: 100%;
+                        background: #fff;
+                        border-radius: 10px;
+                        border: 1px solid var(--border-subtle);
+                        padding: 8px 10px;
+                        display: flex; flex-direction: column; gap: 8px;
+                    }
+                    .im-mini-title { font-size: 0.72rem; font-weight: 800; color: var(--brand-ink); }
+                    .im-mini-box {
+                        position: relative; flex: 1; min-height: 0;
+                        border-radius: 8px; background: #1a1a1a; color: #9aa4ad;
+                        padding: 8px 10px; font-size: 0.72rem; overflow: hidden;
+                    }
+                    .im-flow-placeholder { animation: imFlowPlaceholder 14s ease-in-out infinite; }
                     .im-flow-pasted {
                         position: absolute; inset: 8px 10px; margin: 0;
                         font-family: ui-monospace, Menlo, monospace;
-                        font-size: 0.7rem; color: #d7e0e6; white-space: pre-wrap;
-                        opacity: 0; animation: imFlowPasted 12s ease-in-out infinite;
+                        font-size: 0.68rem; color: #d7e0e6; white-space: pre-wrap; line-height: 1.4;
+                        opacity: 0; animation: imFlowPasted 14s ease-in-out infinite;
                     }
                     @keyframes imFlowPlaceholder {
-                        0%, 76% { opacity: 0.7; }
-                        80%, 92% { opacity: 0; }
-                        96%, 100% { opacity: 0.7; }
+                        0%, 78% { opacity: 0.7; } 82%, 94% { opacity: 0; } 97%, 100% { opacity: 0.7; }
                     }
                     @keyframes imFlowPasted {
-                        0%, 77% { opacity: 0; }
-                        82%, 92% { opacity: 1; }
-                        96%, 100% { opacity: 0; }
+                        0%, 80% { opacity: 0; } 84%, 94% { opacity: 1; } 97%, 100% { opacity: 0; }
                     }
-                    .im-flow-app-btns { display: flex; gap: 6px; margin-top: 8px; }
+                    .im-flow-app-btns { display: flex; gap: 6px; }
                     .im-flow-chip {
-                        font-size: 0.68rem; font-weight: 800; border-radius: 6px; padding: 4px 8px;
+                        font-size: 0.66rem; font-weight: 800; border-radius: 6px; padding: 5px 8px;
                     }
                     .im-flow-chip.gpt {
                         background: var(--brand-accent); color: #fff;
-                        animation: imFlowGptPulse 12s ease-in-out infinite;
+                        animation: imFlowGptPulse 14s ease-in-out infinite;
                     }
                     .im-flow-chip.gem { background: #fff; color: var(--brand-accent); border: 1px solid var(--brand-accent); }
                     @keyframes imFlowGptPulse {
                         0%, 4% { transform: scale(1); box-shadow: none; }
-                        8%, 12% { transform: scale(1.06); box-shadow: 0 0 0 4px rgba(241, 90, 41, 0.25); }
-                        16%, 100% { transform: scale(1); box-shadow: none; }
+                        8%, 13% { transform: scale(1.04); box-shadow: 0 0 0 4px rgba(241, 90, 41, 0.22); }
+                        17%, 100% { transform: scale(1); box-shadow: none; }
                     }
                     .im-flow-cursor {
-                        position: absolute; left: 28px; top: 118px; width: 10px; height: 10px;
+                        position: absolute; left: 42px; bottom: 22px; width: 11px; height: 11px;
                         background: var(--brand-ink);
                         clip-path: polygon(0 0, 100% 70%, 45% 70%, 60% 100%, 40% 100%, 28% 70%, 0 78%);
-                        animation: imFlowCursor 12s ease-in-out infinite;
+                        animation: imFlowCursor 14s ease-in-out infinite;
                     }
                     @keyframes imFlowCursor {
-                        0% { opacity: 0; transform: translate(40px, -24px); }
-                        4%, 12% { opacity: 1; transform: translate(0, 0); }
-                        16%, 100% { opacity: 0; }
+                        0% { opacity: 0; transform: translate(36px, -20px); }
+                        5%, 13% { opacity: 1; transform: translate(0, 0); }
+                        17%, 100% { opacity: 0; }
                     }
-                    .im-flow-gpt-bar { font-size: 0.68rem; font-weight: 800; color: var(--brand-ink); margin-bottom: 6px; }
-                    .im-flow-gpt-prompt {
-                        position: relative;
-                        font-size: 0.72rem; color: var(--text-secondary); background: #fff;
-                        border-radius: 8px; padding: 8px 10px 8px 10px; margin-bottom: 6px;
-                        animation: imFlowFadeIn 12s ease-in-out infinite;
+                    .im-chat-thread {
+                        flex: 1; min-height: 0; overflow: hidden;
+                        padding: 10px 14px 8px;
+                        display: flex; flex-direction: column; gap: 8px; justify-content: flex-end;
                     }
-                    .im-flow-auto {
-                        display: inline-block; margin-right: 6px;
-                        font-size: 0.62rem; font-weight: 800; color: var(--good);
-                        background: var(--good-bg); border-radius: 99px; padding: 1px 6px;
+                    .im-bubble {
+                        max-width: 78%;
+                        font-size: 0.74rem; line-height: 1.45; font-weight: 500;
+                        padding: 8px 10px; border-radius: 14px;
                     }
-                    .im-flow-gpt-words {
-                        font-family: var(--font-word, Georgia, serif);
-                        font-size: 0.78rem; font-weight: 700; color: var(--brand-ink);
-                        min-height: 18px;
-                        animation: imFlowWords 12s ease-in-out infinite;
+                    .im-bubble.user {
+                        align-self: flex-end;
+                        background: #E8EEF4; color: var(--brand-ink);
                     }
-                    .im-flow-gpt-out {
-                        position: relative; margin-top: 4px;
-                        background: #1a1a1a; border-radius: 8px; padding: 6px 8px; min-height: 36px;
+                    .im-bubble.bot {
+                        align-self: flex-start;
+                        background: #fff; color: var(--brand-ink);
+                        border: 1px solid var(--border-subtle);
+                        max-width: 86%;
+                        animation: imBubbleBot 14s ease-in-out infinite;
                     }
-                    .im-flow-gpt-out pre {
-                        margin: 0; font-family: ui-monospace, Menlo, monospace;
-                        font-size: 0.66rem; color: #d7e0e6; opacity: 0;
-                        animation: imFlowOut 12s ease-in-out infinite;
+                    .im-bubble.prompt {
+                        display: -webkit-box;
+                        -webkit-line-clamp: 2;
+                        -webkit-box-orient: vertical;
+                        overflow: hidden;
+                        animation: imBubblePrompt 14s ease-in-out infinite;
                     }
-                    .im-flow-wait {
-                        position: absolute; left: 8px; top: 8px;
-                        font-size: 0.68rem; font-weight: 700; color: #9aa4ad;
-                        animation: imFlowWait 12s ease-in-out infinite;
+                    .im-bubble.words { animation: imBubbleWords 14s ease-in-out infinite; }
+                    @keyframes imBubblePrompt {
+                        0%, 19% { opacity: 0; transform: translateY(6px); }
+                        23%, 74% { opacity: 1; transform: none; }
+                        78%, 100% { opacity: 0; }
                     }
-                    .im-flow-copied {
-                        position: absolute; right: 12px; bottom: 8px;
-                        font-size: 0.68rem; font-weight: 800; color: var(--good);
-                        background: var(--good-bg); border-radius: 99px; padding: 2px 8px;
-                        opacity: 0; animation: imFlowCopied 12s ease-in-out infinite;
+                    @keyframes imBubbleWords {
+                        0%, 33% { opacity: 0; transform: translateY(6px); }
+                        37%, 74% { opacity: 1; transform: none; }
+                        78%, 100% { opacity: 0; }
                     }
-                    @keyframes imFlowWords {
-                        0%, 28% { opacity: 0; }
-                        32%, 73% { opacity: 1; }
-                        77%, 100% { opacity: 0; }
+                    @keyframes imBubbleBot {
+                        0%, 46% { opacity: 0; transform: translateY(6px); }
+                        48%, 74% { opacity: 1; transform: none; }
+                        78%, 100% { opacity: 0; }
                     }
-                    @keyframes imFlowWait {
-                        0%, 42% { opacity: 0; }
-                        46%, 56% { opacity: 1; }
+                    .im-typing {
+                        display: inline-flex; gap: 4px; padding: 2px 2px;
+                        opacity: 0;
+                        animation: imTyping 14s ease-in-out infinite;
+                    }
+                    .im-typing i {
+                        width: 6px; height: 6px; border-radius: 50%; background: #8B9AAB;
+                        animation: imDot 1s ease-in-out infinite;
+                    }
+                    .im-typing i:nth-child(2) { animation-delay: 0.15s; }
+                    .im-typing i:nth-child(3) { animation-delay: 0.3s; }
+                    @keyframes imDot { 0%, 80%, 100% { opacity: 0.3; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-2px); } }
+                    @keyframes imTyping {
+                        0%, 46% { opacity: 0; }
+                        48%, 58% { opacity: 1; }
                         62%, 100% { opacity: 0; }
                     }
-                    @keyframes imFlowOut {
-                        0%, 54% { opacity: 0; }
-                        60%, 73% { opacity: 1; }
-                        77%, 100% { opacity: 0; }
+                    .im-json {
+                        margin: 0; font-family: ui-monospace, Menlo, monospace;
+                        font-size: 0.66rem; line-height: 1.4; color: #2A241C;
+                        white-space: pre-wrap; opacity: 0;
+                        animation: imJson 14s ease-in-out infinite;
                     }
-                    @keyframes imFlowCopied {
-                        0%, 62% { opacity: 0; transform: translateY(4px); }
-                        66%, 73% { opacity: 1; transform: translateY(0); }
-                        77%, 100% { opacity: 0; }
+                    @keyframes imJson {
+                        0%, 56% { opacity: 0; }
+                        60%, 74% { opacity: 1; }
+                        78%, 100% { opacity: 0; }
                     }
-                    @keyframes imFlowFadeIn {
-                        0%, 18% { opacity: 0; }
-                        22%, 73% { opacity: 1; }
-                        77%, 100% { opacity: 0; }
+                    .im-composer {
+                        flex-shrink: 0;
+                        margin: 0 10px 8px;
+                        height: 34px;
+                        border-radius: 18px;
+                        background: #fff;
+                        border: 1px solid var(--border-default);
+                        display: flex; align-items: center;
+                        padding: 0 8px 0 12px;
+                        position: relative;
+                    }
+                    .im-composer-ph, .im-composer-type {
+                        font-size: 0.7rem; white-space: nowrap; overflow: hidden;
+                    }
+                    .im-composer-ph { color: var(--text-secondary); animation: imCompPh 14s ease-in-out infinite; }
+                    .im-composer-type {
+                        position: absolute; left: 12px; color: var(--brand-ink); font-weight: 600;
+                        opacity: 0; animation: imCompType 14s ease-in-out infinite;
+                    }
+                    @keyframes imCompPh {
+                        0%, 30% { opacity: 1; } 34%, 100% { opacity: 0; }
+                    }
+                    @keyframes imCompType {
+                        0%, 31% { opacity: 0; }
+                        34%, 40% { opacity: 1; }
+                        44%, 100% { opacity: 0; }
+                    }
+                    .im-send {
+                        margin-left: auto; width: 22px; height: 22px; border-radius: 50%;
+                        background: #0B1F33; color: #fff; font-size: 12px; font-weight: 800;
+                        display: flex; align-items: center; justify-content: center;
+                    }
+                    .im-copied-flag {
+                        position: absolute; right: 12px; top: 10px;
+                        font-size: 0.7rem; font-weight: 800; color: #0B6B4F;
+                        background: #D8F3E8; border-radius: 99px; padding: 3px 8px;
+                        opacity: 0; animation: imCopied 14s ease-in-out infinite;
+                    }
+                    @keyframes imCopied {
+                        0%, 65% { opacity: 0; transform: translateY(-4px); }
+                        68%, 74% { opacity: 1; transform: none; }
+                        78%, 100% { opacity: 0; }
                     }
                     .im-flow-caps {
-                        display: flex; flex-wrap: wrap; gap: 4px 8px;
-                        list-style: none; margin: 8px 0 0; padding: 0;
+                        display: grid;
+                        grid-template-columns: 1fr 1fr;
+                        gap: 4px 16px;
+                        list-style: none;
+                        margin: 10px 0 0;
+                        padding: 0;
                     }
                     .im-flow-caps li {
-                        font-size: 0.68rem; font-weight: 700; color: var(--text-tertiary);
-                        padding: 2px 0;
+                        font-size: 0.8rem;
+                        font-weight: 600;
+                        color: var(--text-primary);
+                        line-height: 1.4;
+                        opacity: 0.78;
                     }
-                    .im-flow-caps li::before { font-weight: 800; margin-right: 4px; }
+                    .im-flow-caps li::before {
+                        font-weight: 800;
+                        margin-right: 6px;
+                        color: var(--brand-accent);
+                    }
                     .im-flow-caps li:nth-child(1)::before { content: '1.'; }
                     .im-flow-caps li:nth-child(2)::before { content: '2.'; }
                     .im-flow-caps li:nth-child(3)::before { content: '3.'; }
                     .im-flow-caps li:nth-child(4)::before { content: '4.'; }
                     .im-flow-caps li:nth-child(5)::before { content: '5.'; }
                     .im-flow-caps li:nth-child(6)::before { content: '6.'; }
-                    .im-flow-caps li:nth-child(1) { animation: imCap1 12s ease-in-out infinite; }
-                    .im-flow-caps li:nth-child(2) { animation: imCap2 12s ease-in-out infinite; }
-                    .im-flow-caps li:nth-child(3) { animation: imCap3 12s ease-in-out infinite; }
-                    .im-flow-caps li:nth-child(4) { animation: imCap4 12s ease-in-out infinite; }
-                    .im-flow-caps li:nth-child(5) { animation: imCap5 12s ease-in-out infinite; }
-                    .im-flow-caps li:nth-child(6) { animation: imCap6 12s ease-in-out infinite; }
-                    @keyframes imCap1 { 0%, 14% { color: var(--brand-accent); } 18%, 100% { color: var(--text-tertiary); } }
-                    @keyframes imCap2 { 0%, 16% { color: var(--text-tertiary); } 19%, 28% { color: var(--brand-accent); } 32%, 100% { color: var(--text-tertiary); } }
-                    @keyframes imCap3 { 0%, 30% { color: var(--text-tertiary); } 32%, 42% { color: var(--brand-accent); } 46%, 100% { color: var(--text-tertiary); } }
-                    @keyframes imCap4 { 0%, 44% { color: var(--text-tertiary); } 46%, 62% { color: var(--brand-accent); } 66%, 100% { color: var(--text-tertiary); } }
-                    @keyframes imCap5 { 0%, 64% { color: var(--text-tertiary); } 66%, 74% { color: var(--brand-accent); } 78%, 100% { color: var(--text-tertiary); } }
-                    @keyframes imCap6 { 0%, 76% { color: var(--text-tertiary); } 78%, 92% { color: var(--brand-accent); } 96%, 100% { color: var(--text-tertiary); } }
+                    .im-flow-caps li:nth-child(1) { animation: imCap1 14s ease-in-out infinite; }
+                    .im-flow-caps li:nth-child(2) { animation: imCap2 14s ease-in-out infinite; }
+                    .im-flow-caps li:nth-child(3) { animation: imCap3 14s ease-in-out infinite; }
+                    .im-flow-caps li:nth-child(4) { animation: imCap4 14s ease-in-out infinite; }
+                    .im-flow-caps li:nth-child(5) { animation: imCap5 14s ease-in-out infinite; }
+                    .im-flow-caps li:nth-child(6) { animation: imCap6 14s ease-in-out infinite; }
+                    @keyframes imCap1 { 0%, 15% { opacity: 1; font-weight: 800; } 18%, 100% { opacity: 0.78; font-weight: 600; } }
+                    @keyframes imCap2 { 0%, 18% { opacity: 0.78; } 20%, 32% { opacity: 1; font-weight: 800; } 36%, 100% { opacity: 0.78; font-weight: 600; } }
+                    @keyframes imCap3 { 0%, 34% { opacity: 0.78; } 36%, 44% { opacity: 1; font-weight: 800; } 48%, 100% { opacity: 0.78; font-weight: 600; } }
+                    @keyframes imCap4 { 0%, 46% { opacity: 0.78; } 48%, 62% { opacity: 1; font-weight: 800; } 66%, 100% { opacity: 0.78; font-weight: 600; } }
+                    @keyframes imCap5 { 0%, 64% { opacity: 0.78; } 66%, 74% { opacity: 1; font-weight: 800; } 78%, 100% { opacity: 0.78; font-weight: 600; } }
+                    @keyframes imCap6 { 0%, 78% { opacity: 0.78; } 80%, 94% { opacity: 1; font-weight: 800; } 97%, 100% { opacity: 0.78; font-weight: 600; } }
 
                     @media (prefers-reduced-motion: reduce) {
-                        .im-flow-frame, .im-flow-placeholder, .im-flow-pasted, .im-flow-chip.gpt,
-                        .im-flow-cursor, .im-flow-gpt-prompt, .im-flow-gpt-words, .im-flow-gpt-out pre,
-                        .im-flow-wait, .im-flow-copied, .im-flow-caps li { animation: none !important; }
-                        .im-flow-frame.app, .im-flow-pasted, .im-flow-gpt-out pre { opacity: 1; }
-                        .im-flow-frame.gpt, .im-flow-cursor, .im-flow-wait { opacity: 0; }
-                        .im-flow-caps li:nth-child(6) { color: var(--brand-accent); }
+                        .im-url, .im-view, .im-flow-placeholder, .im-flow-pasted, .im-flow-chip.gpt,
+                        .im-flow-cursor, .im-bubble, .im-typing, .im-json, .im-composer-ph,
+                        .im-composer-type, .im-copied-flag, .im-flow-caps li { animation: none !important; }
+                        .im-view.chat, .im-url.gpt, .im-bubble.prompt, .im-bubble.words, .im-json { opacity: 1; }
+                        .im-view.app, .im-url.app, .im-flow-cursor, .im-typing { opacity: 0; }
+                        .im-flow-caps li { opacity: 0.7; }
+                        .im-flow-caps li:nth-child(2) { opacity: 1; font-weight: 800; }
                     }
 
                     @media (max-width: 600px) {
+                        .im-flow-window {
+                            aspect-ratio: 9 / 16;
+                            width: min(210px, 62vw);
+                            max-height: 320px;
+                            margin: 0 auto;
+                            border-radius: 28px;
+                            border: 9px solid #1C1C1C;
+                            box-shadow: 0 12px 28px rgba(11, 31, 51, 0.18);
+                        }
+                        .im-browser-bar {
+                            height: 28px;
+                            background: #F3F5F7;
+                            padding: 0 8px;
+                        }
+                        .im-browser-dots { display: none; }
+                        .im-browser-omni { height: 18px; }
+                        .im-url { font-size: 0.62rem; justify-content: center; }
+                        .im-bubble { font-size: 0.68rem; padding: 7px 8px; }
+                        .im-json { font-size: 0.58rem; }
+                        .im-flow-chip.gem { display: none; }
+                        .im-flow-caps {
+                            grid-template-columns: 1fr;
+                            gap: 6px;
+                            margin-top: 12px;
+                        }
+                        .im-flow-caps li {
+                            font-size: 0.86rem;
+                            opacity: 0.7;
+                        }
+                        .im-flow-cursor { left: 24px; bottom: 18px; }
                         .im-header {
                             padding: var(--space-sm) var(--space-md) 0;
                         }
@@ -589,41 +713,62 @@ export default function ImportModal({ onImport, onClose, importing, error, hasAp
 function ExternalAiDemo() {
     return (
         <div className="im-flow-demo" aria-hidden="true">
-            <div className="im-flow-stage">
-                <div className="im-flow-frame app">
-                    <div className="im-flow-app-top">手動 / JSON</div>
-                    <div className="im-flow-app-box">
-                        <span className="im-flow-placeholder">貼上 ChatGPT / Gemini 的整段回覆</span>
-                        <pre className="im-flow-pasted">{`[{ "front": "kinderen", "lemma": "kind" }]`}</pre>
+            <div className="im-flow-window">
+                <div className="im-browser-bar">
+                    <span className="im-browser-dots" />
+                    <div className="im-browser-omni">
+                        <span className="im-url app">toocheep.app/import</span>
+                        <span className="im-url gpt">chatgpt.com</span>
                     </div>
-                    <div className="im-flow-app-btns">
-                        <span className="im-flow-chip gpt">ChatGPT ↗</span>
-                        <span className="im-flow-chip gem">Gemini ↗</span>
-                    </div>
-                    <span className="im-flow-cursor" />
                 </div>
+                <div className="im-browser-page">
+                    <div className="im-view app">
+                        <div className="im-mini-modal">
+                            <div className="im-mini-title">匯入單字 · 手動 / JSON</div>
+                            <div className="im-mini-box">
+                                <span className="im-flow-placeholder">貼上 ChatGPT / Gemini 的整段回覆</span>
+                                <pre className="im-flow-pasted">{`[
+  { "front": "kinderen", "lemma": "kind" },
+  { "front": "huiswerk", "lemma": "huiswerk" }
+]`}</pre>
+                            </div>
+                            <div className="im-flow-app-btns">
+                                <span className="im-flow-chip gpt">複製提示並開啟 ChatGPT ↗</span>
+                                <span className="im-flow-chip gem">Gemini ↗</span>
+                            </div>
+                        </div>
+                        <span className="im-flow-cursor" />
+                    </div>
 
-                <div className="im-flow-frame gpt">
-                    <div className="im-flow-gpt-bar">ChatGPT</div>
-                    <div className="im-flow-gpt-prompt">
-                        <span className="im-flow-auto">已自動帶入提示詞</span>
-                        你是荷蘭語教授…請輸出 JSON。
+                    <div className="im-view chat">
+                        <div className="im-chat-thread">
+                            <div className="im-bubble user prompt">
+                                你是荷蘭語教授。請把單字整理成純 JSON 陣列，含 front、lemma、forms、例句…
+                            </div>
+                            <div className="im-bubble user words">
+                                單字列表：<br />kinderen<br />huiswerk<br />opbellen
+                            </div>
+                            <div className="im-bubble bot">
+                                <span className="im-typing"><i /><i /><i /></span>
+                                <pre className="im-json">{`[{ "front": "kinderen", "lemma": "kind", "back": "孩子們" }]`}</pre>
+                            </div>
+                        </div>
+                        <div className="im-composer">
+                            <span className="im-composer-ph">詢問任何問題</span>
+                            <span className="im-composer-type">kinderen / huiswerk / opbellen</span>
+                            <span className="im-send">↑</span>
+                        </div>
+                        <span className="im-copied-flag">已複製結果</span>
                     </div>
-                    <div className="im-flow-gpt-words">kinderen · huiswerk · opbellen</div>
-                    <div className="im-flow-gpt-out">
-                        <span className="im-flow-wait">輸出中…</span>
-                        <pre>{`[{ "front": "kinderen", "lemma": "kind" }]`}</pre>
-                    </div>
-                    <span className="im-flow-copied">已複製結果</span>
                 </div>
             </div>
             <ol className="im-flow-caps">
-                <li>點擊下方按鈕到外部 AI</li>
-                <li>貼上提示詞（ChatGPT 會自動帶入）</li>
-                <li>貼上單字</li>
-                <li>等待 AI 輸出</li>
-                <li>複製結果</li>
-                <li>貼上結果</li>
+                <li>點擊下方按鈕，前往外部 AI</li>
+                <li>提示詞已出現在對話裡（ChatGPT 會自動帶入）</li>
+                <li>在對話中貼上要學的單字</li>
+                <li>等待 AI 輸出 JSON</li>
+                <li>複製整段結果</li>
+                <li>回到這裡，貼上結果後匯入</li>
             </ol>
         </div>
     )
