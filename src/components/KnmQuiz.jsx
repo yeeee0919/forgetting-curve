@@ -146,19 +146,20 @@ export default function KnmQuiz() {
                         if (idx === question.correctIndex) cls += ' correct'
                         else if (idx === selected) cls += ' wrong'
                     }
+                    const optionExplain = revealed ? question.optionExplains?.[idx] : ''
                     return (
                         <li key={idx}>
                             <button type="button" className={cls} onClick={() => pick(idx)} disabled={revealed}>
                                 <span className="kq-letter">{String.fromCharCode(65 + idx)}</span>
-                                <span className="kq-opt-text">{opt}</span>
+                                <span className="kq-opt-body">
+                                    <span className="kq-opt-text">{opt}</span>
+                                    {optionExplain ? <span className="kq-opt-explain">{optionExplain}</span> : null}
+                                </span>
                             </button>
                         </li>
                     )
                 })}
             </ul>
-            {revealed && question.explain && (
-                <p className="kq-explain">{question.explain}</p>
-            )}
             <div className="kq-nav">
                 <button type="button" className="kq-btn" onClick={goPrev} disabled={state.i === 0}>返回</button>
                 <button
@@ -287,17 +288,19 @@ const KQ_CSS = `
 }
 .kq-opt.correct .kq-letter { background: var(--good); color: #fff; }
 .kq-opt.wrong .kq-letter { background: var(--again); color: #fff; }
-.kq-explain {
-    margin: 12px 0 0;
-    padding: 10px 12px;
-    border-left: 3px solid var(--brand-primary);
-    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-    background: var(--brand-primary-soft);
-    font-size: 0.84rem;
+.kq-opt-text { display: block; }
+.kq-opt-body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+.kq-opt-explain {
+    font-family: var(--font-sans);
+    font-size: 0.78rem;
     font-weight: 600;
-    line-height: 1.5;
-    color: var(--text-primary);
-    flex-shrink: 0;
+    line-height: 1.45;
+    color: var(--text-secondary);
 }
 .kq-nav {
     display: flex;

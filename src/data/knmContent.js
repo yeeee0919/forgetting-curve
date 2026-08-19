@@ -327,9 +327,12 @@ export const KNM_SECTIONS = [
         kicker: '必考數字與日期',
         blocks: [
             {
+                type: 'map',
+            },
+            {
                 type: 'list',
                 items: [
-                    { lead: '地理', body: '12 省。首都阿姆斯特丹，政府在海牙。約 1/4 領土低於海平面，靠三角洲工程 Deltawerken 防洪。Randstad（阿姆、鹿特丹、海牙、烏特勒支一帶）住了約一半人口。' },
+                    { lead: '地理', body: '12 省。首都阿姆斯特丹（Noord-Holland），政府在海牙 Den Haag（Zuid-Holland）。約 1/4 領土低於海平面，靠三角洲工程 Deltawerken 防洪。Randstad（阿姆、鹿特丹、海牙、烏特勒支一帶）住了約一半人口。' },
                     { lead: '黃金時代', body: '17 世紀靠全球貿易（VOC 東印度公司）致富，藝術（林布蘭）也到巔峰。' },
                     { lead: '殖民', body: '印尼與蘇利南曾是殖民地，現已獨立。荷蘭曾深度參與大西洋奴隸貿易。' },
                 ],
