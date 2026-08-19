@@ -109,39 +109,39 @@ export default function NlProvincesMap() {
             <p className="nl-map-src">地圖輪廓來源：Wikimedia Commons · Provinces of the Netherlands</p>
             <style>{`
                 .nl-map {
-                    margin: 4px 0 18px;
+                    margin: 8px 0 36px;
                     padding: 0;
                 }
 
                 .nl-map-head h4 {
-                    margin: 0 0 4px;
+                    margin: 0 0 6px;
                     font-family: var(--font-sans);
-                    font-size: 0.78rem;
-                    font-weight: 800;
-                    letter-spacing: 0.04em;
-                    text-transform: uppercase;
-                    color: var(--knm-ink, #1E1A14);
+                    font-size: 1.05rem;
+                    font-weight: 700;
+                    letter-spacing: -0.01em;
+                    text-transform: none;
+                    color: #242424;
                 }
 
                 .nl-map-head p {
-                    margin: 0 0 10px;
+                    margin: 0 0 16px;
                     font-family: var(--font-word);
-                    font-size: 0.88rem;
-                    line-height: 1.5;
-                    color: var(--knm-ink-soft, #4F473C);
+                    font-size: 1.12rem;
+                    line-height: 1.55;
+                    color: #242424;
                 }
 
                 .nl-map-board {
-                    background: #FFF9EE;
-                    border: 1px solid rgba(30, 26, 20, 0.12);
-                    border-radius: 4px;
-                    padding: 8px 8px 0;
+                    background: transparent;
+                    border: none;
+                    border-radius: 0;
+                    padding: 0;
                 }
 
                 .nl-map-svg {
                     display: block;
                     width: 100%;
-                    max-width: 340px;
+                    max-width: 380px;
                     margin: 0 auto;
                     height: auto;
                     overflow: visible;
@@ -150,26 +150,26 @@ export default function NlProvincesMap() {
                 .nl-prov {
                     cursor: pointer;
                     fill-rule: evenodd;
-                    stroke: #2C261C;
-                    stroke-width: 0.55;
+                    stroke: #242424;
+                    stroke-width: 0.5;
                     stroke-linejoin: round;
-                    transition: fill 0.15s ease, stroke-width 0.15s ease, opacity 0.15s ease;
+                    transition: opacity 0.15s ease, stroke-width 0.15s ease;
                 }
 
-                .nl-prov[data-province="Groningen"] { fill: #8FB9A8; }
-                .nl-prov[data-province="Friesland"] { fill: #6FA3A0; }
-                .nl-prov[data-province="Drenthe"] { fill: #E2A07A; }
-                .nl-prov[data-province="Overijssel"] { fill: #D4B15A; }
-                .nl-prov[data-province="Flevoland"] { fill: #7EB0D4; }
-                .nl-prov[data-province="Gelderland"] { fill: #D57A62; }
-                .nl-prov[data-province="Utrecht"] { fill: #E6C56A; }
-                .nl-prov[data-province="Noord-Holland"] { fill: #3F7A6C; }
-                .nl-prov[data-province="Zuid-Holland"] { fill: #C45C3E; }
-                .nl-prov[data-province="Zeeland"] { fill: #7D9B5E; }
-                .nl-prov[data-province="Noord-Brabant"] { fill: #B5834A; }
-                .nl-prov[data-province="Limburg"] { fill: #8A5E7A; }
+                .nl-prov[data-province="Groningen"] { fill: #C5D5CE; }
+                .nl-prov[data-province="Friesland"] { fill: #A9C4C2; }
+                .nl-prov[data-province="Drenthe"] { fill: #E6C8B4; }
+                .nl-prov[data-province="Overijssel"] { fill: #E2D3A4; }
+                .nl-prov[data-province="Flevoland"] { fill: #B7CCE0; }
+                .nl-prov[data-province="Gelderland"] { fill: #E0B8AD; }
+                .nl-prov[data-province="Utrecht"] { fill: #E8D9A8; }
+                .nl-prov[data-province="Noord-Holland"] { fill: #8AADA4; }
+                .nl-prov[data-province="Zuid-Holland"] { fill: #D4A090; }
+                .nl-prov[data-province="Zeeland"] { fill: #B4C4A4; }
+                .nl-prov[data-province="Noord-Brabant"] { fill: #D0B496; }
+                .nl-prov[data-province="Limburg"] { fill: #C4A8B8; }
 
-                .nl-map-shapes [data-province] { opacity: 0.82; }
+                .nl-map-shapes [data-province] { opacity: 0.78; }
                 .nl-map-shapes.is-Groningen [data-province="Groningen"],
                 .nl-map-shapes.is-Friesland [data-province="Friesland"],
                 .nl-map-shapes.is-Drenthe [data-province="Drenthe"],
@@ -183,37 +183,37 @@ export default function NlProvincesMap() {
                 .nl-map-shapes.is-Noord-Brabant [data-province="Noord-Brabant"],
                 .nl-map-shapes.is-Limburg [data-province="Limburg"] {
                     opacity: 1;
-                    stroke-width: 1.15;
+                    stroke-width: 1.1;
                 }
 
                 .nl-map-label {
                     font-family: var(--font-sans);
                     font-size: 5.6px;
-                    font-weight: 800;
-                    fill: #1A1814;
-                    stroke: #FFF9EE;
+                    font-weight: 700;
+                    fill: #242424;
+                    stroke: #FFFFFF;
                     stroke-width: 2.4px;
                     paint-order: stroke;
                     letter-spacing: -0.02em;
                 }
 
                 .nl-map-label.on {
-                    fill: #8B1E12;
+                    fill: #000;
                     font-size: 6.1px;
                 }
 
                 .nl-map-city circle {
-                    fill: #1A1814;
-                    stroke: #FFF9EE;
+                    fill: #242424;
+                    stroke: #FFFFFF;
                     stroke-width: 0.7;
                 }
 
                 .nl-map-city text {
                     font-family: var(--font-sans);
                     font-size: 4.6px;
-                    font-weight: 700;
-                    fill: #1A1814;
-                    stroke: #FFF9EE;
+                    font-weight: 600;
+                    fill: #242424;
+                    stroke: #FFFFFF;
                     stroke-width: 1.8px;
                     paint-order: stroke;
                 }
@@ -223,37 +223,39 @@ export default function NlProvincesMap() {
                     flex-wrap: wrap;
                     align-items: baseline;
                     gap: 8px;
-                    margin: 0;
-                    padding: 8px 6px 10px;
-                    border-top: 1px dotted rgba(30, 26, 20, 0.12);
+                    margin: 8px 0 0;
+                    padding: 12px 0 4px;
+                    border-top: 1px solid rgba(36, 36, 36, 0.12);
                     font-family: var(--font-sans);
                 }
 
                 .nl-map-caption strong {
-                    font-size: 0.92rem;
-                    font-weight: 800;
-                    color: #1E1A14;
+                    font-size: 0.95rem;
+                    font-weight: 700;
+                    color: #242424;
                 }
 
                 .nl-map-caption span {
-                    font-size: 0.84rem;
-                    font-weight: 700;
-                    color: #C45C4A;
+                    font-size: 0.88rem;
+                    font-weight: 500;
+                    color: #6B6B6B;
                 }
 
                 .nl-map-caption em {
-                    font-style: normal;
-                    font-size: 0.75rem;
-                    color: #4F473C;
+                    font-style: italic;
+                    font-family: var(--font-word);
+                    font-size: 0.88rem;
+                    color: #6B6B6B;
                 }
 
                 .nl-map-legend {
                     list-style: none;
-                    margin: 10px 0 0;
+                    margin: 8px 0 0;
                     padding: 0;
                     display: grid;
                     grid-template-columns: 1fr 1fr;
-                    gap: 4px;
+                    gap: 0;
+                    border-top: 1px solid rgba(36, 36, 36, 0.12);
                 }
 
                 .nl-map-legend button {
@@ -261,46 +263,52 @@ export default function NlProvincesMap() {
                     display: grid;
                     grid-template-columns: 1fr auto;
                     grid-template-rows: auto auto;
-                    gap: 0 8px;
-                    padding: 7px 8px;
-                    border: 1px solid transparent;
-                    border-radius: 4px;
+                    gap: 0 10px;
+                    padding: 12px 4px;
+                    border: none;
+                    border-bottom: 1px solid rgba(36, 36, 36, 0.08);
+                    border-radius: 0;
                     background: transparent;
                     text-align: left;
                     cursor: pointer;
                 }
 
                 .nl-map-legend button.on {
-                    background: #FFF9EE;
-                    border-color: rgba(196, 92, 74, 0.35);
+                    background: transparent;
+                    box-shadow: inset 0 -1px 0 #242424;
+                    border-bottom-color: #242424;
                 }
 
                 .nl-map-legend b {
-                    font-size: 0.74rem;
-                    font-weight: 800;
-                    color: #1E1A14;
+                    font-family: var(--font-sans);
+                    font-size: 0.88rem;
+                    font-weight: 700;
+                    color: #242424;
                     letter-spacing: -0.01em;
                 }
 
                 .nl-map-legend span {
-                    font-size: 0.72rem;
-                    font-weight: 700;
-                    color: #C45C4A;
+                    font-family: var(--font-sans);
+                    font-size: 0.82rem;
+                    font-weight: 500;
+                    color: #6B6B6B;
                     text-align: right;
                 }
 
                 .nl-map-legend i {
                     grid-column: 1 / -1;
-                    font-style: normal;
-                    font-size: 0.68rem;
-                    color: #6A6156;
-                    line-height: 1.35;
+                    font-style: italic;
+                    font-family: var(--font-word);
+                    font-size: 0.82rem;
+                    color: #6B6B6B;
+                    line-height: 1.4;
                 }
 
                 .nl-map-src {
-                    margin: 8px 0 0;
-                    font-size: 0.62rem;
-                    color: #8A8074;
+                    margin: 14px 0 0;
+                    font-family: var(--font-sans);
+                    font-size: 0.72rem;
+                    color: #6B6B6B;
                 }
 
                 @media (max-width: 768px) {
