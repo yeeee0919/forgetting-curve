@@ -1,7 +1,9 @@
 /**
  * MemoFlip SRS 演算法
- * 三階段設計：學習階段 → 複習階段 → 重學階段
+ * 四段漏斗：總量池 → 緩衝區 → 已熟練 → 成熟
  * 參考 Anki SM-2，加入 Fuzz Factor 避免易度地獄
+ *
+ * 單字不離開系統。成熟卡到期仍會回來，只是較少。
  */
 
 import { getCardRoots } from './wordUtils.js'
@@ -15,17 +17,22 @@ export const RATING = {
 
 export const STATUS = {
     NEW: 'new',           // 總量池：尚未開始學習的新字
-    LEARNING: 'learning',   // 背誦區：新卡，正在建立印象
-    REVIEW: 'review',     // 熟練區：已畢業(間隔>=3天)
-    RELEARNING: 'relearning', // 背誦區：複習時忘記，重學
+    LEARNING: 'learning',   // 緩衝區：新卡，或尚未滿 3 天的日級複習
+    REVIEW: 'review',     // 已離開緩衝區（已熟練或成熟）
+    RELEARNING: 'relearning', // 緩衝區：複習時忘記，重學
 }
 
 const MIN = 60 * 1000
 const DAY = 24 * 60 * MIN
 
-// 學習階梯：新卡要依序通過這些關卡才算「畢業」
+/** 離開緩衝區、進入已熟練的間隔門檻（「記得了」路徑） */
+export const GRADUATE_INTERVAL = 3 * DAY
+/** 從已熟練升成成熟、從日常磨字淡出的間隔門檻 */
+export const MATURE_INTERVAL = 21 * DAY
+
+// 學習階梯：新卡要依序通過這些關卡才開始以「天」複習
 const LEARNING_STEPS = [1 * MIN, 10 * MIN]
-// 重學階梯：背過但忘記的卡，要通過這個關卡才回到複習
+// 重學階梯：背過但忘記的卡，要通過這個關卡才回到日級複習
 const RELEARNING_STEPS = [10 * MIN]
 
 /**
@@ -35,6 +42,22 @@ const RELEARNING_STEPS = [10 * MIN]
 function fuzz(ms) {
     const jitter = ms * 0.1
     return Math.round(ms + (Math.random() * 2 - 1) * jitter)
+}
+
+function bufferOrReview(interval) {
+    return interval >= GRADUATE_INTERVAL ? STATUS.REVIEW : STATUS.LEARNING
+}
+
+export function isMature(card) {
+    return card?.status === STATUS.REVIEW && (card.interval || 0) >= MATURE_INTERVAL
+}
+
+export function getStage(card) {
+    if (!card) return 'learning'
+    if (card.status === STATUS.NEW) return 'new'
+    if (card.status === STATUS.RELEARNING) return 'relearning'
+    if (card.status === STATUS.REVIEW) return isMature(card) ? 'mature' : 'review'
+    return 'learning'
 }
 
 /**
@@ -53,6 +76,37 @@ export function initCard() {
 }
 
 /**
+ * SM-2 日級調度。
+ * stayReview: 已離開緩衝區的卡，Hard 使間隔暫低於 3 天也不退回緩衝區（祖父條款）。
+ */
+function applySm2(card, rating, now, { stayReview }) {
+    const { interval, easeFactor, repetitions } = card
+
+    if (rating === RATING.AGAIN) {
+        const newEF = Math.max(1.3, easeFactor - 0.2)
+        return {
+            ..._make(RELEARNING_STEPS[0], newEF, 0, now, STATUS.RELEARNING, 0),
+            lastReviewInterval: interval,
+        }
+    }
+
+    let i
+    let newEF = easeFactor
+    if (rating === RATING.HARD) {
+        newEF = Math.max(1.3, easeFactor - 0.15)
+        i = fuzz(Math.max(1 * DAY, Math.max(interval + DAY, Math.round(interval * 1.2))))
+    } else if (rating === RATING.GOOD) {
+        i = fuzz(Math.max(1 * DAY, Math.round(interval * easeFactor)))
+    } else {
+        newEF = Math.min(4.0, easeFactor + 0.15)
+        i = fuzz(Math.max(1 * DAY, Math.round(interval * newEF * 1.3)))
+    }
+
+    const status = stayReview ? STATUS.REVIEW : bufferOrReview(i)
+    return _make(i, newEF, repetitions + 1, now, status, 0)
+}
+
+/**
  * 三階段調度：根據卡片目前狀態與用戶評分，計算下次複習時間
  */
 export function scheduleCard(card, rating) {
@@ -62,61 +116,47 @@ export function scheduleCard(card, rating) {
     // 相容舊資料（沒有 status 欄位的卡片）
     if (!status) status = repetitions >= 2 ? STATUS.REVIEW : STATUS.LEARNING
     if (step === undefined) step = 0
+    if (interval === undefined) interval = 0
+
+    const working = { ...card, interval, easeFactor, repetitions, status, step }
 
     // ─────────────────────────────
-    // 📖 學習階段：新卡畢業前 (或者剛剛從 NEW 啟動)
+    // 📖 學習階段：新卡，或尚未滿 3 天、仍佔緩衝區名額
     // ─────────────────────────────
     if (status === STATUS.LEARNING || status === STATUS.NEW) {
-        if (rating === RATING.AGAIN) {
-            // 重來：退回第一步
-            return _make(LEARNING_STEPS[0], easeFactor, 0, now, STATUS.LEARNING, 0)
-        }
-        if (rating === RATING.HARD) {
-            // 困難：停在目前階梯，但稍微延長
-            const t = LEARNING_STEPS[step] * 1.5
-            return _make(t, easeFactor, repetitions, now, STATUS.LEARNING, step)
-        }
-        if (rating === RATING.GOOD) {
-            const next = step + 1
-            if (next >= LEARNING_STEPS.length) {
-                // 畢業！進入複習階段，第一次間隔 1 天
-                return _make(1 * DAY, easeFactor, 1, now, STATUS.REVIEW, 0)
+        const onMinuteSteps = interval < DAY
+
+        if (onMinuteSteps) {
+            if (rating === RATING.AGAIN) {
+                return _make(LEARNING_STEPS[0], easeFactor, 0, now, STATUS.LEARNING, 0)
             }
-            return _make(LEARNING_STEPS[next], easeFactor, repetitions, now, STATUS.LEARNING, next)
+            if (rating === RATING.HARD) {
+                const t = LEARNING_STEPS[step] * 1.5
+                return _make(t, easeFactor, repetitions, now, STATUS.LEARNING, step)
+            }
+            if (rating === RATING.GOOD) {
+                const next = step + 1
+                if (next >= LEARNING_STEPS.length) {
+                    // 通過分鐘階梯，開始以天複習，但仍留在緩衝區（1 天 < 3 天）
+                    return _make(1 * DAY, easeFactor, 1, now, STATUS.LEARNING, next)
+                }
+                return _make(LEARNING_STEPS[next], easeFactor, repetitions, now, STATUS.LEARNING, next)
+            }
+            if (rating === RATING.EASY) {
+                // 學習中按完全記得：4 天，當天出緩衝區
+                return _make(4 * DAY, Math.min(4.0, easeFactor + 0.15), 1, now, STATUS.REVIEW, 0)
+            }
         }
-        if (rating === RATING.EASY) {
-            // 跳過所有階梯，直接畢業，間隔 4 天
-            return _make(4 * DAY, Math.min(4.0, easeFactor + 0.15), 1, now, STATUS.REVIEW, 0)
-        }
+
+        // 日級、仍在緩衝區：用 SM-2，滿 3 天才出站
+        return applySm2(working, rating, now, { stayReview: false })
     }
 
     // ─────────────────────────────
-    // 📈 複習階段：正式 SM-2 計算
+    // 📈 複習階段：已離開緩衝區（已熟練 / 成熟）
     // ─────────────────────────────
     if (status === STATUS.REVIEW) {
-        if (rating === RATING.AGAIN) {
-            // 忘記：進入重學，降低易度係數
-            // 記住這次的 REVIEW 間隔，重學成功後用來做折損計算
-            const newEF = Math.max(1.3, easeFactor - 0.2)
-            return { ..._make(RELEARNING_STEPS[0], newEF, 0, now, STATUS.RELEARNING, 0), lastReviewInterval: interval }
-        }
-        if (rating === RATING.HARD) {
-            // 困難：間隔 × 1.2，降低易度係數，且至少推進 1 天
-            const newEF = Math.max(1.3, easeFactor - 0.15)
-            const i = fuzz(Math.max(1 * DAY, Math.max(interval + DAY, Math.round(interval * 1.2))))
-            return _make(i, newEF, repetitions + 1, now, STATUS.REVIEW, 0)
-        }
-        if (rating === RATING.GOOD) {
-            // 良好：間隔 × 易度係數（SM-2 核心），且至少 1 天
-            const i = fuzz(Math.max(1 * DAY, Math.round(interval * easeFactor)))
-            return _make(i, easeFactor, repetitions + 1, now, STATUS.REVIEW, 0)
-        }
-        if (rating === RATING.EASY) {
-            // 輕鬆：間隔 × 易度係數 × 1.3，提升易度，且至少 1 天
-            const newEF = Math.min(4.0, easeFactor + 0.15)
-            const i = fuzz(Math.max(1 * DAY, Math.round(interval * newEF * 1.3)))
-            return _make(i, newEF, repetitions + 1, now, STATUS.REVIEW, 0)
-        }
+        return applySm2(working, rating, now, { stayReview: true })
     }
 
     // ─────────────────────────────
@@ -124,16 +164,16 @@ export function scheduleCard(card, rating) {
     // ─────────────────────────────
     if (status === STATUS.RELEARNING) {
         if (rating === RATING.AGAIN || rating === RATING.HARD) {
-            // 再次失敗：重回重學起點（保留 lastReviewInterval）
-            return { ..._make(RELEARNING_STEPS[0], easeFactor, 0, now, STATUS.RELEARNING, 0), lastReviewInterval: card.lastReviewInterval || 0 }
+            return {
+                ..._make(RELEARNING_STEPS[0], easeFactor, 0, now, STATUS.RELEARNING, 0),
+                lastReviewInterval: card.lastReviewInterval || 0,
+            }
         }
-        // Good / Easy：重學成功，回到複習
-        // 正確折損：拿進重學前的 REVIEW 間隔乘以 0.5（而非重學步驟的 10 分鐘）
-        // 最少 1 天，且不超過原本間隔（防止錯誤暴增）
+        // Good / Easy：重學成功。間隔仍 < 3 天則回到緩衝區。
         const baseInterval = card.lastReviewInterval || 1 * DAY
         const i = fuzz(Math.max(1 * DAY, Math.round(baseInterval * 0.5)))
         const newEF = rating === RATING.EASY ? Math.min(4.0, easeFactor + 0.1) : easeFactor
-        return _make(i, newEF, repetitions + 1, now, STATUS.REVIEW, 0)
+        return _make(i, newEF, repetitions + 1, now, bufferOrReview(i), 0)
     }
 
     // fallback
@@ -141,8 +181,6 @@ export function scheduleCard(card, rating) {
 }
 
 function _make(interval, easeFactor, repetitions, now, status, step) {
-    // 演算法階段維護：只要順利畢業，就在 REVIEW 階段接受 SM-2 算式的複利成長
-    // 取消強制的 RELEARNING 降級，否則會導致「間隔被砍半」的無限平移 Bug
     return { interval, easeFactor, repetitions, dueDate: now + interval, status, step }
 }
 
@@ -179,7 +217,8 @@ export function previewLabel(card, rating) {
 }
 
 /**
- * 初始化遷移舊資料，符合 3 天畢業新制與 NEW 狀態
+ * 初始化遷移舊資料。
+ * 不把已在 REVIEW、間隔 < 3 天的舊卡踢回緩衝區（祖父條款）。
  */
 export function migrateCards(cards, bufferCapacity = 50) {
     let updated = false;
@@ -220,7 +259,7 @@ export function migrateCards(cards, bufferCapacity = 50) {
         return { ...c, status: newStatus, roots: newRoots };
     });
 
-    // 自動修剪緩衝區 (Buffer Pruning) - 嚴格執行 50 個名額制
+    // 自動修剪緩衝區 (Buffer Pruning) - 嚴格執行名額制
     // 如果背誦區超載，會優先把「從未背過」的新字退回總量池；
     // 若還是超載，則把「最不急迫（到期日最遠）」的字退回總量池。
     let bufferCards = migrated.filter(c => c.status === STATUS.LEARNING || c.status === STATUS.RELEARNING);
@@ -257,73 +296,62 @@ export function migrateCards(cards, bufferCapacity = 50) {
     return { migrated, updated };
 }
 
+function byDueDate(a, b) {
+    return a.dueDate - b.dueDate
+}
+
 /**
  * 【漏斗控制：Session 排序】
- * 用遺忘曲線的緊迫度，嚴格填滿 30 個位置。
+ * 分鐘級緩衝區到期 → 以天計到期 → 新字（有空位且緩衝區未滿）。
  */
 export function buildSessionSequence(cards, learningCapacity = 50, sessionSize = 30) {
     const now = Date.now();
     const validStatuses = [STATUS.NEW, STATUS.LEARNING, STATUS.REVIEW, STATUS.RELEARNING];
 
-    // 狀態異常的卡片（undefined / null / 非法值）統一視為 NEW，確保 pool+buffer+mastered = cards.length
     const pool = cards.filter(c => c.status === STATUS.NEW || !validStatuses.includes(c.status));
     const buffer = cards.filter(c => c.status === STATUS.LEARNING || c.status === STATUS.RELEARNING);
     const learningBuffer = cards.filter(c => c.status === STATUS.LEARNING);
     const relearningBuffer = cards.filter(c => c.status === STATUS.RELEARNING);
-    const mastered = cards.filter(c => c.status === STATUS.REVIEW);
+    const reviewCards = cards.filter(c => c.status === STATUS.REVIEW);
+    const mastered = reviewCards.filter(c => (c.interval || 0) < MATURE_INTERVAL);
+    const mature = reviewCards.filter(c => (c.interval || 0) >= MATURE_INTERVAL);
 
     const bufferCount = buffer.length;
     const availableSlots = Math.max(0, learningCapacity - bufferCount);
 
-    // P0: 熟練區到期 (防止遺忘)
-    const p0 = mastered.filter(c => c.dueDate <= now).sort((a, b) => a.dueDate - b.dueDate);
-    
-    // P1: 背誦區急迫 (短期記憶鞏固)
-    const p1 = relearningBuffer.filter(c => c.dueDate <= now).sort((a, b) => a.dueDate - b.dueDate);
-    
-    // P2: 背誦區常規 (推進學習)
-    const p2 = learningBuffer.filter(c => c.dueDate <= now).sort((a, b) => a.dueDate - b.dueDate);
+    const dueBuffer = buffer.filter(c => c.dueDate <= now)
+    const pMinute = dueBuffer.filter(c => (c.interval || 0) < DAY).sort(byDueDate)
+    const pDayBuffer = dueBuffer.filter(c => (c.interval || 0) >= DAY).sort(byDueDate)
+    const pReviewDue = reviewCards.filter(c => c.dueDate <= now).sort(byDueDate)
+    const pDay = [...pDayBuffer, ...pReviewDue]
 
-    // 保證每個 Session 都有一定比例的新字，讓新字能穩定流入緩衝區 (30%)
-    const guaranteedNewRatio = 0.3;
-    const guaranteedNewSlots = Math.min(
-        Math.floor(sessionSize * guaranteedNewRatio), 
-        availableSlots, 
-        pool.length
-    );
-    
-    // 剩下的名額給待複習卡片
-    const dueSlots = sessionSize - guaranteedNewSlots;
-    let dueCards = [...p0, ...p1, ...p2];
-    let session = dueCards.slice(0, dueSlots);
-    
-    // P3: 總量池補充保障名額的新字
-    let newCardsToAdd = guaranteedNewSlots;
-    let p3 = pool.slice(0, newCardsToAdd);
-    session = [...session, ...p3];
+    const p1 = relearningBuffer.filter(c => c.dueDate <= now)
+    const p2 = learningBuffer.filter(c => c.dueDate <= now)
 
-    // 如果還有剩餘空間 (例如待複習的卡片不足)，則繼續用新字補滿
-    if (session.length < sessionSize && availableSlots > newCardsToAdd) {
-        const extraNewSlots = Math.min(sessionSize - session.length, availableSlots - newCardsToAdd, pool.length - newCardsToAdd);
-        if (extraNewSlots > 0) {
-            const extraNew = pool.slice(newCardsToAdd, newCardsToAdd + extraNewSlots);
-            session = [...session, ...extraNew];
-            newCardsToAdd += extraNewSlots;
-        }
+    let session = [...pMinute]
+    if (session.length < sessionSize) {
+        session = [...session, ...pDay.slice(0, sessionSize - session.length)]
     }
-    
+
+    if (session.length < sessionSize && availableSlots > 0 && pool.length > 0) {
+        const extraNew = Math.min(sessionSize - session.length, availableSlots, pool.length)
+        session = [...session, ...pool.slice(0, extraNew)]
+    }
+
     return {
         sessionCards: session.slice(0, sessionSize),
         stats: {
-            pool: pool.length, // 顯示目前的總量池數量
-            buffer: bufferCount, // 顯示目前緩衝區的水位
+            pool: pool.length,
+            buffer: bufferCount,
             learning: learningBuffer.length,
-            learningDue: p2.length,        // 新詞中今天到期的數量
+            learningDue: p2.length,
             relearning: relearningBuffer.length,
-            relearningDue: p1.length,      // 記憶修復中今天到期的數量
+            relearningDue: p1.length,
             mastered: mastered.length,
-            masteredDue: p0.length,        // 已熟練但今天需複習的數量
-            dueCount: p0.length + p1.length + p2.length // 真的該複習的總量
+            masteredDue: mastered.filter(c => c.dueDate <= now).length,
+            mature: mature.length,
+            matureDue: mature.filter(c => c.dueDate <= now).length,
+            dueCount: pMinute.length + pDay.length,
         }
     };
 }
@@ -332,8 +360,10 @@ export function buildSessionSequence(cards, learningCapacity = 50, sessionSize =
  * 取得卡片狀態標籤（用於 UI 顯示）
  */
 export function getStatusLabel(card) {
-    if (card.status === STATUS.NEW) return { label: '未學習', color: '#9e9e9e' }
-    if (!card.status || card.status === STATUS.LEARNING) return { label: '背誦區', color: '#ffab40' }
-    if (card.status === STATUS.RELEARNING) return { label: '重學中', color: '#ff5252' }
+    const stage = getStage(card)
+    if (stage === 'new') return { label: '未學習', color: '#9e9e9e' }
+    if (stage === 'learning') return { label: '背誦區', color: '#ffab40' }
+    if (stage === 'relearning') return { label: '重學中', color: '#ff5252' }
+    if (stage === 'mature') return { label: '成熟', color: '#0d9488' }
     return { label: '已熟練', color: '#40c4ff' }
 }

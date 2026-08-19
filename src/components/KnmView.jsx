@@ -102,6 +102,7 @@ function Block({ block }) {
 
 export default function KnmView() {
     const [activeId, setActiveId] = useState(KNM_SECTIONS[0].id)
+    const [quizOpen, setQuizOpen] = useState(false)
 
     const jumpTo = (id) => {
         setActiveId(id)
@@ -109,11 +110,20 @@ export default function KnmView() {
     }
 
     return (
-        <div className="knm-layout">
+        <div className={`knm-layout${quizOpen ? ' quiz-open' : ''}`}>
             <section className="knm-pane knm-study" aria-label="KNM 教材">
-                <header className="knm-pane-header">
-                    <h2>KNM</h2>
-                    <p className="knm-pane-kicker">Kennis van de Nederlandse Maatschappij · 2025/26</p>
+                <header className="knm-pane-header knm-study-header">
+                    <div>
+                        <h2>KNM</h2>
+                        <p className="knm-pane-kicker">Kennis van de Nederlandse Maatschappij · 2025/26</p>
+                    </div>
+                    <button
+                        type="button"
+                        className="knm-exam-open"
+                        onClick={() => setQuizOpen(true)}
+                    >
+                        考試
+                    </button>
                 </header>
                 <div className="knm-study-body">
                     <nav className="knm-toc" aria-label="章節">
@@ -158,6 +168,13 @@ export default function KnmView() {
             <section className="knm-pane knm-quiz" aria-label="KNM 考題">
                 <header className="knm-pane-header knm-quiz-header">
                     <h2>考題</h2>
+                    <button
+                        type="button"
+                        className="knm-exam-close"
+                        onClick={() => setQuizOpen(false)}
+                    >
+                        關閉
+                    </button>
                 </header>
                 <div className="knm-quiz-body">
                     <KnmQuiz />
@@ -177,6 +194,7 @@ export default function KnmView() {
                     min-height: 0;
                     overflow: hidden;
                     background: var(--bg-canvas);
+                    position: relative;
                 }
 
                 .knm-pane {
@@ -216,6 +234,36 @@ export default function KnmView() {
                     padding: 28px 48px 8px;
                     border-bottom: none;
                     background: transparent;
+                }
+
+                .knm-study-header {
+                    display: flex;
+                    align-items: flex-start;
+                    justify-content: space-between;
+                    gap: 16px;
+                }
+
+                .knm-exam-open,
+                .knm-exam-close {
+                    display: none;
+                    flex-shrink: 0;
+                    margin-top: 8px;
+                    padding: 8px 16px;
+                    border: 1px solid var(--knm-ink);
+                    border-radius: 999px;
+                    background: var(--knm-ink);
+                    color: #fff;
+                    font-family: var(--font-sans);
+                    font-size: 0.88rem;
+                    font-weight: 700;
+                    cursor: pointer;
+                }
+
+                .knm-exam-close {
+                    margin-top: 0;
+                    background: transparent;
+                    color: var(--text-primary);
+                    border-color: var(--border-default);
                 }
 
                 .knm-pane-header h2 {
@@ -628,17 +676,35 @@ export default function KnmView() {
                 @media (max-width: 768px) {
                     .knm-layout {
                         flex-direction: column;
-                        overflow: auto;
-                    }
-                    .knm-study,
-                    .knm-quiz {
-                        flex: 1 1 50%;
-                        width: 100%;
-                        min-height: 48vh;
+                        overflow: hidden;
                     }
                     .knm-study {
+                        flex: 1 1 auto;
+                        width: 100%;
+                        min-height: 0;
                         border-right: none;
-                        border-bottom: 1px solid var(--knm-rule);
+                        border-bottom: none;
+                    }
+                    .knm-exam-open {
+                        display: inline-flex;
+                        align-items: center;
+                    }
+                    .knm-quiz {
+                        display: none;
+                        flex: none;
+                        width: 100%;
+                        min-height: 0;
+                    }
+                    .knm-layout.quiz-open .knm-quiz {
+                        display: flex;
+                        position: absolute;
+                        inset: 0;
+                        z-index: 6;
+                        background: var(--bg-surface);
+                    }
+                    .knm-layout.quiz-open .knm-exam-close {
+                        display: inline-flex;
+                        align-items: center;
                     }
                     .knm-study .knm-pane-header,
                     .knm-toc-inner,

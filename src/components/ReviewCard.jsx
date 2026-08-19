@@ -1,6 +1,6 @@
 import './ReviewCard.css'
 import { useState, useEffect, useRef } from 'react'
-import { RATING, previewLabel, getStatusLabel } from '../services/srs'
+import { RATING, previewLabel, getStage } from '../services/srs'
 import { getCardRoots, segmentWord } from '../services/wordUtils'
 import { parseFormEntry } from '../services/cardFields'
 import Icon from './Icons'
@@ -75,8 +75,10 @@ async function speak(text, lang) {
 }
 
 const STATUS_STYLE = {
+  new: { label: '未學習', color: 'var(--text-tertiary)', bg: 'var(--bg-tint)' },
   learning: { label: '學習中', color: 'var(--hard)', bg: 'var(--hard-bg)' },
-  review: { label: '複習', color: 'var(--easy)', bg: 'var(--easy-bg)' },
+  review: { label: '已熟練', color: 'var(--easy)', bg: 'var(--easy-bg)' },
+  mature: { label: '成熟', color: '#0d9488', bg: '#D7EFE9' },
   relearning: { label: '重學中', color: 'var(--again)', bg: 'var(--again-bg)' },
 }
 
@@ -403,7 +405,7 @@ export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdat
     )
   }
 
-  const statusInfo = STATUS_STYLE[card.status] || STATUS_STYLE.learning
+  const statusInfo = STATUS_STYLE[getStage(card)] || STATUS_STYLE.learning
 
 
   return (

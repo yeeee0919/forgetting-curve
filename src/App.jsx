@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { getCards, saveCards, getSettings, saveSettings, generateId, getSessionState, saveSessionState } from './services/storage'
-import { initCard, scheduleCard, buildSessionSequence, migrateCards, getStatusLabel } from './services/srs'
+import { initCard, scheduleCard, buildSessionSequence, migrateCards } from './services/srs'
 import { parseTextToCards, parseTextToCardsGemini } from './services/ai'
 import { mergeIncomingCards, toCardContent } from './services/cardFields'
 import { getInboxWords, deleteInboxWord, clearInbox, getCloudCards, upsertCloudCards, deleteCloudCard } from './services/supabase'
@@ -318,13 +318,6 @@ export default function App() {
         }
     }
 
-    const clearAllWeakCards = () => {
-        const updated = cards.map(c => c.isWeak ? { ...c, isWeak: false } : c)
-        updateCards(updated)
-        // 同時清空已略過清單，確保存檔同步
-        setDismissedWeakCards([])
-    }
-
     const sequence = buildSessionSequence(cards, 60, sessionState.sessionSize)
     const dueCards = sequence.sessionCards
     const dueCount = sequence.stats.dueCount
@@ -411,7 +404,6 @@ export default function App() {
                         onClearInbox={handleClearInbox}
                         weakCards={weakCards}
                         dismissWeakCard={dismissWeakCard}
-                        clearAllWeakCards={clearAllWeakCards}
                         activityLog={activityLog}
                         isMobile={isMobile}
                         sessionSize={sessionState.sessionSize}
@@ -588,10 +580,12 @@ function ProgressRing({ value, max }) {
     )
 }
 
+const HIDE_STICKY_NOTES_KEY = 'memoflip_hide_sticky_notes'
+
 function HomePage({
     totalCards, stats, bufferCapacity, dueCount, onStartReview, onImport,
     inboxWords, onDeleteInboxWord, onClearInbox, weakCards, dismissWeakCard,
-    clearAllWeakCards, activityLog, isMobile, sessionSize, dueCards, hasActiveSession,
+    activityLog, isMobile, sessionSize, dueCards, hasActiveSession,
     extensionInstalled, onOpenExtGuide,
 }) {
     const greetingText = getGreeting()
@@ -602,6 +596,22 @@ function HomePage({
             return false
         }
     })
+    const [stickyNotesHidden, setStickyNotesHidden] = useState(() => {
+        try {
+            return localStorage.getItem(HIDE_STICKY_NOTES_KEY) === '1'
+        } catch {
+            return false
+        }
+    })
+    const toggleStickyNotes = () => {
+        setStickyNotesHidden((hidden) => {
+            const next = !hidden
+            try {
+                localStorage.setItem(HIDE_STICKY_NOTES_KEY, next ? '1' : '0')
+            } catch { /* ignore */ }
+            return next
+        })
+    }
 
     useEffect(() => {
         const onHide = () => setHideExtCard(true)
@@ -610,9 +620,10 @@ function HomePage({
     }, [])
 
     const showExtCard = !isMobile && !extensionInstalled && !hideExtCard
-    const computedTotal = stats.pool + stats.buffer + stats.mastered
+    const matureCount = stats.mature || 0
+    const computedTotal = stats.pool + stats.buffer + stats.mastered + matureCount
     const bufferPct = bufferCapacity > 0 ? Math.min(100, (stats.buffer / bufferCapacity) * 100) : 0
-    const masteredPct = computedTotal > 0 ? Math.min(100, (stats.mastered / computedTotal) * 100) : 0
+    const maturePct = computedTotal > 0 ? Math.min(100, (matureCount / computedTotal) * 100) : 0
 
     return (
         <div className="home-layout">
@@ -625,18 +636,28 @@ function HomePage({
                     <p className="home-lede">
                         {dueCount > 0
                             ? `今天有 ${dueCount} 張待複習，建議先完成一輪 ${dueCards.length || sessionSize || 30} 張。`
-                            : computedTotal > 0
-                                ? '今日任務已清空，可以把新單字推進緩衝區。'
-                                : '匯入單字後，從總量池 → 緩衝區 → 已熟練一步步建立長期記憶。'}
+                            : dueCards.length > 0
+                                ? '沒有到期卡片，這一輪會從總量池推進新字。'
+                                : computedTotal > 0
+                                    ? '今日任務已清空。新字要等緩衝區有空位才會進來。'
+                                    : '匯入單字後，從總量池 → 緩衝區 → 已熟練 → 成熟，一步步把字從日常磨字裡淡出。'}
                     </p>
                 </header>
 
                 <div className="home-actions">
-                    {(dueCount > 0 || stats.pool > 0 || stats.buffer > 0 || hasActiveSession) ? (
+                    {(dueCards.length > 0 || hasActiveSession) ? (
                         <button className="btn-primary large" onClick={onStartReview}>
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="8" width="18" height="14" rx="2" ry="2"></rect><path d="M7 4h14v14"></path></svg>
-                            {hasActiveSession ? '繼續複習' : `開始複習（${sessionSize || 30} 張）`}
+                            {hasActiveSession ? '繼續複習' : `開始複習（${dueCards.length || sessionSize || 30} 張）`}
                         </button>
+                    ) : stats.pool > 0 && stats.buffer >= bufferCapacity ? (
+                        <div className="done-msg">
+                            <span className="done-msg-icon">
+                                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3a9 9 0 0 0 9 9 9 9 0 0 0-9 9 9 9 0 0 0-9-9 9 9 0 0 0 9-9Z"></path></svg>
+                            </span>
+                            <p>緩衝區已滿，先讓單字出站</p>
+                            <small>「記得了」需間隔滿 3 天才會把名額讓給新字</small>
+                        </div>
                     ) : (
                         <div className="done-msg">
                             <span className="done-msg-icon">
@@ -667,22 +688,24 @@ function HomePage({
                         <span className="memory-due-label">今日待複習</span>
                         <span className={`memory-due-num ${dueCount > 0 ? 'hot' : ''}`}>{dueCount}</span>
                         <span className="memory-due-hint">
-                            {stats.masteredDue > 0
-                                ? `含 ${stats.masteredDue} 張熟練到期`
-                                : stats.relearning > 0
-                                    ? `${stats.relearning} 張重學中`
-                                    : '新詞或空白'}
+                            {stats.matureDue > 0
+                                ? `含 ${stats.matureDue} 張成熟到期`
+                                : stats.masteredDue > 0
+                                    ? `含 ${stats.masteredDue} 張熟練到期`
+                                    : stats.relearning > 0
+                                        ? `${stats.relearning} 張重學中`
+                                        : '新詞或空白'}
                         </span>
                     </div>
 
                     <div className="memory-mastered">
-                        <ProgressRing value={stats.mastered} max={computedTotal} />
+                        <ProgressRing value={matureCount} max={computedTotal} />
                         <div className="memory-mastered-copy">
-                            <div className="memory-mastered-title">已熟練 {stats.mastered}<span> / {computedTotal}</span></div>
+                            <div className="memory-mastered-title">成熟 {matureCount}<span> / {computedTotal}</span></div>
                             <div className="memory-mastered-bar" aria-hidden="true">
-                                <div className="memory-mastered-fill" style={{ width: `${masteredPct}%` }} />
+                                <div className="memory-mastered-fill" style={{ width: `${maturePct}%` }} />
                             </div>
-                            <p className="memory-mastered-sub">長期記憶中的卡片比例</p>
+                            <p className="memory-mastered-sub">間隔已達 21 天，到期仍會回來</p>
                         </div>
                     </div>
 
@@ -717,13 +740,25 @@ function HomePage({
                             <p>
                                 {stats.masteredDue > 0
                                     ? `${stats.masteredDue} 張今日到期`
-                                    : '暫無到期卡片'}
+                                    : '間隔 3–21 天'}
+                            </p>
+                        </article>
+
+                        <article className="memory-stage mature">
+                            <header>
+                                <h3>成熟</h3>
+                                <strong>{matureCount}</strong>
+                            </header>
+                            <p>
+                                {stats.matureDue > 0
+                                    ? `${stats.matureDue} 張今日到期`
+                                    : '間隔 21 天以上'}
                             </p>
                         </article>
                     </div>
 
                     <p className="memory-equation">
-                        <span>{stats.pool}</span> + <span>{stats.buffer}</span> + <span>{stats.mastered}</span>
+                        <span>{stats.pool}</span> + <span>{stats.buffer}</span> + <span>{stats.mastered}</span> + <span>{matureCount}</span>
                         {' = '}
                         <strong>{computedTotal}</strong>
                         {computedTotal !== totalCards && (
@@ -734,19 +769,22 @@ function HomePage({
             </div>
 
             {!isMobile && weakCards.length > 0 && (
-                <div className="home-col weak-cards">
-                    <div className="sticky-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <h3 className="sticky-title" style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)' }}>
+                <div className={`home-col weak-cards${stickyNotesHidden ? ' is-collapsed' : ''}`}>
+                    <div className="sticky-header">
+                        <h3 className="sticky-title">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 17v5"></path><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"></path></svg>
-                            需要加強 <span style={{ opacity: 0.6, fontSize: '0.75rem', fontWeight: 600 }}>{weakCards.length}</span>
+                            需要加強 <span>{weakCards.length}</span>
                         </h3>
                         <button
-                            onClick={clearAllWeakCards}
-                            style={{ background: 'none', border: 'none', color: 'var(--text-tertiary)', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', padding: '4px', letterSpacing: '0.02em', transition: 'color 0.2s' }}
-                            onMouseOver={e => e.target.style.color = 'var(--text-primary)'}
-                            onMouseOut={e => e.target.style.color = 'var(--text-tertiary)'}
-                        >隱藏</button>
+                            type="button"
+                            className="sticky-toggle"
+                            onClick={toggleStickyNotes}
+                            aria-expanded={!stickyNotesHidden}
+                        >
+                            {stickyNotesHidden ? '顯示' : '隱藏'}
+                        </button>
                     </div>
+                    {!stickyNotesHidden && (
                     <div className="sticky-notes-container">
                         {weakCards.slice(0, 18).map(card => (
                             <div key={card.id} className="sticky-note">
@@ -760,6 +798,7 @@ function HomePage({
                             </div>
                         ))}
                     </div>
+                    )}
                 </div>
             )}
 

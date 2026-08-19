@@ -447,7 +447,7 @@
     }
 
     .memory-stages {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(4, 1fr);
         gap: 8px;
     }
 
@@ -675,7 +675,7 @@
 
 .memory-stages {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: var(--space-sm);
 }
 
@@ -729,6 +729,10 @@
     background: #E5F4F3;
 }
 
+.memory-stage.mature {
+    background: #D7EFE9;
+}
+
 .memory-buffer-meter {
     height: 5px;
     background: rgba(255, 255, 255, 0.55);
@@ -779,21 +783,46 @@
 
 /* ── Section Headers ── */
 .sticky-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
     border-bottom: 1.5px solid rgba(241, 90, 41, 0.08);
-    /* Sophisticated faint border */
-    padding-bottom: 6px !important;
+    padding-bottom: 6px;
     margin-bottom: 4px;
 }
 
 .sticky-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
     font-size: 0.75rem;
-    /* Shrunk from 0.85rem */
     font-weight: 700;
-    /* Medium bold */
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: var(--text-tertiary) !important;
-    /* Lighter text color */
+    color: var(--text-secondary);
+}
+
+.sticky-title span {
+    opacity: 0.6;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.sticky-toggle {
+    background: none;
+    border: none;
+    color: var(--text-tertiary);
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 4px;
+    letter-spacing: 0.02em;
+}
+
+.sticky-toggle:hover {
+    color: var(--text-primary);
 }
 
 .sticky-notes-container {

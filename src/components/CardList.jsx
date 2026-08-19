@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import './CardList.css'
 import { getCardRoots, segmentWord } from '../services/wordUtils'
+import { getStage } from '../services/srs'
 import Icon from './Icons'
 
 export default function CardList({ cards, onDelete }) {
@@ -33,11 +34,13 @@ export default function CardList({ cards, onDelete }) {
         ? [...cards].sort((a, b) => (b.againCount || 0) - (a.againCount || 0))
         : cards
 
-    const statusLabel = { learning: '學習中', review: '複習', relearning: '重學中' }
+    const statusLabel = { learning: '學習中', review: '已熟練', mature: '成熟', relearning: '重學中', new: '未學習' }
     const statusStyle = {
         learning: { background: 'var(--hard-bg)', color: 'var(--hard)' },
         review: { background: 'var(--easy-bg)', color: 'var(--easy)' },
-        relearning: { background: 'var(--again-bg)', color: 'var(--again)' }
+        mature: { background: '#D7EFE9', color: '#0d9488' },
+        relearning: { background: 'var(--again-bg)', color: 'var(--again)' },
+        new: { background: 'var(--bg-tint)', color: 'var(--text-tertiary)' },
     }
 
     return (
@@ -66,7 +69,7 @@ export default function CardList({ cards, onDelete }) {
             </div>
             <div className="cl-list">
                 {sortedCards.map(card => {
-                    const s = card.status || 'learning'
+                    const s = getStage(card)
                     return (
                         <div key={card.id} className="cl-item">
                             <div className="cl-item-main">

@@ -45,6 +45,7 @@ export default function NlProvincesMap() {
                 <h4>十二省 Provincies</h4>
                 <p>點地圖或名單，對位置與中文。首都、政府城市已標出。</p>
             </header>
+            <div className="nl-map-row">
             <div className="nl-map-board">
                 <svg
                     className="nl-map-svg"
@@ -83,13 +84,14 @@ export default function NlProvincesMap() {
                         </text>
                     ))}
                 </svg>
-                <figcaption className="nl-map-caption">
+            </div>
+
+            <div className="nl-map-side">
+                <p className="nl-map-caption">
                     <strong>{active.id}</strong>
                     <span>{active.zh}</span>
                     <em>{active.hint}</em>
-                </figcaption>
-            </div>
-
+                </p>
             <ol className="nl-map-legend">
                 {PROVINCES.map((p) => (
                     <li key={p.id}>
@@ -106,6 +108,8 @@ export default function NlProvincesMap() {
                     </li>
                 ))}
             </ol>
+            </div>
+            </div>
             <p className="nl-map-src">地圖輪廓來源：Wikimedia Commons · Provinces of the Netherlands</p>
             <style>{`
                 .nl-map {
@@ -131,18 +135,26 @@ export default function NlProvincesMap() {
                     color: #242424;
                 }
 
+                .nl-map-row {
+                    display: grid;
+                    grid-template-columns: minmax(180px, 0.92fr) minmax(200px, 1.08fr);
+                    gap: 8px 20px;
+                    align-items: start;
+                }
+
                 .nl-map-board {
                     background: transparent;
                     border: none;
                     border-radius: 0;
                     padding: 0;
+                    min-width: 0;
                 }
 
                 .nl-map-svg {
                     display: block;
                     width: 100%;
-                    max-width: 380px;
-                    margin: 0 auto;
+                    max-width: none;
+                    margin: 0;
                     height: auto;
                     overflow: visible;
                 }
@@ -218,14 +230,18 @@ export default function NlProvincesMap() {
                     paint-order: stroke;
                 }
 
+                .nl-map-side {
+                    min-width: 0;
+                }
+
                 .nl-map-caption {
                     display: flex;
                     flex-wrap: wrap;
                     align-items: baseline;
                     gap: 8px;
-                    margin: 8px 0 0;
-                    padding: 12px 0 4px;
-                    border-top: 1px solid rgba(36, 36, 36, 0.12);
+                    margin: 0 0 4px;
+                    padding: 0 6px 10px;
+                    border-bottom: 1px solid rgba(36, 36, 36, 0.12);
                     font-family: var(--font-sans);
                 }
 
@@ -250,12 +266,14 @@ export default function NlProvincesMap() {
 
                 .nl-map-legend {
                     list-style: none;
-                    margin: 8px 0 0;
+                    margin: 0;
                     padding: 0;
-                    display: grid;
-                    grid-template-columns: 1fr 1fr;
+                    display: flex;
+                    flex-direction: column;
                     gap: 0;
-                    border-top: 1px solid rgba(36, 36, 36, 0.12);
+                    min-width: 0;
+                    max-height: 420px;
+                    overflow-y: auto;
                 }
 
                 .nl-map-legend button {
@@ -264,7 +282,7 @@ export default function NlProvincesMap() {
                     grid-template-columns: 1fr auto;
                     grid-template-rows: auto auto;
                     gap: 0 10px;
-                    padding: 12px 4px;
+                    padding: 8px 6px;
                     border: none;
                     border-bottom: 1px solid rgba(36, 36, 36, 0.08);
                     border-radius: 0;
@@ -311,9 +329,19 @@ export default function NlProvincesMap() {
                     color: #6B6B6B;
                 }
 
-                @media (max-width: 768px) {
+                @media (max-width: 520px) {
+                    .nl-map-row {
+                        grid-template-columns: minmax(140px, 0.9fr) minmax(140px, 1.1fr);
+                        gap: 8px 12px;
+                    }
                     .nl-map-legend {
-                        grid-template-columns: 1fr;
+                        max-height: 260px;
+                    }
+                    .nl-map-legend i {
+                        display: none;
+                    }
+                    .nl-map-caption em {
+                        display: none;
                     }
                 }
             `}</style>

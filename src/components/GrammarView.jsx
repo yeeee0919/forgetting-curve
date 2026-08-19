@@ -231,13 +231,15 @@ export default function GrammarView() {
                         <div className="ppt-viewer-header">
                             <h2 className="ppt-viewer-title">{category.title}</h2>
                             <div className="ppt-viewer-controls">
-                                <button className="ppt-btn-small" onClick={prevPage} disabled={page <= 1}>
-                                    ← 上一頁
-                                </button>
-                                <span className="ppt-page-indicator">第 {page} 頁</span>
-                                <button className="ppt-btn-small" onClick={nextPage}>
-                                    下一頁 →
-                                </button>
+                                <div className="ppt-page-nav">
+                                    <button className="ppt-btn-small" onClick={prevPage} disabled={page <= 1}>
+                                        ← 上一頁
+                                    </button>
+                                    <span className="ppt-page-indicator">第 {page} 頁</span>
+                                    <button className="ppt-btn-small" onClick={nextPage}>
+                                        下一頁 →
+                                    </button>
+                                </div>
                                 <a
                                     href={`/grammar/${category.id}.pdf`}
                                     target="_blank"
@@ -409,6 +411,11 @@ export default function GrammarView() {
                     align-items: center;
                     gap: 12px;
                 }
+                .ppt-page-nav {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                }
                 .ppt-page-indicator {
                     font-size: 0.95rem;
                     font-weight: 600;
@@ -553,13 +560,16 @@ export default function GrammarView() {
                     }
                     .ppt-viewer-controls {
                         width: 100%;
-                        justify-content: space-between;
+                        justify-content: flex-end;
                         gap: 6px;
+                    }
+                    .ppt-page-nav {
+                        display: none;
                     }
                     .ppt-btn-small {
                         padding: 8px 10px;
                         font-size: 0.8rem;
-                        flex: 1;
+                        flex: 0 0 auto;
                         text-align: center;
                     }
                     .ppt-slide-wrapper {
