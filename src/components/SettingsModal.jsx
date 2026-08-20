@@ -12,7 +12,7 @@ const PAGE_TITLE = {
     backup: '資料備份',
 }
 
-export default function SettingsModal({ settings, onSave, onClose, onExport, onRestore, onClearAllCards, user, quota, lastSynced, onGoogleLogin, onLogout }) {
+export default function SettingsModal({ settings, onSave, onClose, onExport, onRestore, onClearAllCards, user, quota, lastSynced, onGoogleLogin, onLogout, onReplayTour }) {
     const [page, setPage] = useState('home')
     const [geminiKey, setGeminiKey] = useState(settings.geminiKey || '')
     const [elevenLabsKey, setElevenLabsKey] = useState(settings.elevenLabsKey || '')
@@ -131,6 +131,22 @@ export default function SettingsModal({ settings, onSave, onClose, onExport, onR
                                 </span>
                                 <Icon name="chevronRight" size={18} />
                             </button>
+                            {onReplayTour && (
+                                <button
+                                    type="button"
+                                    className="sm-row"
+                                    onClick={() => {
+                                        onClose()
+                                        onReplayTour()
+                                    }}
+                                >
+                                    <span className="sm-row-text">
+                                        <span className="sm-row-title">重新播放導覽</span>
+                                        <span className="sm-row-meta">第一次使用的 Spotlight 說明</span>
+                                    </span>
+                                    <Icon name="chevronRight" size={18} />
+                                </button>
+                            )}
                         </nav>
                     </div>
                 )}

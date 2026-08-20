@@ -122,7 +122,7 @@ export function ExtensionGuideModal({ open, onClose, installed }) {
     )
 }
 
-function CatcherDemo() {
+export function CatcherDemo() {
     return (
         <div className="catcher-demo" aria-hidden="true">
             <div className="catcher-demo-bar">

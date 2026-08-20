@@ -134,8 +134,9 @@ function FormChips({ card }) {
   )
 }
 
-export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdateNote, sessionState, updateSession, isMobile }) {
+export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdateNote, sessionState, updateSession, isMobile, tourMode = false }) {
   const [sessionCards, setSessionCards] = useState(() => {
+    if (tourMode) return dueCards.slice(0, sessionState?.sessionSize || 30)
     if (sessionState?.activeSession) return sessionState.activeSession.cards
 
     // 每次進入複習頁面時，將預計複習的卡片進行隨機打亂 (Fisher-Yates)
@@ -146,12 +147,12 @@ export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdat
     }
     return shuffled.slice(0, sessionState?.sessionSize || 30)
   })
-  const [index, setIndex] = useState(() => sessionState?.activeSession?.index || 0)
-  const [flipped, setFlipped] = useState(false)
-  const [results, setResults] = useState(() => sessionState?.activeSession?.results || [])
-  const [failedCards, setFailedCards] = useState(() => sessionState?.activeSession?.failedCards || [])
+  const [index, setIndex] = useState(() => (tourMode ? 0 : (sessionState?.activeSession?.index || 0)))
+  const [flipped, setFlipped] = useState(() => !!tourMode)
+  const [results, setResults] = useState(() => (tourMode ? [] : (sessionState?.activeSession?.results || [])))
+  const [failedCards, setFailedCards] = useState(() => (tourMode ? [] : (sessionState?.activeSession?.failedCards || [])))
   const [tipsOpen, setTipsOpen] = useState(false)
-  const [showKeysDemo, setShowKeysDemo] = useState(() => !isMobile && shouldShowReviewKeysDemo())
+  const [showKeysDemo, setShowKeysDemo] = useState(() => !tourMode && !isMobile && shouldShowReviewKeysDemo())
 
 
   // ── 蕃茄鐘計時器 ──
@@ -285,6 +286,7 @@ export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdat
   }
 
   const handleRate = (rating) => {
+    if (tourMode) return
     // 立即通知上層狀態更新
     onRate(card.id, rating)
     const nextResults = [...results, rating]
@@ -336,6 +338,7 @@ export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdat
     if (sessionCards.length === 0 || index >= sessionCards.length) return
 
     const handleKeyDown = (e) => {
+      if (tourMode) return
       // 絕對關鍵！避免按住不放時一秒觸發 30 次渲染，導致 React 崩潰與記憶體爆炸、畫面撕裂重疊
       if (e.repeat) return;
 
@@ -368,7 +371,7 @@ export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdat
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [flipped, index, sessionCards.length, handleRate])
+  }, [flipped, index, sessionCards.length, handleRate, tourMode])
 
   // ── Done screen ──
   if (sessionCards.length === 0 || index >= sessionCards.length) {
@@ -669,9 +672,9 @@ export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdat
 
         {/* 操作按鈕與提示區段 */}
         <div className="rc-bottom-area">
-          <div className={`rc-rating-wrap ${!flipped ? 'rc-rating-wrap-hidden' : ''}`}>
+          <div className={`rc-rating-wrap ${!flipped ? 'rc-rating-wrap-hidden' : ''}`} data-tour="review-ratings">
             {!flipped ? (
-              <button className="rc-show-btn" onClick={() => { setFlipped(true); if (!isMobile) setTipsOpen(true); }}>
+              <button className="rc-show-btn" onClick={() => { if (tourMode) return; setFlipped(true); if (!isMobile) setTipsOpen(true); }}>
                 顯示答案 <span className="rc-kbd-hint" style={{ opacity: 0.5, fontSize: '0.8rem', marginLeft: '6px' }}>[Space]</span>
               </button>
             ) : (
@@ -684,6 +687,8 @@ export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdat
                         className={`rc-rating-btn ${r.main ? 'rc-rating-main' : 'rc-rating-sub'}`}
                         style={{ '--rc': r.color, '--rbg': r.bg, '--rborder': r.border }}
                         onClick={() => handleRate(r.id)}
+                        disabled={tourMode}
+                        tabIndex={tourMode ? -1 : undefined}
                       >
                         <span className="rcb-icon">{r.icon}</span>
                         <div className="rcb-text-row">

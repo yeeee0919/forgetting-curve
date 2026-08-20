@@ -9,7 +9,7 @@ import { toCardContent } from '../services/cardFields'
 import { requestExtensionInboxFlush } from '../services/auth'
 import Icon from './Icons'
 
-export default function ImportModal({ onImport, onClose, importing, error, loggedIn, quota, onLogin, onImportDirect, onSuccessFeedback, initialText = '', inboxWords: inboxFromApp, onClearInbox }) {
+export default function ImportModal({ onImport, onClose, importing, error, loggedIn, quota, onLogin, onImportDirect, onSuccessFeedback, initialText = '', inboxWords: inboxFromApp, onClearInbox, tourMode = false }) {
     const [tab, setTab] = useState('ai')
     const [text, setText] = useState(() => initialText || '')
     const [jsonText, setJsonText] = useState('')
@@ -109,7 +109,7 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
         : 0
 
     const requestClose = () => {
-        if (importing) return
+        if (tourMode || importing) return
         onClose()
     }
 
@@ -137,12 +137,12 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
     }
 
     return (
-        <div className="modal-overlay" onClick={requestClose}>
-            <div className="modal im-modal-v5" onClick={e => e.stopPropagation()}>
+        <div className="modal-overlay" onClick={tourMode ? undefined : requestClose}>
+            <div className="modal im-modal-v5" data-tour="import-modal" onClick={e => e.stopPropagation()}>
                 {/* Header with Dual Tabs - Compressed for space */}
                 <div className="im-header">
                     <div className="im-header-main">
-                        <h2 className="im-title">匯入單字</h2>
+                        <h2 className="im-title">匯入單字{tourMode ? ' · 導覽示範' : ''}</h2>
                         <div className="im-tabs-horizontal">
                             <button className={`im-tab-h ${tab === 'ai' ? 'active' : ''}`} onClick={() => !importing && setTab('ai')} disabled={importing}>
                                 AI 自動解析
@@ -153,7 +153,7 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
                         </div>
                     </div>
                     <div className="im-header-actions">
-                        <button className="im-close-v4" onClick={requestClose} disabled={importing} aria-label="關閉">
+                        <button className="im-close-v4" onClick={requestClose} disabled={importing || tourMode} aria-label="關閉">
                             <Icon name="x" size={16} />
                         </button>
                     </div>
@@ -169,7 +169,8 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
                                     placeholder={'每行一個單字，或：\nhuis / 房子\nhuis, fiets, water'}
                                     value={text}
                                     onChange={e => setText(e.target.value)}
-                                    disabled={importing}
+                                    disabled={importing || tourMode}
+                                    readOnly={tourMode}
                                 />
                                 {importing && (
                                     <div className="im-loading-overlay" role="status" aria-live="polite">
@@ -234,6 +235,8 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
                                 placeholder={'JSON 或每行：huis / 房子'}
                                 value={jsonText}
                                 onChange={e => setJsonText(e.target.value)}
+                                disabled={tourMode}
+                                readOnly={tourMode}
                             />
                             {detectedCount > 0 && (
                                 <div className="im-field-hint" style={{ color: 'var(--good)', flexShrink: 0 }}>
@@ -268,12 +271,13 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
                     </div>
 
                     <div className="im-footer-right">
-                        <button className="btn-secondary im-btn-v5" onClick={requestClose} disabled={importing}>取消</button>
+                        <button className="btn-secondary im-btn-v5" onClick={requestClose} disabled={importing || tourMode}>取消</button>
                         <button
                             className="btn-primary im-btn-v5"
                             onClick={tab === 'manual' ? handleJsonSubmit : handleAiSubmit}
                             disabled={
-                                importing
+                                tourMode
+                                || importing
                                 || (tab === 'manual' ? !jsonText.trim() : !text.trim() || !listCheck.ok || !loggedIn)
                             }
                         >

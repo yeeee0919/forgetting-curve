@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { getCards, saveCards, clearCards, cancelPendingCardSaves, getSettings, saveSettings, generateId, getSessionState, saveSessionState } from './services/storage'
 import { initCard, scheduleCard, buildSessionSequence, migrateCards } from './services/srs'
 import { parseTextToCardsWithSession, fetchAiQuota } from './services/ai'
@@ -17,10 +17,18 @@ import ListeningLab from './components/ListeningLab'
 import SpeakingLab from './components/SpeakingLab'
 import ImportModal, { formatImportSuccess } from './components/ImportModal'
 import SettingsModal from './components/SettingsModal'
+import OnboardingTour from './components/OnboardingTour'
 import Icon from './components/Icons'
 import { ExtensionDownloadCard, ExtensionGuideModal } from './components/WordCatcherPromo'
 import { useExtensionInstalled } from './hooks/useExtensionInstalled'
 import { HIDE_EXT_CARD_KEY } from './config/extension'
+import {
+    hasCompletedOnboardingTour,
+    markOnboardingTourDone,
+    resetOnboardingTour,
+    getOnboardingSteps,
+    createTourDemoCards,
+} from './services/onboardingTour'
 import './App.css'
 
 function getGreeting() {
@@ -59,8 +67,14 @@ export default function App() {
     const [sessionState, setSessionState] = useState(getSessionState())
     const [aiQuota, setAiQuota] = useState(null)
     const [cardsReady, setCardsReady] = useState(true) // 訪客一開始即可寫入；登入後等同步完成
+    const [tourActive, setTourActive] = useState(false)
+    const [tourStepIndex, setTourStepIndex] = useState(0)
+    const [tourCards, setTourCards] = useState(null)
     const userId = session?.user?.id || ''
     const accessToken = session?.access_token || ''
+    const tourSteps = useMemo(() => getOnboardingSteps({ isMobile }), [isMobile])
+    const currentTourStep = tourActive ? tourSteps[tourStepIndex] : null
+    const workingCards = tourCards || cards
 
 
     // 活動紀錄紀錄每天背了幾張卡
@@ -251,6 +265,55 @@ export default function App() {
         return () => clearTimeout(t)
     }, [toast])
 
+    const finishTour = useCallback(() => {
+        markOnboardingTourDone()
+        setTourActive(false)
+        setTourStepIndex(0)
+        setTourCards(null)
+        setShowImport(false)
+        setView('home')
+    }, [])
+
+    const startTour = useCallback(() => {
+        setShowSettings(false)
+        setShowExtGuide(false)
+        setTourCards(null)
+        setTourStepIndex(0)
+        setTourActive(true)
+        setView('home')
+    }, [])
+
+    const handleReplayTour = useCallback(() => {
+        resetOnboardingTour()
+        startTour()
+    }, [startTour])
+
+    // 訪客首次開站自動播導覽
+    useEffect(() => {
+        if (hasCompletedOnboardingTour()) return
+        const t = setTimeout(() => startTour(), 500)
+        return () => clearTimeout(t)
+    }, [startTour])
+
+    // 依步驟切頁、開匯入、掛示意卡（不寫入真實字庫）
+    useEffect(() => {
+        if (!tourActive) return
+        const step = tourSteps[tourStepIndex]
+        if (!step) return
+        setView(step.view || 'home')
+        setShowImport(!!step.openImport)
+        setImportSeed('')
+        setImportError('')
+        if (step.useDemoCards) {
+            setTourCards(prev => prev || createTourDemoCards())
+        } else {
+            setTourCards(null)
+        }
+        if (step.view === 'review') {
+            setSessionState(prev => ({ ...prev, activeSession: null }))
+        }
+    }, [tourActive, tourStepIndex, tourSteps])
+
     const showToast = useCallback((message) => {
         if (!message) return
         setToast({ id: Date.now(), message })
@@ -283,6 +346,7 @@ export default function App() {
     const updateCards = useCallback((newCards) => {
         // 登入後同步完成前禁止寫入，避免把訪客／上一帳的記憶體字卡寫進新帳
         if (userId && !cardsReady) return
+        if (tourActive) return
         setCards(prevCards => {
             const timestamped = newCards.map(c => {
                 const oldCard = prevCards.find(old => old.id === c.id);
@@ -304,7 +368,7 @@ export default function App() {
 
             return timestamped;
         });
-    }, [userId, cardsReady])
+    }, [userId, cardsReady, tourActive])
 
 
     const dismissWeakCard = (cardId) => {
@@ -478,11 +542,11 @@ export default function App() {
         setShowImport(true)
     }, [inboxWords])
 
-    const sequence = buildSessionSequence(cards, 60, sessionState.sessionSize)
+    const sequence = buildSessionSequence(workingCards, 60, sessionState.sessionSize)
     const dueCards = sequence.sessionCards
     const dueCount = sequence.stats.dueCount
     const stats = sequence.stats
-    const weakCards = cards.filter(c => c.isWeak && !dismissedWeakCards.includes(c.id))
+    const weakCards = workingCards.filter(c => c.isWeak && !dismissedWeakCards.includes(c.id))
 
     // 當 ReviewCard 結束，計算正確率與判定
     const handleSessionDone = (results) => {
@@ -539,19 +603,20 @@ export default function App() {
                                 {(session?.user?.email || '帳號').split('@')[0]}
                             </button>
                         )}
-                        {userId && !isMobile && (
+                        {(userId || (tourActive && currentTourStep?.showExtIcon)) && !isMobile && (
                             <button
                                 className={`icon-btn ${extensionInstalled ? '' : 'ext-pending'}`}
-                                onClick={() => setShowExtGuide(true)}
+                                data-tour="ext-btn"
+                                onClick={() => !tourActive && setShowExtGuide(true)}
                                 title="Word Catcher 擴充功能"
                             >
                                 <Icon name="puzzle" size={20} strokeWidth={2} />
                             </button>
                         )}
-                        <button className="icon-btn" onClick={() => openImport()} title="匯入單字">
+                        <button className="icon-btn" data-tour="import-btn" onClick={() => !tourActive && openImport()} title="匯入單字">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path></svg>
                         </button>
-                        <button className="icon-btn" onClick={() => setShowSettings(true)} title="設定">
+                        <button className="icon-btn" onClick={() => !tourActive && setShowSettings(true)} title="設定">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
                         </button>
                     </div>
@@ -562,13 +627,13 @@ export default function App() {
             <main className={`app-content ${view === 'home' || view === 'grammar' || view === 'review' || view === 'speaking' || view === 'knm' ? 'wide' : ''} ${view === 'lab' ? 'lab-fullscreen' : ''} ${view === 'speaking' ? 'speaking-fullscreen' : ''} ${view === 'knm' ? 'knm-fullscreen' : ''}`}>
                 {view === 'home' && (
                     <HomePage
-                        totalCards={cards.length}
+                        totalCards={workingCards.length}
                         stats={stats}
                         bufferCapacity={60}
                         dueCount={dueCount}
-                        onStartReview={() => setView('review')}
-                        onImport={() => openImport()}
-                        onImportCatch={() => openImport({ prefillInbox: true })}
+                        onStartReview={() => !tourActive && setView('review')}
+                        onImport={() => !tourActive && openImport()}
+                        onImportCatch={() => !tourActive && openImport({ prefillInbox: true })}
                         inboxWords={inboxWords}
                         onDeleteInboxWord={handleDeleteInboxWord}
                         onClearInbox={handleClearInbox}
@@ -586,23 +651,25 @@ export default function App() {
                 )}
                 {view === 'review' && (
                     <ReviewCard
-                        key={userId || 'guest'}
+                        key={tourActive ? `tour-review` : (userId || 'guest')}
                         dueCards={dueCards}
                         onRate={handleRate}
                         onDone={handleSessionDone}
                         onDelete={handleDelete}
                         onUpdateNote={handleUpdateNote}
                         sessionState={sessionState}
-                        updateSession={(newState) => { 
+                        updateSession={(newState) => {
+                            if (tourActive) return
                             setSessionState(newState)
                             saveSessionState(newState)
                         }}
                         isMobile={isMobile}
+                        tourMode={!!(tourActive && currentTourStep?.id === 'review')}
                     />
 
                 )}
                 {view === 'library' && (
-                    <CardList cards={cards} onDelete={handleDelete} />
+                    <CardList cards={workingCards} onDelete={handleDelete} />
                 )}
                 {view === 'grammar' && (
                     <GrammarView settings={settings} />
@@ -622,7 +689,7 @@ export default function App() {
             <nav className="tabbar">
                 <button
                     className={`tabbar-item ${view === 'home' ? 'active' : ''}`}
-                    onClick={() => setView('home')}
+                    onClick={() => !tourActive && setView('home')}
                 >
                     <span className="tabbar-icon">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
@@ -631,7 +698,8 @@ export default function App() {
                 </button>
                 <button
                     className={`tabbar-item ${view === 'review' ? 'active' : ''}`}
-                    onClick={() => setView('review')}
+                    data-tour="review-tab"
+                    onClick={() => !tourActive && setView('review')}
                 >
                     <span className="tabbar-icon">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="8" width="18" height="14" rx="2" ry="2"></rect><path d="M7 4h14v14"></path></svg>
@@ -641,7 +709,7 @@ export default function App() {
                 </button>
                 <button
                     className={`tabbar-item ${view === 'library' ? 'active' : ''}`}
-                    onClick={() => setView('library')}
+                    onClick={() => !tourActive && setView('library')}
                 >
                     <span className="tabbar-icon">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
@@ -650,7 +718,7 @@ export default function App() {
                 </button>
                 <button
                     className={`tabbar-item ${view === 'grammar' ? 'active' : ''}`}
-                    onClick={() => setView('grammar')}
+                    onClick={() => !tourActive && setView('grammar')}
                 >
                     <span className="tabbar-icon">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
@@ -659,7 +727,7 @@ export default function App() {
                 </button>
                 <button
                     className={`tabbar-item ${view === 'knm' ? 'active' : ''}`}
-                    onClick={() => setView('knm')}
+                    onClick={() => !tourActive && setView('knm')}
                 >
                     <span className="tabbar-icon">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 21h18"/><path d="M5 21V8l7-4 7 4v13"/><path d="M9 21v-6h6v6"/><path d="M9 10h.01"/><path d="M15 10h.01"/></svg>
@@ -668,7 +736,7 @@ export default function App() {
                 </button>
                 <button
                     className={`tabbar-item ${view === 'lab' ? 'active' : ''}`}
-                    onClick={() => setView('lab')}
+                    onClick={() => !tourActive && setView('lab')}
                 >
                     <span className="tabbar-icon">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
@@ -677,7 +745,7 @@ export default function App() {
                 </button>
                 <button
                     className={`tabbar-item ${view === 'speaking' ? 'active' : ''}`}
-                    onClick={() => setView('speaking')}
+                    onClick={() => !tourActive && setView('speaking')}
                 >
                     <span className="tabbar-icon">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
@@ -701,6 +769,7 @@ export default function App() {
                     initialText={importSeed}
                     inboxWords={inboxWords}
                     onClearInbox={handleClearInbox}
+                    tourMode={!!(tourActive && currentTourStep?.openImport)}
                 />
             )}
             {toast && (
@@ -724,6 +793,7 @@ export default function App() {
                     lastSynced={lastSynced}
                     onGoogleLogin={() => signInWithGoogle().catch(err => alert(err.message))}
                     onLogout={handleLogout}
+                    onReplayTour={handleReplayTour}
                 />
             )}
             <ExtensionGuideModal
@@ -731,6 +801,18 @@ export default function App() {
                 onClose={() => setShowExtGuide(false)}
                 installed={extensionInstalled}
             />
+            {tourActive && (
+                <OnboardingTour
+                    steps={tourSteps}
+                    stepIndex={tourStepIndex}
+                    onPrev={() => setTourStepIndex(i => Math.max(0, i - 1))}
+                    onNext={() => {
+                        if (tourStepIndex >= tourSteps.length - 1) finishTour()
+                        else setTourStepIndex(i => i + 1)
+                    }}
+                    onSkip={finishTour}
+                />
+            )}
         </div>
     )
 }
@@ -883,7 +965,7 @@ function HomePage({
                         </div>
                     </div>
 
-                    <div className="memory-stages">
+                    <div className="memory-stages" data-tour="memory-stages">
                         <article className="memory-stage pool">
                             <header>
                                 <h3>總量池</h3>
