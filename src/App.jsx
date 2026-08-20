@@ -1,9 +1,12 @@
 import { useState, useEffect, useCallback } from 'react'
-import { getCards, saveCards, getSettings, saveSettings, generateId, getSessionState, saveSessionState } from './services/storage'
+import { getCards, saveCards, clearCards, getSettings, saveSettings, generateId, getSessionState, saveSessionState } from './services/storage'
 import { initCard, scheduleCard, buildSessionSequence, migrateCards } from './services/srs'
-import { parseTextToCards, parseTextToCardsGemini } from './services/ai'
+import { parseTextToCardsWithSession, fetchAiQuota } from './services/ai'
 import { mergeIncomingCards, toCardContent } from './services/cardFields'
-import { getInboxWords, deleteInboxWord, clearInbox, getCloudCards, upsertCloudCards, deleteCloudCard } from './services/supabase'
+import { getCloudCards, upsertCloudCards, deleteCloudCard, getCloudInbox, upsertCloudInbox, deleteCloudInboxItem, clearCloudInbox, mergeCardsByUpdatedAt } from './services/supabase'
+import { subscribeAuth, signInWithGoogle, signOutUser, ackExtensionQueue } from './services/auth'
+import { getLocalInbox, saveLocalInbox, clearLocalInbox, mergeInboxItems } from './services/inbox'
+import { parseSimpleCards, looksLikeSimpleList } from './services/simpleImport'
 
 import ReviewCard from './components/ReviewCard'
 import CardList from './components/CardList'
@@ -48,9 +51,12 @@ export default function App() {
     const extensionInstalled = useExtensionInstalled()
     const [importing, setImporting] = useState(false)
     const [importError, setImportError] = useState('')
-    const [syncId, setSyncId] = useState(localStorage.getItem('memoflip_sync_id') || '')
+    const [session, setSession] = useState(null)
     const [lastSynced, setLastSynced] = useState(null)
     const [sessionState, setSessionState] = useState(getSessionState())
+    const [aiQuota, setAiQuota] = useState(null)
+    const userId = session?.user?.id || ''
+    const accessToken = session?.access_token || ''
 
 
     // 活動紀錄紀錄每天背了幾張卡
@@ -81,77 +87,86 @@ export default function App() {
         }
         setCards(loaded)
         setSettings(getSettings())
-        fetchInboxWords()
+        setInboxWords(getLocalInbox())
     }, [])
 
-    // 移除舊的減壓模式，改由三層緩衝區 (Buffer) 進行流量控制
+    useEffect(() => {
+        return subscribeAuth(setSession)
+    }, [])
 
     useEffect(() => {
-        if (syncId) {
-            handleSync(syncId)
+        const onMessage = (event) => {
+            const data = event.data
+            if (data?.source !== 'toocheep-word-catcher' || data?.type !== 'inbox-flush') return
+            const incoming = Array.isArray(data.items) ? data.items : []
+            if (!incoming.length) return
+            setInboxWords(prev => {
+                const merged = mergeInboxItems(prev, incoming)
+                if (!userId) saveLocalInbox(merged)
+                return merged
+            })
+            if (userId) {
+                upsertCloudInbox(userId, incoming).catch(err => console.error('Inbox upload failed:', err))
+            }
+            ackExtensionQueue(incoming.map(i => i.id).filter(Boolean))
         }
-    }, [syncId])
+        window.addEventListener('message', onMessage)
+        return () => window.removeEventListener('message', onMessage)
+    }, [userId])
 
-    const handleSync = async (id) => {
-        if (!id) return
-        try {
-            const remoteCards = await getCloudCards(id)
-            const currentLocalCards = getCards() // 修正：從 local 抓取最新，避免 closure 拿到初始的 []
-            
-            if (!remoteCards.length && currentLocalCards.length > 0) {
-                // 初次同步：將本地推送至雲端
-                await upsertCloudCards(id, currentLocalCards)
+    useEffect(() => {
+        if (!userId) return
+        let cancelled = false
+        ;(async () => {
+            try {
+                const remoteCards = await getCloudCards(userId)
+                const currentLocalCards = getCards()
+                const merged = mergeCardsByUpdatedAt(currentLocalCards, remoteCards)
+                const { migrated: migratedMerged } = migrateCards(merged, 60)
+                if (cancelled) return
+                setCards(migratedMerged)
+                saveCards(migratedMerged)
                 setLastSynced(Date.now())
-                return
+                const toPush = migratedMerged.filter(c => {
+                    const remote = remoteCards.find(r => r.id === c.id)
+                    return !remote || (c.updatedAt || 0) > (remote.updatedAt || 0)
+                })
+                if (toPush.length > 0) await upsertCloudCards(userId, toPush)
+
+                const localInbox = getLocalInbox()
+                if (localInbox.length) {
+                    await upsertCloudInbox(userId, localInbox)
+                    clearLocalInbox()
+                }
+                const freshInbox = await getCloudInbox(userId)
+                if (cancelled) return
+                setInboxWords(freshInbox || [])
+                const quota = await fetchAiQuota(accessToken).catch(() => null)
+                if (!cancelled) setAiQuota(quota)
+            } catch (e) {
+                console.error('Sync failed:', e)
             }
+        })()
+        return () => { cancelled = true }
+    }, [userId])
 
-            // 合併邏輯：以 updatedAt 為準
-            const localMap = new Map(currentLocalCards.map(c => [c.id, c]))
-            const remoteMap = new Map(remoteCards.map(c => [c.id, c]))
-            const allIds = new Set([...localMap.keys(), ...remoteMap.keys()])
-
-            const merged = Array.from(allIds).map(cid => {
-                const local = localMap.get(cid)
-                const remote = remoteMap.get(cid)
-                if (!local) return remote
-                if (!remote) return local
-                // 誰比較新就聽誰的
-                return (remote.updatedAt || 0) > (local.updatedAt || 0) ? remote : local
-            })
-
-            // 同步後執行狀態修復，避免雲端舊資料的非法 status
-            const { migrated: migratedMerged } = migrateCards(merged, 60)
-            setCards(migratedMerged)
-            saveCards(migratedMerged)
-            setLastSynced(Date.now())
-
-            // 如果本地有比雲端新的，或是雲端沒有的，推送到雲端
-            const toPush = merged.filter(c => {
-                const remote = remoteMap.get(c.id)
-                return !remote || (c.updatedAt || 0) > (remote.updatedAt || 0)
-            })
-            if (toPush.length > 0) {
-                await upsertCloudCards(id, toPush)
-            }
-        } catch (e) {
-            console.error('Sync failed:', e)
+    useEffect(() => {
+        const onFocus = () => {
+            if (!userId) return
+            getCloudInbox(userId).then(data => setInboxWords(data || [])).catch(() => {})
         }
-    }
-
-
-    const fetchInboxWords = async () => {
-        try {
-            const data = await getInboxWords()
-            setInboxWords(data || [])
-        } catch (e) {
-            console.error('Failed to fetch inbox words:', e)
-        }
-    }
+        window.addEventListener('focus', onFocus)
+        return () => window.removeEventListener('focus', onFocus)
+    }, [userId])
 
     const handleDeleteInboxWord = async (id) => {
         try {
-            await deleteInboxWord(id)
-            setInboxWords(prev => prev.filter(w => w.id !== id))
+            if (userId) await deleteCloudInboxItem(userId, id)
+            setInboxWords(prev => {
+                const next = prev.filter(w => w.id !== id)
+                if (!userId) saveLocalInbox(next)
+                return next
+            })
         } catch (e) {
             console.error('Failed to delete word:', e)
         }
@@ -160,8 +175,9 @@ export default function App() {
     const handleClearInbox = async () => {
         try {
             const ids = inboxWords.map(w => w.id)
-            await clearInbox(ids)
+            if (userId) await clearCloudInbox(userId, ids)
             setInboxWords([])
+            clearLocalInbox()
         } catch (e) {
             console.error('Failed to clear inbox:', e)
         }
@@ -177,35 +193,41 @@ export default function App() {
 
             saveCards(timestamped)
 
-            if (syncId) {
-                // 背景同步
+            if (userId) {
                 const changedCards = timestamped.filter(c => {
                     const oldCard = prevCards.find(old => old.id === c.id);
                     return oldCard !== c;
                 });
                 if (changedCards.length > 0) {
-                    upsertCloudCards(syncId, changedCards)
+                    upsertCloudCards(userId, changedCards)
                 }
             }
 
             return timestamped;
         });
-    }, [syncId])
+    }, [userId])
 
 
     const dismissWeakCard = (cardId) => {
         setDismissedWeakCards(prev => [...prev, cardId])
     }
 
-    const handleImport = async (text, aiProvider = 'openai', onSuccess = null) => {
+    const handleImport = async (text, _aiProvider = 'openai', onSuccess = null) => {
         setImporting(true)
         setImportError('')
         try {
             let parsed = []
-            if (aiProvider === 'gemini') {
-                parsed = await parseTextToCardsGemini(text, settings.geminiKey)
+            let quotaInfo = null
+            if (!accessToken) {
+                parsed = parseSimpleCards(text)
+                if (!parsed.length) throw new Error('沒登入時請用「原文 / 譯文」格式，或先 Google 登入再用 AI')
+            } else if (looksLikeSimpleList(text) && !text.trim().startsWith('{') && !text.trim().startsWith('[')) {
+                parsed = parseSimpleCards(text)
             } else {
-                parsed = await parseTextToCards(text, settings.openaiKey)
+                const data = await parseTextToCardsWithSession(text, accessToken)
+                parsed = data.cards || []
+                quotaInfo = data.quota
+                if (quotaInfo) setAiQuota(quotaInfo)
             }
             if (!parsed.length) throw new Error('沒有解析到任何單字，請確認格式')
             const incoming = parsed.map(p => ({
@@ -219,10 +241,11 @@ export default function App() {
                 alert(`【負荷預警】你目前將有超過 150 張卡片待複習，建議這批單字分 3 天分批排入，以免負擔過重而產生放棄感！\n目前將為你照常匯入，但我們強烈建議控制每日新字數量。`)
             }
             updateCards(next)
-            if (onSuccess) onSuccess()
+            if (onSuccess) await onSuccess()
             setShowImport(false)
             return { added, updated, relearned }
         } catch (err) {
+            if (err.quota) setAiQuota(err.quota)
             setImportError(err.message)
             throw err
         } finally {
@@ -262,10 +285,10 @@ export default function App() {
 
     const handleDelete = useCallback((cardId) => {
         updateCards(cards.filter(c => c.id !== cardId))
-        if (syncId) {
-            deleteCloudCard(syncId, cardId).catch(err => console.error('Cloud delete failed:', err))
+        if (userId) {
+            deleteCloudCard(userId, cardId).catch(err => console.error('Cloud delete failed:', err))
         }
-    }, [cards, updateCards, syncId])
+    }, [cards, updateCards, userId])
 
     const handleUpdateNote = useCallback((cardId, note) => {
         const updated = cards.map(c => {
@@ -316,6 +339,50 @@ export default function App() {
             }
             alert('還原成功！')
         }
+    }
+
+    const handleLogout = async () => {
+        if (!window.confirm('登出後這台裝置上的字卡與 inbox 會清空。雲端帳號裡的資料還在，下次用同一個 Google 登入會回來。')) return
+        try {
+            await signOutUser()
+        } catch (e) {
+            console.error('Logout failed:', e)
+        }
+        setSession(null)
+        setCards([])
+        clearCards()
+        setInboxWords([])
+        clearLocalInbox()
+        setLastSynced(null)
+        setAiQuota(null)
+        setShowSettings(false)
+    }
+
+    const handleInboxDirectAdd = async (items) => {
+        const list = items || inboxWords
+        if (!list.length) return
+        const newCards = list.map(item => ({
+            id: generateId(),
+            ...toCardContent({
+                front: item.word,
+                back: item.translation || '',
+                example_1: item.context_sentence || '',
+            }),
+            createdAt: Date.now(),
+            ...initCard(),
+        }))
+        handleImportDirect(newCards)
+        const ids = new Set(list.map(i => i.id))
+        try {
+            if (userId) await clearCloudInbox(userId, [...ids])
+        } catch (e) {
+            console.error('Failed to clear inbox after import:', e)
+        }
+        setInboxWords(prev => {
+            const next = prev.filter(w => !ids.has(w.id))
+            if (!userId) saveLocalInbox(next)
+            return next
+        })
     }
 
     const sequence = buildSessionSequence(cards, 60, sessionState.sessionSize)
@@ -370,13 +437,22 @@ export default function App() {
                         <span className="logo-text">toocheep<span className="logo-sub">fordutch</span></span>
                     </div>
                     <div className="header-actions">
+                        {!userId ? (
+                            <button className="btn-secondary header-login-btn" onClick={() => signInWithGoogle().catch(err => alert(err.message))}>
+                                登入
+                            </button>
+                        ) : (
+                            <button className="header-user-btn" onClick={() => setShowSettings(true)} title={session?.user?.email || '已登入'}>
+                                {(session?.user?.email || '帳號').split('@')[0]}
+                            </button>
+                        )}
                         {!isMobile && (
                             <button
                                 className={`icon-btn ${extensionInstalled ? '' : 'ext-pending'}`}
                                 onClick={() => setShowExtGuide(true)}
                                 title="Word Catcher 擴充功能"
                             >
-                                <Icon name="puzzle" size={18} />
+                                <Icon name="puzzle" size={20} strokeWidth={2} />
                             </button>
                         )}
                         <button className="icon-btn primary-glow" onClick={() => setShowImport(true)} title="匯入單字">
@@ -519,12 +595,16 @@ export default function App() {
             {showImport && (
                 <ImportModal
                     onImport={handleImport}
-                    onClose={() => { setShowImport(false); setImportError(''); fetchInboxWords(); }}
+                    onClose={() => { setShowImport(false); setImportError('') }}
                     importing={importing}
                     error={importError}
-                    hasApiKey={!!settings.openaiKey}
-                    onNeedKey={() => { setShowImport(false); setShowSettings(true) }}
+                    loggedIn={!!userId}
+                    quota={aiQuota}
+                    onLogin={() => signInWithGoogle().catch(err => alert(err.message))}
                     onImportDirect={handleImportDirect}
+                    inboxWords={inboxWords}
+                    onInboxDirectAdd={() => handleInboxDirectAdd()}
+                    onClearInbox={handleClearInbox}
                 />
             )}
             {showSettings && (
@@ -537,13 +617,11 @@ export default function App() {
                     onClose={() => setShowSettings(false)}
                     onExport={handleExport}
                     onRestore={handleRestoreBackup}
-                    syncId={syncId}
-                    onSyncIdChange={(id) => {
-                        setSyncId(id)
-                        localStorage.setItem('memoflip_sync_id', id)
-                    }}
+                    user={session?.user || null}
+                    quota={aiQuota}
                     lastSynced={lastSynced}
-                    onManualSync={() => handleSync(syncId)}
+                    onGoogleLogin={() => signInWithGoogle().catch(err => alert(err.message))}
+                    onLogout={handleLogout}
                 />
             )}
             <ExtensionGuideModal

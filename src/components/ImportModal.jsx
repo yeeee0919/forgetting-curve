@@ -1,39 +1,20 @@
-import { useState, useEffect } from 'react'
-import { getInboxWords, deleteInboxWord, clearInbox } from '../services/supabase'
+import { useState, useRef, useEffect } from 'react'
 import { generateId } from '../services/storage'
 import { initCard } from '../services/srs'
 import { EXTERNAL_JSON_PROMPT } from '../services/cardPrompt'
-import { parseCardsJsonStrict, countCardsInJson } from '../services/jsonImport'
+import { parseCardsJson, countCardsInJson } from '../services/jsonImport'
+import { parseSimpleCards } from '../services/simpleImport'
 import { toCardContent } from '../services/cardFields'
 import Icon from './Icons'
 
-export default function ImportModal({ onImport, onClose, importing, error, hasApiKey, onNeedKey, onImportDirect }) {
+export default function ImportModal({ onImport, onClose, importing, error, loggedIn, quota, onLogin, onImportDirect, inboxWords: inboxFromApp, onInboxDirectAdd, onClearInbox }) {
     const [tab, setTab] = useState('ai')
-    const [provider, setProvider] = useState('openai')
     const [text, setText] = useState('')
     const [jsonText, setJsonText] = useState('')
     const [result, setResult] = useState(null)
     const [jsonError, setJsonError] = useState('')
-    const [inboxWords, setInboxWords] = useState([])
-    const [loadingInbox, setLoadingInbox] = useState(false)
-    const [showSettings, setShowSettings] = useState(false)
     const [copiedTarget, setCopiedTarget] = useState(null)
-
-    useEffect(() => {
-        fetchInbox()
-    }, [])
-
-    const fetchInbox = async () => {
-        setLoadingInbox(true)
-        try {
-            const data = await getInboxWords()
-            setInboxWords(data || [])
-        } catch (e) {
-            console.error('Failed to fetch inbox:', e)
-        } finally {
-            setLoadingInbox(false)
-        }
-    }
+    const inboxWords = inboxFromApp || []
 
     const handlePasteInbox = () => {
         if (inboxWords.length === 0) return
@@ -45,15 +26,8 @@ export default function ImportModal({ onImport, onClose, importing, error, hasAp
         try {
             setResult(null)
             const inboxText = inboxWords.map(w => w.word).join('\n')
-            const isInboxImport = text.trim() === inboxText.trim()
-
-            const successCallback = isInboxImport ? async () => {
-                const ids = inboxWords.map(w => w.id)
-                await clearInbox(ids)
-                setInboxWords([])
-            } : null
-
-            const res = await onImport(text, provider, successCallback)
+            const isInboxImport = inboxWords.length > 0 && text.trim() === inboxText.trim()
+            const res = await onImport(text, 'openai', isInboxImport ? onClearInbox : null)
             setResult(res)
             setText('')
         } catch (e) {
@@ -65,7 +39,9 @@ export default function ImportModal({ onImport, onClose, importing, error, hasAp
         setJsonError('')
         setResult(null)
         try {
-            const arr = parseCardsJsonStrict(jsonText)
+            let arr = parseCardsJson(jsonText)
+            if (!arr.length) arr = parseSimpleCards(jsonText)
+            if (!arr.length) throw new Error('找不到 JSON 字卡，也不是「原文 / 譯文」列表')
             const cards = arr.map(p => ({
                 id: generateId(),
                 ...toCardContent(p),
@@ -76,7 +52,7 @@ export default function ImportModal({ onImport, onClose, importing, error, hasAp
             setResult(res)
             setJsonText('')
         } catch (e) {
-            setJsonError('JSON 格式錯誤：' + e.message)
+            setJsonError('格式錯誤：' + e.message)
         }
     }
 
@@ -122,25 +98,6 @@ export default function ImportModal({ onImport, onClose, importing, error, hasAp
                         </div>
                     </div>
                     <div className="im-header-actions">
-                        <div className="im-settings-wrapper">
-                            <button className={`im-icon-btn ${showSettings ? 'active' : ''}`} onClick={() => setShowSettings(!showSettings)} title="設定">
-                                <Icon name="settings" size={16} />
-                            </button>
-                            {showSettings && (
-                                <div className="im-settings-dropdown">
-                                    <div className="im-settings-item">
-                                        <label>AI 引擎</label>
-                                        <select value={provider} onChange={e => setProvider(e.target.value)}>
-                                            <option value="openai">OpenAI (推薦)</option>
-                                            <option value="gemini">Google Gemini 1.5</option>
-                                        </select>
-                                    </div>
-                                    <button className="im-settings-link" onClick={onNeedKey}>
-                                        填寫 API Keys
-                                    </button>
-                                </div>
-                            )}
-                        </div>
                         <button className="im-close-v4" onClick={onClose}><Icon name="x" size={16} /></button>
                     </div>
                 </div>
@@ -163,39 +120,38 @@ export default function ImportModal({ onImport, onClose, importing, error, hasAp
                                 )}
                             </div>
                             <div className="im-field-hint">
-                                💡 支援格式：網頁文字、PDF 文本、混亂的單字列表
+                                {loggedIn
+                                    ? `💡 貼上任意文字，AI 會拆成字卡。額度 ${quota?.used ?? 0}/${quota?.limit ?? 50}。用完請改「手動」頁，每行「原文 / 譯文」。`
+                                    : '💡 尚未登入：請每行「原文 / 譯文」，或先 Google 登入再用 AI。'}
                             </div>
+                            {!loggedIn && (
+                                <button type="button" className="im-paste-inbox-btn" onClick={onLogin} style={{ position: 'relative', marginTop: 8 }}>
+                                    使用 Google 登入以啟用 AI
+                                </button>
+                            )}
+                            {inboxWords.length > 0 && onInboxDirectAdd && (
+                                <button type="button" className="im-paste-inbox-btn" onClick={onInboxDirectAdd} style={{ position: 'relative', marginTop: 8 }}>
+                                    捕捉區 {inboxWords.length} 個字，不用 AI 直接加入牌組
+                                </button>
+                            )}
                         </div>
                     )}
 
                     {tab === 'manual' && (
                         <div className="im-manual-container">
-                            <div className="im-manual-guide">
-                                <div className="im-manual-copy">
-                                    <p className="im-manual-lead">用 ChatGPT / Gemini 整理成 JSON，再貼回這裡。</p>
-                                    <ol className="im-flow-caps">
-                                        <li>點擊下方按鈕，前往外部 AI</li>
-                                        <li>提示詞已出現在對話裡（ChatGPT 會自動帶入）</li>
-                                        <li>在對話中貼上要學的單字</li>
-                                        <li>等待 AI 輸出 JSON</li>
-                                        <li>複製整段結果</li>
-                                        <li>回到這裡，貼上結果後匯入</li>
-                                    </ol>
-                                </div>
-                                <ExternalAiDemo />
-                            </div>
+                            <ManualGuide />
                             <textarea
                                 className="im-textarea-v4 im-code-editor"
-                                placeholder='可直接貼上 ChatGPT / Gemini 的整段回覆'
+                                placeholder={'JSON 或每行：huis / 房子'}
                                 value={jsonText}
                                 onChange={e => setJsonText(e.target.value)}
                             />
                             {detectedCount > 0 && (
-                                <div className="im-field-hint" style={{ color: 'var(--good)' }}>
+                                <div className="im-field-hint" style={{ color: 'var(--good)', flexShrink: 0 }}>
                                     辨識到 {detectedCount} 張卡
                                 </div>
                             )}
-                            {jsonError && <div className="im-error-v4">{jsonError}</div>}
+                            {jsonError && <div className="im-error-v4" style={{ flexShrink: 0 }}>{jsonError}</div>}
                         </div>
                     )}
                 </div>
@@ -228,8 +184,9 @@ export default function ImportModal({ onImport, onClose, importing, error, hasAp
                 </div>
 
                 {/* Progress Status Bar */}
-                {(error || result) && (
+                {(error || result || jsonError) && (
                     <div className="im-status-bar">
+                        {jsonError && <div className="im-error-v4">{jsonError}</div>}
                         {error && <div className="im-error-v4">{error}</div>}
                         {result && <div className="im-success-v4">成功匯入 {result.added} 張{result.updated > 0 ? `（更新 ${result.updated} 張` : ''}{result.relearned > 0 ? `，${result.relearned} 張進入重學` : ''}{result.updated > 0 ? '）' : ''}</div>}
                     </div>
@@ -284,7 +241,7 @@ export default function ImportModal({ onImport, onClose, importing, error, hasAp
 
                     .im-body { flex: 1; padding: var(--space-lg) var(--space-lg); display: flex; flex-direction: column; background: var(--bg-surface); overflow: hidden; }
                     
-                    .im-ai-container, .im-manual-container { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+                    .im-ai-container, .im-manual-container { flex: 1; display: flex; flex-direction: column; min-height: 0; overflow-y: auto; }
                     .im-manual-container { gap: 12px; }
                     .im-textarea-wrapper { position: relative; flex: 1; display: flex; flex-direction: column; min-height: 0; }
                     
@@ -441,24 +398,92 @@ export default function ImportModal({ onImport, onClose, importing, error, hasAp
                         font-size: 0.72rem; font-weight: 600; color: var(--text-primary);
                         opacity: 0;
                     }
-                    .im-url.app { animation: imUrlApp 14s ease-in-out infinite; }
-                    .im-url.gpt { animation: imUrlGpt 14s ease-in-out infinite; }
-                    @keyframes imUrlApp {
-                        0%, 14% { opacity: 1; } 18%, 76% { opacity: 0; } 80%, 94% { opacity: 1; } 97%, 100% { opacity: 0; }
-                    }
-                    @keyframes imUrlGpt {
-                        0%, 16% { opacity: 0; } 20%, 74% { opacity: 1; } 78%, 100% { opacity: 0; }
-                    }
+                    .im-flow-demo[data-step="0"] .im-url.app,
+                    .im-flow-demo[data-step="5"] .im-url.app { opacity: 1; }
+                    .im-flow-demo[data-step="1"] .im-url.gpt,
+                    .im-flow-demo[data-step="2"] .im-url.gpt,
+                    .im-flow-demo[data-step="3"] .im-url.gpt,
+                    .im-flow-demo[data-step="4"] .im-url.gpt { opacity: 1; }
                     .im-browser-page { position: relative; flex: 1; min-height: 0; background: #F7F8FA; }
-                    .im-view { position: absolute; inset: 0; opacity: 0; pointer-events: none; }
-                    .im-view.app { animation: imViewApp 14s ease-in-out infinite; padding: 10px 12px; }
-                    .im-view.chat { animation: imViewChat 14s ease-in-out infinite; display: flex; flex-direction: column; }
-                    @keyframes imViewApp {
-                        0%, 15% { opacity: 1; } 19%, 76% { opacity: 0; } 80%, 94% { opacity: 1; } 97%, 100% { opacity: 0; }
+                    .im-view {
+                        position: absolute; inset: 0;
+                        opacity: 0;
+                        pointer-events: none;
+                        transition: opacity 0.35s ease;
                     }
-                    @keyframes imViewChat {
-                        0%, 16% { opacity: 0; } 20%, 74% { opacity: 1; } 78%, 100% { opacity: 0; }
+                    .im-view.chat { display: flex; flex-direction: column; }
+                    .im-view.app { padding: 10px 12px; }
+                    .im-flow-demo[data-step="0"] .im-view.click { opacity: 1; }
+                    .im-flow-demo[data-step="1"] .im-view.chat,
+                    .im-flow-demo[data-step="2"] .im-view.chat,
+                    .im-flow-demo[data-step="3"] .im-view.chat,
+                    .im-flow-demo[data-step="4"] .im-view.chat { opacity: 1; }
+                    .im-flow-demo[data-step="5"] .im-view.app { opacity: 1; }
+
+                    .im-click-scene {
+                        height: 100%;
+                        padding: 12px 14px 16px;
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: flex-end;
+                        gap: 10px;
+                        background: linear-gradient(180deg, #F7F8FA 0%, #fff 55%);
                     }
+                    .im-click-label {
+                        margin: 0;
+                        font-size: 0.72rem;
+                        font-weight: 700;
+                        color: var(--text-tertiary);
+                    }
+                    .im-click-btns {
+                        position: relative;
+                        display: flex;
+                        gap: 8px;
+                        flex-wrap: wrap;
+                    }
+                    .im-click-target {
+                        position: relative;
+                    }
+                    .im-flow-chip {
+                        font-size: 0.72rem; font-weight: 800; border-radius: 8px; padding: 8px 10px;
+                        display: inline-flex; align-items: center; gap: 4px;
+                    }
+                    .im-flow-chip.gpt {
+                        background: var(--brand-accent); color: #fff;
+                        box-shadow: 0 4px 12px rgba(241, 90, 41, 0.28);
+                    }
+                    .im-flow-chip.gem { background: #fff; color: var(--brand-accent); border: 1px solid var(--brand-accent); }
+                    .im-flow-demo[data-step="0"] .im-click-target {
+                        animation: imClickBtn 1.8s ease-in-out infinite;
+                    }
+                    @keyframes imClickBtn {
+                        0%, 38% { transform: scale(1); box-shadow: 0 4px 12px rgba(241, 90, 41, 0.28); }
+                        48% { transform: scale(0.94); box-shadow: 0 1px 0 rgba(241, 90, 41, 0.2); }
+                        58%, 100% { transform: scale(1.03); box-shadow: 0 0 0 5px rgba(241, 90, 41, 0.22); }
+                    }
+                    .im-flow-cursor {
+                        position: absolute;
+                        right: 18px;
+                        bottom: -4px;
+                        width: 14px;
+                        height: 14px;
+                        background: var(--brand-ink);
+                        clip-path: polygon(0 0, 100% 70%, 45% 70%, 60% 100%, 40% 100%, 28% 70%, 0 78%);
+                        opacity: 0;
+                        z-index: 2;
+                        filter: drop-shadow(0 1px 1px rgba(255,255,255,0.8));
+                    }
+                    .im-flow-demo[data-step="0"] .im-flow-cursor {
+                        opacity: 1;
+                        animation: imClickCursor 1.8s ease-in-out infinite;
+                    }
+                    @keyframes imClickCursor {
+                        0%, 18% { transform: translate(22px, -18px); }
+                        42% { transform: translate(0, 0); }
+                        50% { transform: translate(0, 3px) scale(0.9); }
+                        60%, 100% { transform: translate(0, 0); }
+                    }
+
                     .im-mini-modal {
                         height: 100%;
                         background: #fff;
@@ -473,44 +498,18 @@ export default function ImportModal({ onImport, onClose, importing, error, hasAp
                         border-radius: 8px; background: #1a1a1a; color: #9aa4ad;
                         padding: 8px 10px; font-size: 0.72rem; overflow: hidden;
                     }
-                    .im-flow-placeholder { animation: imFlowPlaceholder 14s ease-in-out infinite; }
+                    .im-flow-placeholder { opacity: 0.7; }
                     .im-flow-pasted {
                         position: absolute; inset: 8px 10px; margin: 0;
                         font-family: ui-monospace, Menlo, monospace;
                         font-size: 0.68rem; color: #d7e0e6; white-space: pre-wrap; line-height: 1.4;
-                        opacity: 0; animation: imFlowPasted 14s ease-in-out infinite;
+                        opacity: 0;
                     }
-                    @keyframes imFlowPlaceholder {
-                        0%, 78% { opacity: 0.7; } 82%, 94% { opacity: 0; } 97%, 100% { opacity: 0.7; }
-                    }
-                    @keyframes imFlowPasted {
-                        0%, 80% { opacity: 0; } 84%, 94% { opacity: 1; } 97%, 100% { opacity: 0; }
-                    }
+                    .im-flow-demo[data-step="5"] .im-flow-placeholder { opacity: 0; }
+                    .im-flow-demo[data-step="5"] .im-flow-pasted { opacity: 1; }
                     .im-flow-app-btns { display: flex; gap: 6px; }
-                    .im-flow-chip {
-                        font-size: 0.66rem; font-weight: 800; border-radius: 6px; padding: 5px 8px;
-                    }
-                    .im-flow-chip.gpt {
-                        background: var(--brand-accent); color: #fff;
-                        animation: imFlowGptPulse 14s ease-in-out infinite;
-                    }
-                    .im-flow-chip.gem { background: #fff; color: var(--brand-accent); border: 1px solid var(--brand-accent); }
-                    @keyframes imFlowGptPulse {
-                        0%, 4% { transform: scale(1); box-shadow: none; }
-                        8%, 13% { transform: scale(1.04); box-shadow: 0 0 0 4px rgba(241, 90, 41, 0.22); }
-                        17%, 100% { transform: scale(1); box-shadow: none; }
-                    }
-                    .im-flow-cursor {
-                        position: absolute; left: 42px; bottom: 22px; width: 11px; height: 11px;
-                        background: var(--brand-ink);
-                        clip-path: polygon(0 0, 100% 70%, 45% 70%, 60% 100%, 40% 100%, 28% 70%, 0 78%);
-                        animation: imFlowCursor 14s ease-in-out infinite;
-                    }
-                    @keyframes imFlowCursor {
-                        0% { opacity: 0; transform: translate(36px, -20px); }
-                        5%, 13% { opacity: 1; transform: translate(0, 0); }
-                        17%, 100% { opacity: 0; }
-                    }
+                    .im-view.app .im-flow-chip { font-size: 0.66rem; padding: 5px 8px; }
+
                     .im-chat-thread {
                         flex: 1; min-height: 0; overflow: hidden;
                         padding: 10px 14px 8px;
@@ -520,6 +519,9 @@ export default function ImportModal({ onImport, onClose, importing, error, hasAp
                         max-width: 78%;
                         font-size: 0.74rem; line-height: 1.45; font-weight: 500;
                         padding: 8px 10px; border-radius: 14px;
+                        opacity: 0;
+                        transform: translateY(6px);
+                        transition: opacity 0.35s ease, transform 0.35s ease;
                     }
                     .im-bubble.user {
                         align-self: flex-end;
@@ -530,35 +532,70 @@ export default function ImportModal({ onImport, onClose, importing, error, hasAp
                         background: #fff; color: var(--brand-ink);
                         border: 1px solid var(--border-subtle);
                         max-width: 86%;
-                        animation: imBubbleBot 14s ease-in-out infinite;
                     }
                     .im-bubble.prompt {
                         display: -webkit-box;
                         -webkit-line-clamp: 2;
                         -webkit-box-orient: vertical;
                         overflow: hidden;
-                        animation: imBubblePrompt 14s ease-in-out infinite;
                     }
-                    .im-bubble.words { animation: imBubbleWords 14s ease-in-out infinite; }
-                    @keyframes imBubblePrompt {
-                        0%, 19% { opacity: 0; transform: translateY(6px); }
-                        23%, 74% { opacity: 1; transform: none; }
-                        78%, 100% { opacity: 0; }
+                    .im-flow-demo[data-step="2"] .im-bubble.prompt,
+                    .im-flow-demo[data-step="3"] .im-bubble.prompt,
+                    .im-flow-demo[data-step="4"] .im-bubble.prompt {
+                        display: block;
+                        -webkit-line-clamp: unset;
                     }
-                    @keyframes imBubbleWords {
-                        0%, 33% { opacity: 0; transform: translateY(6px); }
-                        37%, 74% { opacity: 1; transform: none; }
-                        78%, 100% { opacity: 0; }
+                    .im-flow-demo[data-step="2"] .im-bubble.prompt,
+                    .im-flow-demo[data-step="3"] .im-bubble.prompt,
+                    .im-flow-demo[data-step="4"] .im-bubble.prompt { opacity: 1; transform: none; }
+                    .im-flow-demo[data-step="1"] .im-bubble.prompt {
+                        animation: imPromptPasteIn 5s ease-in-out infinite;
                     }
-                    @keyframes imBubbleBot {
-                        0%, 46% { opacity: 0; transform: translateY(6px); }
-                        48%, 74% { opacity: 1; transform: none; }
-                        78%, 100% { opacity: 0; }
+                    .im-prompt-slot {
+                        display: none;
+                        margin-top: 4px;
+                        padding: 3px 6px;
+                        border-radius: 6px;
+                        background: rgba(241, 90, 41, 0.14);
+                        color: var(--brand-accent);
+                        font-weight: 700;
                     }
+                    .im-prompt-words {
+                        display: none;
+                        margin-top: 4px;
+                        padding: 3px 6px;
+                        border-radius: 6px;
+                        background: rgba(11, 143, 140, 0.12);
+                        color: var(--good);
+                        font-weight: 700;
+                    }
+                    .im-flow-demo[data-step="2"] .im-prompt-slot {
+                        display: inline-block;
+                        animation: imSlotPulse 5s ease-in-out infinite;
+                    }
+                    .im-flow-demo[data-step="2"] .im-prompt-words {
+                        display: inline-block;
+                        animation: imWordsIntoPrompt 5s ease-in-out infinite;
+                    }
+                    .im-flow-demo[data-step="3"] .im-prompt-words,
+                    .im-flow-demo[data-step="4"] .im-prompt-words { display: inline-block; }
+                    @keyframes imPromptPasteIn {
+                        0%, 48% { opacity: 0; transform: translateY(6px); }
+                        58%, 100% { opacity: 1; transform: none; }
+                    }
+                    @keyframes imSlotPulse {
+                        0%, 18% { opacity: 1; }
+                        28%, 100% { opacity: 0; }
+                    }
+                    @keyframes imWordsIntoPrompt {
+                        0%, 26% { opacity: 0; }
+                        34%, 100% { opacity: 1; }
+                    }
+                    .im-flow-demo[data-step="3"] .im-bubble.bot,
+                    .im-flow-demo[data-step="4"] .im-bubble.bot { opacity: 1; transform: none; }
                     .im-typing {
                         display: inline-flex; gap: 4px; padding: 2px 2px;
                         opacity: 0;
-                        animation: imTyping 14s ease-in-out infinite;
                     }
                     .im-typing i {
                         width: 6px; height: 6px; border-radius: 50%; background: #8B9AAB;
@@ -567,22 +604,15 @@ export default function ImportModal({ onImport, onClose, importing, error, hasAp
                     .im-typing i:nth-child(2) { animation-delay: 0.15s; }
                     .im-typing i:nth-child(3) { animation-delay: 0.3s; }
                     @keyframes imDot { 0%, 80%, 100% { opacity: 0.3; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-2px); } }
-                    @keyframes imTyping {
-                        0%, 46% { opacity: 0; }
-                        48%, 58% { opacity: 1; }
-                        62%, 100% { opacity: 0; }
-                    }
                     .im-json {
                         margin: 0; font-family: ui-monospace, Menlo, monospace;
                         font-size: 0.66rem; line-height: 1.4; color: #2A241C;
                         white-space: pre-wrap; opacity: 0;
-                        animation: imJson 14s ease-in-out infinite;
                     }
-                    @keyframes imJson {
-                        0%, 56% { opacity: 0; }
-                        60%, 74% { opacity: 1; }
-                        78%, 100% { opacity: 0; }
-                    }
+                    .im-flow-demo[data-step="3"] .im-typing { opacity: 1; }
+                    .im-flow-demo[data-step="3"] .im-json { opacity: 0; }
+                    .im-flow-demo[data-step="4"] .im-typing { opacity: 0; }
+                    .im-flow-demo[data-step="4"] .im-json { opacity: 1; }
                     .im-composer {
                         flex-shrink: 0;
                         margin: 0 10px 8px;
@@ -594,85 +624,178 @@ export default function ImportModal({ onImport, onClose, importing, error, hasAp
                         padding: 0 8px 0 12px;
                         position: relative;
                     }
-                    .im-composer-ph, .im-composer-type {
+                    .im-composer-ph, .im-composer-prompt, .im-composer-type {
                         font-size: 0.7rem; white-space: nowrap; overflow: hidden;
                     }
-                    .im-composer-ph { color: var(--text-secondary); animation: imCompPh 14s ease-in-out infinite; }
+                    .im-composer-ph { color: var(--text-secondary); opacity: 1; }
+                    .im-composer-prompt,
                     .im-composer-type {
-                        position: absolute; left: 12px; color: var(--brand-ink); font-weight: 600;
-                        opacity: 0; animation: imCompType 14s ease-in-out infinite;
+                        position: absolute; left: 12px; right: 36px;
+                        color: var(--brand-ink); font-weight: 600;
+                        opacity: 0;
                     }
-                    @keyframes imCompPh {
-                        0%, 30% { opacity: 1; } 34%, 100% { opacity: 0; }
+                    .im-flow-demo[data-step="1"] .im-composer-ph { animation: imCompPhHide 5s ease-in-out infinite; }
+                    .im-flow-demo[data-step="1"] .im-composer-prompt { animation: imPasteIntoComposer 5s ease-in-out infinite; }
+                    .im-flow-demo[data-step="2"] .im-composer-ph { animation: imCompPhHide 5s ease-in-out infinite; }
+                    .im-flow-demo[data-step="2"] .im-composer-type { animation: imPasteIntoComposer 5s ease-in-out infinite; }
+                    @keyframes imCompPhHide {
+                        0%, 10% { opacity: 1; }
+                        16%, 52% { opacity: 0; }
+                        60%, 100% { opacity: 1; }
                     }
-                    @keyframes imCompType {
-                        0%, 31% { opacity: 0; }
-                        34%, 40% { opacity: 1; }
-                        44%, 100% { opacity: 0; }
+                    @keyframes imPasteIntoComposer {
+                        0%, 12% { opacity: 0; }
+                        18%, 50% { opacity: 1; }
+                        58%, 100% { opacity: 0; }
                     }
                     .im-send {
                         margin-left: auto; width: 22px; height: 22px; border-radius: 50%;
                         background: #0B1F33; color: #fff; font-size: 12px; font-weight: 800;
                         display: flex; align-items: center; justify-content: center;
                     }
+                    .im-paste-flag,
+                    .im-words-flag,
                     .im-copied-flag {
                         position: absolute; right: 12px; top: 10px;
-                        font-size: 0.7rem; font-weight: 800; color: #0B6B4F;
-                        background: #D8F3E8; border-radius: 99px; padding: 3px 8px;
-                        opacity: 0; animation: imCopied 14s ease-in-out infinite;
+                        font-size: 0.7rem; font-weight: 800;
+                        border-radius: 99px; padding: 3px 8px;
+                        opacity: 0;
                     }
-                    @keyframes imCopied {
-                        0%, 65% { opacity: 0; transform: translateY(-4px); }
-                        68%, 74% { opacity: 1; transform: none; }
-                        78%, 100% { opacity: 0; }
+                    .im-paste-flag, .im-words-flag {
+                        color: var(--brand-accent);
+                        background: rgba(241, 90, 41, 0.12);
                     }
+                    .im-copied-flag {
+                        color: #0B6B4F;
+                        background: #D8F3E8;
+                    }
+                    .im-flow-demo[data-step="1"] .im-paste-flag { animation: imFlagIn 5s ease-in-out infinite; }
+                    .im-flow-demo[data-step="2"] .im-words-flag { animation: imFlagIn 5s ease-in-out infinite; }
+                    .im-flow-demo[data-step="4"] .im-copied-flag { opacity: 1; }
+                    @keyframes imFlagIn {
+                        0%, 6% { opacity: 0; transform: translateY(-6px); }
+                        12%, 40% { opacity: 1; transform: none; }
+                        50%, 100% { opacity: 0; }
+                    }
+                    .im-flow-demo[data-paused="1"] .im-click-target,
+                    .im-flow-demo[data-paused="1"] .im-flow-cursor,
+                    .im-flow-demo[data-paused="1"] .im-bubble.prompt,
+                    .im-flow-demo[data-paused="1"] .im-prompt-slot,
+                    .im-flow-demo[data-paused="1"] .im-prompt-words,
+                    .im-flow-demo[data-paused="1"] .im-composer-ph,
+                    .im-flow-demo[data-paused="1"] .im-composer-prompt,
+                    .im-flow-demo[data-paused="1"] .im-composer-type,
+                    .im-flow-demo[data-paused="1"] .im-paste-flag,
+                    .im-flow-demo[data-paused="1"] .im-words-flag {
+                        animation-play-state: paused;
+                    }
+
                     .im-flow-caps {
                         display: flex;
                         flex-direction: column;
-                        gap: 6px;
+                        gap: 4px;
                         list-style: none;
                         margin: 0;
                         padding: 0;
                     }
                     .im-flow-caps li {
-                        font-size: 0.82rem;
+                        position: relative;
+                        overflow: hidden;
+                        display: flex;
+                        align-items: flex-start;
+                        gap: 8px;
+                        margin: 0;
+                        padding: 6px 8px;
+                        border-radius: 10px;
+                        font-size: 0.8rem;
                         font-weight: 600;
-                        color: var(--text-primary);
-                        line-height: 1.45;
-                        opacity: 0.78;
+                        color: var(--text-secondary);
+                        line-height: 1.4;
+                        opacity: 0.42;
+                        background: transparent;
+                        cursor: pointer;
+                        border: none;
+                        width: 100%;
+                        text-align: left;
+                        font-family: inherit;
+                        z-index: 0;
                     }
-                    .im-flow-caps li::before {
+                    .im-step-fill {
+                        position: absolute;
+                        inset: 0 auto 0 0;
+                        width: var(--im-progress, 0%);
+                        background: rgba(241, 90, 41, 0.16);
+                        pointer-events: none;
+                        z-index: 0;
+                    }
+                    .im-flow-caps li > :not(.im-step-fill) {
+                        position: relative;
+                        z-index: 1;
+                    }
+                    .im-flow-caps li:hover {
+                        opacity: 0.75;
+                    }
+                    .im-flow-caps li.is-active {
+                        opacity: 1;
+                        color: var(--brand-ink);
+                        background: rgba(241, 90, 41, 0.04);
+                        box-shadow: inset 0 0 0 1px rgba(241, 90, 41, 0.22);
                         font-weight: 800;
-                        margin-right: 6px;
-                        color: var(--brand-accent);
                     }
-                    .im-flow-caps li:nth-child(1)::before { content: '1.'; }
-                    .im-flow-caps li:nth-child(2)::before { content: '2.'; }
-                    .im-flow-caps li:nth-child(3)::before { content: '3.'; }
-                    .im-flow-caps li:nth-child(4)::before { content: '4.'; }
-                    .im-flow-caps li:nth-child(5)::before { content: '5.'; }
-                    .im-flow-caps li:nth-child(6)::before { content: '6.'; }
-                    .im-flow-caps li:nth-child(1) { animation: imCap1 14s ease-in-out infinite; }
-                    .im-flow-caps li:nth-child(2) { animation: imCap2 14s ease-in-out infinite; }
-                    .im-flow-caps li:nth-child(3) { animation: imCap3 14s ease-in-out infinite; }
-                    .im-flow-caps li:nth-child(4) { animation: imCap4 14s ease-in-out infinite; }
-                    .im-flow-caps li:nth-child(5) { animation: imCap5 14s ease-in-out infinite; }
-                    .im-flow-caps li:nth-child(6) { animation: imCap6 14s ease-in-out infinite; }
-                    @keyframes imCap1 { 0%, 15% { opacity: 1; font-weight: 800; } 18%, 100% { opacity: 0.78; font-weight: 600; } }
-                    @keyframes imCap2 { 0%, 18% { opacity: 0.78; } 20%, 32% { opacity: 1; font-weight: 800; } 36%, 100% { opacity: 0.78; font-weight: 600; } }
-                    @keyframes imCap3 { 0%, 34% { opacity: 0.78; } 36%, 44% { opacity: 1; font-weight: 800; } 48%, 100% { opacity: 0.78; font-weight: 600; } }
-                    @keyframes imCap4 { 0%, 46% { opacity: 0.78; } 48%, 62% { opacity: 1; font-weight: 800; } 66%, 100% { opacity: 0.78; font-weight: 600; } }
-                    @keyframes imCap5 { 0%, 64% { opacity: 0.78; } 66%, 74% { opacity: 1; font-weight: 800; } 78%, 100% { opacity: 0.78; font-weight: 600; } }
-                    @keyframes imCap6 { 0%, 78% { opacity: 0.78; } 80%, 94% { opacity: 1; font-weight: 800; } 97%, 100% { opacity: 0.78; font-weight: 600; } }
+                    .im-step-n {
+                        flex-shrink: 0;
+                        width: 20px;
+                        height: 20px;
+                        margin-top: 1px;
+                        border-radius: 50%;
+                        display: inline-flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: 0.68rem;
+                        font-weight: 800;
+                        background: var(--bg-tint);
+                        color: var(--text-tertiary);
+                    }
+                    .im-flow-caps li.is-active .im-step-n {
+                        background: var(--brand-accent);
+                        color: #fff;
+                    }
+
+                    .im-flow-steps {
+                        margin-top: 8px;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        gap: 6px;
+                    }
+                    .im-flow-dots {
+                        display: flex;
+                        gap: 6px;
+                    }
+                    .im-flow-dots i {
+                        width: 7px;
+                        height: 7px;
+                        border-radius: 50%;
+                        background: var(--border-default);
+                    }
+                    .im-flow-dots i.on {
+                        background: var(--brand-accent);
+                        transform: scale(1.25);
+                    }
+                    .im-flow-now {
+                        margin: 0;
+                        height: 1.2em;
+                        width: 100%;
+                        text-align: center;
+                        font-size: 0.75rem;
+                        font-weight: 800;
+                        color: var(--brand-ink);
+                    }
 
                     @media (prefers-reduced-motion: reduce) {
-                        .im-url, .im-view, .im-flow-placeholder, .im-flow-pasted, .im-flow-chip.gpt,
-                        .im-flow-cursor, .im-bubble, .im-typing, .im-json, .im-composer-ph,
-                        .im-composer-type, .im-copied-flag, .im-flow-caps li { animation: none !important; }
-                        .im-view.chat, .im-url.gpt, .im-bubble.prompt, .im-bubble.words, .im-json { opacity: 1; }
-                        .im-view.app, .im-url.app, .im-flow-cursor, .im-typing { opacity: 0; }
-                        .im-flow-caps li { opacity: 0.7; }
-                        .im-flow-caps li:nth-child(2) { opacity: 1; font-weight: 800; }
+                        .im-view, .im-bubble, .im-click-target, .im-flow-cursor { animation: none !important; transition: none !important; }
+                        .im-flow-demo[data-step="0"] .im-click-target { transform: none; box-shadow: 0 0 0 5px rgba(241, 90, 41, 0.22); }
+                        .im-flow-demo[data-step="0"] .im-flow-cursor { transform: none; }
                     }
 
                     @media (max-width: 720px) {
@@ -704,7 +827,6 @@ export default function ImportModal({ onImport, onClose, importing, error, hasAp
                         .im-url { font-size: 0.62rem; justify-content: center; }
                         .im-bubble { font-size: 0.68rem; padding: 7px 8px; }
                         .im-json { font-size: 0.58rem; }
-                        .im-flow-chip.gem { display: none; }
                         .im-flow-caps {
                             gap: 6px;
                         }
@@ -713,9 +835,7 @@ export default function ImportModal({ onImport, onClose, importing, error, hasAp
                         }
                         .im-flow-caps li {
                             font-size: 0.86rem;
-                            opacity: 0.7;
                         }
-                        .im-flow-cursor { left: 24px; bottom: 18px; }
                         .im-header {
                             padding: var(--space-sm) var(--space-md) 0;
                         }
@@ -759,9 +879,85 @@ export default function ImportModal({ onImport, onClose, importing, error, hasAp
     )
 }
 
-function ExternalAiDemo() {
+function ManualGuide() {
+    const [step, setStep] = useState(0)
+    const [progress, setProgress] = useState(0)
+    const [paused, setPaused] = useState(false)
+    const progressRef = useRef(0)
+    progressRef.current = progress
+
+    useEffect(() => {
+        if (paused) return
+        let raf
+        const t0 = performance.now()
+        const origin = progressRef.current / 100
+        const tick = (now) => {
+            const p = Math.min(1, origin + (now - t0) / STEP_MS)
+            progressRef.current = p * 100
+            setProgress(p * 100)
+            if (p >= 1) {
+                progressRef.current = 0
+                setProgress(0)
+                setStep(s => (s + 1) % FLOW_STEPS.length)
+                return
+            }
+            raf = requestAnimationFrame(tick)
+        }
+        raf = requestAnimationFrame(tick)
+        return () => cancelAnimationFrame(raf)
+    }, [paused, step])
+
+    const hoverStep = (i) => {
+        setPaused(true)
+        if (i !== step) {
+            progressRef.current = 0
+            setProgress(0)
+            setStep(i)
+        }
+    }
+
     return (
-        <div className="im-flow-demo" aria-hidden="true">
+        <div className="im-manual-guide">
+            <div className="im-manual-copy">
+                <p className="im-manual-lead">用 ChatGPT / Gemini 整理成 JSON，再貼回這裡。</p>
+                <ol
+                    className="im-flow-caps"
+                    onMouseEnter={() => setPaused(true)}
+                    onMouseLeave={() => setPaused(false)}
+                >
+                    {FLOW_STEPS.map((s, i) => (
+                        <li
+                            key={s.n}
+                            className={step === i ? 'is-active' : ''}
+                            onMouseEnter={() => hoverStep(i)}
+                            style={step === i ? { '--im-progress': `${progress}%` } : undefined}
+                        >
+                            <span className="im-step-fill" />
+                            <span className="im-step-n">{s.n}</span>
+                            {s.text}
+                        </li>
+                    ))}
+                </ol>
+            </div>
+            <ExternalAiDemo step={step} paused={paused} />
+        </div>
+    )
+}
+
+const STEP_MS = 5000
+
+const FLOW_STEPS = [
+    { n: 1, label: '步驟 1 · 點擊複製提示並開啟', text: '點擊下方「複製提示並開啟 ChatGPT」' },
+    { n: 2, label: '步驟 2 · 貼上提示詞', text: '把提示詞貼進 ChatGPT 對話' },
+    { n: 3, label: '步驟 3 · 加上自己的單字', text: '在提示詞裡貼上要學的單字' },
+    { n: 4, label: '步驟 4 · 等待 JSON', text: '等待 AI 輸出 JSON' },
+    { n: 5, label: '步驟 5 · 複製結果', text: '複製整段結果' },
+    { n: 6, label: '步驟 6 · 貼回這裡匯入', text: '回到這裡，貼上結果後匯入' },
+]
+
+function ExternalAiDemo({ step, paused }) {
+    return (
+        <div className="im-flow-demo" data-step={step} data-paused={paused ? '1' : '0'} aria-hidden="true">
             <div className="im-flow-window">
                 <div className="im-browser-bar">
                     <span className="im-browser-dots" />
@@ -771,6 +967,19 @@ function ExternalAiDemo() {
                     </div>
                 </div>
                 <div className="im-browser-page">
+                    <div className="im-view click">
+                        <div className="im-click-scene">
+                            <p className="im-click-label">匯入單字 · 手動 / JSON</p>
+                            <div className="im-click-btns">
+                                <span className="im-flow-chip gpt im-click-target">
+                                    複製提示並開啟 ChatGPT ↗
+                                    <span className="im-flow-cursor" />
+                                </span>
+                                <span className="im-flow-chip gem">複製提示並開啟 Gemini ↗</span>
+                            </div>
+                        </div>
+                    </div>
+
                     <div className="im-view app">
                         <div className="im-mini-modal">
                             <div className="im-mini-title">匯入單字 · 手動 / JSON</div>
@@ -786,16 +995,14 @@ function ExternalAiDemo() {
                                 <span className="im-flow-chip gem">Gemini ↗</span>
                             </div>
                         </div>
-                        <span className="im-flow-cursor" />
                     </div>
 
                     <div className="im-view chat">
                         <div className="im-chat-thread">
                             <div className="im-bubble user prompt">
                                 你是荷蘭語教授。請把單字整理成純 JSON 陣列，含 front、lemma、forms、例句…
-                            </div>
-                            <div className="im-bubble user words">
-                                單字列表：<br />kinderen<br />huiswerk<br />opbellen
+                                <span className="im-prompt-slot">（←在這裡貼上你的單字）</span>
+                                <span className="im-prompt-words">kinderen / huiswerk / opbellen</span>
                             </div>
                             <div className="im-bubble bot">
                                 <span className="im-typing"><i /><i /><i /></span>
@@ -804,12 +1011,23 @@ function ExternalAiDemo() {
                         </div>
                         <div className="im-composer">
                             <span className="im-composer-ph">詢問任何問題</span>
+                            <span className="im-composer-prompt">你是荷蘭語教授。請把單字整理成純 JSON…</span>
                             <span className="im-composer-type">kinderen / huiswerk / opbellen</span>
                             <span className="im-send">↑</span>
                         </div>
+                        <span className="im-paste-flag">⌘V 貼上提示詞</span>
+                        <span className="im-words-flag">貼上單字</span>
                         <span className="im-copied-flag">已複製結果</span>
                     </div>
                 </div>
+            </div>
+            <div className="im-flow-steps">
+                <div className="im-flow-dots">
+                    {FLOW_STEPS.map((s, i) => (
+                        <i key={s.n} className={step === i ? 'on' : ''} />
+                    ))}
+                </div>
+                <p className="im-flow-now">{FLOW_STEPS[step].label}</p>
             </div>
         </div>
     )

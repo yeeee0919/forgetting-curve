@@ -12,9 +12,8 @@ const PAGE_TITLE = {
     backup: '資料備份',
 }
 
-export default function SettingsModal({ settings, onSave, onClose, onExport, onRestore, syncId, onSyncIdChange, lastSynced, onManualSync }) {
+export default function SettingsModal({ settings, onSave, onClose, onExport, onRestore, user, quota, lastSynced, onGoogleLogin, onLogout }) {
     const [page, setPage] = useState('home')
-    const [key, setKey] = useState(settings.openaiKey || '')
     const [geminiKey, setGeminiKey] = useState(settings.geminiKey || '')
     const [elevenLabsKey, setElevenLabsKey] = useState(settings.elevenLabsKey || '')
     const [voices, setVoices] = useState([])
@@ -22,7 +21,6 @@ export default function SettingsModal({ settings, onSave, onClose, onExport, onR
     const [voiceLang, setVoiceLang] = useState('nl')
     const [rate, setRate] = useState(settings.speechRate ?? 0.35)
     const [testPlaying, setTestPlaying] = useState(false)
-    const [copied, setCopied] = useState(false)
 
     useEffect(() => {
         const load = () => setVoices(window.speechSynthesis.getVoices())
@@ -37,7 +35,7 @@ export default function SettingsModal({ settings, onSave, onClose, onExport, onR
     const saveDetails = () => {
         localStorage.setItem('memoflip_voice_name', selectedVoice)
         localStorage.setItem('memoflip_speech_rate', String(rate))
-        onSave({ ...settings, openaiKey: key, geminiKey, elevenLabsKey, voiceName: selectedVoice, speechRate: rate })
+        onSave({ ...settings, geminiKey, elevenLabsKey, voiceName: selectedVoice, speechRate: rate })
     }
 
     const goHome = () => {
@@ -64,20 +62,8 @@ export default function SettingsModal({ settings, onSave, onClose, onExport, onR
         window.speechSynthesis.speak(utter)
     }
 
-    const copySyncId = async () => {
-        if (!syncId) return
-        try {
-            await navigator.clipboard.writeText(syncId)
-            setCopied(true)
-            setTimeout(() => setCopied(false), 1600)
-        } catch {
-            /* ignore */
-        }
-    }
-
     const keySummary = [
-        key && 'OpenAI',
-        geminiKey && 'Gemini',
+        geminiKey && 'Gemini TTS',
         elevenLabsKey && 'ElevenLabs',
     ].filter(Boolean)
 
@@ -101,26 +87,23 @@ export default function SettingsModal({ settings, onSave, onClose, onExport, onR
                 {page === 'home' && (
                     <div className="sm-home">
                         <section className="sm-id-card">
-                            <p className="form-label">用戶 ID</p>
-                            <p className="sm-id-hint">電腦與手機輸入同一個 ID，就能同步字卡。</p>
-                            <input
-                                type="text"
-                                className="form-input"
-                                placeholder="例如 my-dutch-id"
-                                value={syncId}
-                                onChange={(e) => onSyncIdChange(e.target.value)}
-                            />
-                            <div className="sm-id-actions">
-                                <button className="btn-secondary" onClick={copySyncId} disabled={!syncId}>
-                                    <Icon name={copied ? 'check' : 'copy'} size={16} />
-                                    {copied ? '已複製' : '複製 ID'}
-                                </button>
-                                <button className="btn-primary" onClick={onManualSync} disabled={!syncId}>
-                                    立即同步
-                                </button>
-                            </div>
-                            {lastSynced && (
-                                <p className="sm-id-meta">上次同步：{new Date(lastSynced).toLocaleString()}</p>
+                            <p className="form-label">帳號</p>
+                            {user ? (
+                                <>
+                                    <p className="sm-id-hint">{user.email || '已用 Google 登入'}</p>
+                                    {quota && (
+                                        <p className="sm-id-meta">AI 額度 {quota.used || 0} / {quota.limit || 50}（用完仍可手動加字）</p>
+                                    )}
+                                    {lastSynced && (
+                                        <p className="sm-id-meta">上次同步：{new Date(lastSynced).toLocaleString()}</p>
+                                    )}
+                                    <button className="btn-secondary" onClick={onLogout}>登出</button>
+                                </>
+                            ) : (
+                                <>
+                                    <p className="sm-id-hint">沒登入也能用這台瀏覽器。登入後字卡會同步，才能用 AI 匯入。</p>
+                                    <button className="btn-primary" onClick={onGoogleLogin}>使用 Google 登入</button>
+                                </>
                             )}
                         </section>
 
@@ -129,7 +112,7 @@ export default function SettingsModal({ settings, onSave, onClose, onExport, onR
                                 <span className="sm-row-text">
                                     <span className="sm-row-title">API 金鑰</span>
                                     <span className="sm-row-meta">
-                                        {keySummary.length ? `已設定 ${keySummary.join('、')}` : '匯入單字與高品質發音需要'}
+                                        {keySummary.length ? `已設定 ${keySummary.join('、')}` : '高品質發音選填'}
                                     </span>
                                 </span>
                                 <Icon name="chevronRight" size={18} />
@@ -154,13 +137,9 @@ export default function SettingsModal({ settings, onSave, onClose, onExport, onR
 
                 {page === 'api' && (
                     <div className="sm-page">
+                        <p className="sm-id-hint">AI 匯入已含在 Google 登入裡，不必再貼 OpenAI key。這裡只給發音用。</p>
                         <div className="form-group">
-                            <label className="form-label">OpenAI API Key</label>
-                            <input className="form-input" type="password" placeholder="sk-..." value={key} onChange={e => setKey(e.target.value)} />
-                            <p className="sm-help">前往 <a href="https://platform.openai.com/api-keys" target="_blank" rel="noreferrer">platform.openai.com</a> 取得。</p>
-                        </div>
-                        <div className="form-group">
-                            <label className="form-label">Google Gemini API Key</label>
+                            <label className="form-label">Google Gemini API Key（選填，發音）</label>
                             <input className="form-input" type="password" placeholder="AIzaSy..." value={geminiKey} onChange={e => setGeminiKey(e.target.value)} />
                             <p className="sm-help">前往 <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer">Google AI Studio</a> 取得。</p>
                         </div>

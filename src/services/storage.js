@@ -17,6 +17,14 @@ export function getCards() {
 let cardsTimeout = null
 let settingsTimeout = null
 
+export function clearCards() {
+    try {
+        localStorage.removeItem(CARDS_KEY)
+    } catch {
+        /* ignore */
+    }
+}
+
 export function saveCards(cards) {
     // 移至下一個 Event Loop 執行，並加入 Debounce 防抖，
     // 避免短時間內連按造成多個大型陣列的 closure 堆積與 CPU 瞬間負載過高，進而引發 Compositor Crash。
