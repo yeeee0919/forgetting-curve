@@ -300,18 +300,30 @@ export default function App() {
         if (!tourActive) return
         const step = tourSteps[tourStepIndex]
         if (!step) return
-        setView(step.view || 'home')
-        setShowImport(!!step.openImport)
-        setImportSeed('')
-        setImportError('')
+
+        // 先備好示意卡再切 view，避免複習頁閃空再填
         if (step.useDemoCards) {
-            setTourCards(prev => prev || createTourDemoCards())
+            setTourCards(createTourDemoCards())
         } else {
             setTourCards(null)
         }
+
         if (step.view === 'review') {
             setSessionState(prev => ({ ...prev, activeSession: null }))
         }
+
+        setImportSeed('')
+        setImportError('')
+        // 匯入步：先確保在 home 再開彈窗；離開匯入步再關，減少疊加閃爍
+        if (step.openImport) {
+            setView('home')
+            const t = setTimeout(() => setShowImport(true), 40)
+            return () => clearTimeout(t)
+        }
+
+        setShowImport(false)
+        setView(step.view || 'home')
+        return undefined
     }, [tourActive, tourStepIndex, tourSteps])
 
     const showToast = useCallback((message) => {
@@ -610,7 +622,7 @@ export default function App() {
                                 onClick={() => !tourActive && setShowExtGuide(true)}
                                 title="Word Catcher 擴充功能"
                             >
-                                <Icon name="puzzle" size={20} strokeWidth={2} />
+                                <Icon name="catchNet" size={20} strokeWidth={2} />
                             </button>
                         )}
                         <button className="icon-btn" data-tour="import-btn" onClick={() => !tourActive && openImport()} title="匯入單字">

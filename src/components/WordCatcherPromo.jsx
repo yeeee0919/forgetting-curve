@@ -41,7 +41,7 @@ export function ExtensionDownloadCard({ onOpenGuide }) {
                     target="_blank"
                     rel="noreferrer"
                 >
-                    <Icon name="puzzle" size={16} strokeWidth={2} />
+                    <Icon name="catchNet" size={16} strokeWidth={2} />
                     安裝 Chrome 擴充功能
                 </a>
             ) : (
@@ -108,7 +108,7 @@ export function ExtensionGuideModal({ open, onClose, installed }) {
                         target="_blank"
                         rel="noreferrer"
                     >
-                        <Icon name="puzzle" size={16} />
+                        <Icon name="catchNet" size={16} />
                         安裝 Chrome 擴充功能
                     </a>
                 ) : (
