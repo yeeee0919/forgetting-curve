@@ -170,7 +170,20 @@ export default function ImportModal({ onImport, onClose, importing, error, hasAp
 
                     {tab === 'manual' && (
                         <div className="im-manual-container">
-                            <ExternalAiDemo />
+                            <div className="im-manual-guide">
+                                <div className="im-manual-copy">
+                                    <p className="im-manual-lead">用 ChatGPT / Gemini 整理成 JSON，再貼回這裡。</p>
+                                    <ol className="im-flow-caps">
+                                        <li>點擊下方按鈕，前往外部 AI</li>
+                                        <li>提示詞已出現在對話裡（ChatGPT 會自動帶入）</li>
+                                        <li>在對話中貼上要學的單字</li>
+                                        <li>等待 AI 輸出 JSON</li>
+                                        <li>複製整段結果</li>
+                                        <li>回到這裡，貼上結果後匯入</li>
+                                    </ol>
+                                </div>
+                                <ExternalAiDemo />
+                            </div>
                             <textarea
                                 className="im-textarea-v4 im-code-editor"
                                 placeholder='可直接貼上 ChatGPT / Gemini 的整段回覆'
@@ -178,7 +191,7 @@ export default function ImportModal({ onImport, onClose, importing, error, hasAp
                                 onChange={e => setJsonText(e.target.value)}
                             />
                             {detectedCount > 0 && (
-                                <div className="im-field-hint" style={{ marginTop: '8px', color: 'var(--good)' }}>
+                                <div className="im-field-hint" style={{ color: 'var(--good)' }}>
                                     辨識到 {detectedCount} 張卡
                                 </div>
                             )}
@@ -272,6 +285,7 @@ export default function ImportModal({ onImport, onClose, importing, error, hasAp
                     .im-body { flex: 1; padding: var(--space-lg) var(--space-lg); display: flex; flex-direction: column; background: var(--bg-surface); overflow: hidden; }
                     
                     .im-ai-container, .im-manual-container { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+                    .im-manual-container { gap: 12px; }
                     .im-textarea-wrapper { position: relative; flex: 1; display: flex; flex-direction: column; min-height: 0; }
                     
                     .im-textarea-v4 {
@@ -358,11 +372,36 @@ export default function ImportModal({ onImport, onClose, importing, error, hasAp
 
                     .im-code-editor { font-family: 'JetBrains Mono', monospace; background: #1a1a1a; color: #e0e0e0; }
 
-                    .im-flow-demo { flex-shrink: 0; margin-bottom: 10px; }
+                    .im-manual-guide {
+                        display: grid;
+                        grid-template-columns: minmax(0, 1fr) minmax(260px, 1.15fr);
+                        gap: 12px 20px;
+                        align-items: stretch;
+                        flex-shrink: 0;
+                    }
+                    .im-manual-copy {
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: center;
+                        gap: 10px;
+                        min-width: 0;
+                    }
+                    .im-manual-lead {
+                        margin: 0;
+                        font-size: 0.92rem;
+                        font-weight: 700;
+                        color: var(--brand-ink);
+                        line-height: 1.45;
+                    }
+                    .im-manual-container .im-textarea-v4 {
+                        min-height: 240px;
+                    }
+
+                    .im-flow-demo { min-width: 0; }
                     .im-flow-window {
                         width: 100%;
                         aspect-ratio: 16 / 9;
-                        max-height: 268px;
+                        max-height: 196px;
                         border: 1px solid var(--border-default);
                         border-radius: 12px;
                         overflow: hidden;
@@ -588,18 +627,18 @@ export default function ImportModal({ onImport, onClose, importing, error, hasAp
                         78%, 100% { opacity: 0; }
                     }
                     .im-flow-caps {
-                        display: grid;
-                        grid-template-columns: 1fr 1fr;
-                        gap: 4px 16px;
+                        display: flex;
+                        flex-direction: column;
+                        gap: 6px;
                         list-style: none;
-                        margin: 10px 0 0;
+                        margin: 0;
                         padding: 0;
                     }
                     .im-flow-caps li {
-                        font-size: 0.8rem;
+                        font-size: 0.82rem;
                         font-weight: 600;
                         color: var(--text-primary);
-                        line-height: 1.4;
+                        line-height: 1.45;
                         opacity: 0.78;
                     }
                     .im-flow-caps li::before {
@@ -636,15 +675,24 @@ export default function ImportModal({ onImport, onClose, importing, error, hasAp
                         .im-flow-caps li:nth-child(2) { opacity: 1; font-weight: 800; }
                     }
 
+                    @media (max-width: 720px) {
+                        .im-manual-guide {
+                            grid-template-columns: 1fr;
+                        }
+                        .im-flow-window {
+                            max-height: 180px;
+                        }
+                    }
+
                     @media (max-width: 600px) {
                         .im-flow-window {
-                            aspect-ratio: 9 / 16;
-                            width: min(210px, 62vw);
-                            max-height: 320px;
-                            margin: 0 auto;
-                            border-radius: 28px;
-                            border: 9px solid #1C1C1C;
-                            box-shadow: 0 12px 28px rgba(11, 31, 51, 0.18);
+                            aspect-ratio: 16 / 9;
+                            width: 100%;
+                            max-height: 160px;
+                            margin: 0;
+                            border-radius: 12px;
+                            border: 1px solid var(--border-default);
+                            box-shadow: var(--elevation-1);
                         }
                         .im-browser-bar {
                             height: 28px;
@@ -658,9 +706,10 @@ export default function ImportModal({ onImport, onClose, importing, error, hasAp
                         .im-json { font-size: 0.58rem; }
                         .im-flow-chip.gem { display: none; }
                         .im-flow-caps {
-                            grid-template-columns: 1fr;
                             gap: 6px;
-                            margin-top: 12px;
+                        }
+                        .im-manual-container .im-textarea-v4 {
+                            min-height: 180px;
                         }
                         .im-flow-caps li {
                             font-size: 0.86rem;
@@ -762,14 +811,6 @@ function ExternalAiDemo() {
                     </div>
                 </div>
             </div>
-            <ol className="im-flow-caps">
-                <li>點擊下方按鈕，前往外部 AI</li>
-                <li>提示詞已出現在對話裡（ChatGPT 會自動帶入）</li>
-                <li>在對話中貼上要學的單字</li>
-                <li>等待 AI 輸出 JSON</li>
-                <li>複製整段結果</li>
-                <li>回到這裡，貼上結果後匯入</li>
-            </ol>
         </div>
     )
 }

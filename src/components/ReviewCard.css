@@ -930,7 +930,8 @@
         font-size: 1.55rem !important;
     }
 
-    .rc-kbd-hint {
+    .rc-kbd-hint,
+    .rcb-shortcut {
         display: none;
     }
 

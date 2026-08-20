@@ -4,6 +4,7 @@ import { RATING, previewLabel, getStage } from '../services/srs'
 import { getCardRoots, segmentWord } from '../services/wordUtils'
 import { parseFormEntry } from '../services/cardFields'
 import Icon from './Icons'
+import ReviewKeysDemo, { shouldShowReviewKeysDemo } from './ReviewKeysDemo'
 
 const LANG_MAP = {
   nl: 'nl-NL', en: 'en-US', ja: 'ja-JP',
@@ -85,21 +86,25 @@ const STATUS_STYLE = {
 const RATINGS = [
   {
     id: RATING.AGAIN,
+    key: 'Q',
     icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /></svg>,
     label: '完全不記得', short: '不記得', color: 'var(--again)', bg: 'var(--again-bg)', border: 'transparent', main: false
   },
   {
     id: RATING.HARD,
+    key: 'W',
     icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>,
     label: '模糊', short: '不記得', color: 'var(--hard)', bg: 'var(--hard-bg)', border: 'transparent', main: true
   },
   {
     id: RATING.GOOD,
+    key: 'E',
     icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>,
     label: '記得了', short: '記得', color: 'var(--good)', bg: 'var(--good-bg)', border: 'transparent', main: true
   },
   {
     id: RATING.EASY,
+    key: 'R',
     icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg>,
     label: '完全記得', short: '記得', color: 'var(--easy)', bg: 'var(--easy-bg)', border: 'transparent', main: false
   },
@@ -142,6 +147,7 @@ export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdat
   const [results, setResults] = useState(() => sessionState?.activeSession?.results || [])
   const [failedCards, setFailedCards] = useState(() => sessionState?.activeSession?.failedCards || [])
   const [tipsOpen, setTipsOpen] = useState(false)
+  const [showKeysDemo, setShowKeysDemo] = useState(() => !isMobile && shouldShowReviewKeysDemo())
 
 
   // ── 蕃茄鐘計時器 ──
@@ -440,12 +446,26 @@ export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdat
         >
           <Icon name={earMode ? 'ear' : 'eye'} size={18} />
         </button>
+
+        {!isMobile && !showKeysDemo && (
+          <button
+            className="rc-autoplay-btn"
+            onClick={() => setShowKeysDemo(true)}
+            title="快捷鍵教學"
+          >
+            <Icon name="keyboard" size={18} />
+          </button>
+        )}
       </div>
 
       {/* ── 主要複習區 ── */}
       <div className="rc-wrap">
 
         {/* 卡片區域（單張卡片 DOM 重複利用） */}
+        {showKeysDemo && !isMobile && (
+          <ReviewKeysDemo onClose={() => setShowKeysDemo(false)} />
+        )}
+
         <div className="rc-single-card-wrap" style={{ width: '100%', display: 'flex', flexDirection: 'column' }}>
 
           {/* 主卡片 */}
@@ -655,6 +675,7 @@ export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdat
                         <span className="rcb-icon">{r.icon}</span>
                         <div className="rcb-text-row">
                           <span className="rcb-label">{r.label}</span>
+                          <span className="rcb-shortcut">{r.key}</span>
                         </div>
                       </button>
                     </div>

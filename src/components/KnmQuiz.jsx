@@ -170,6 +170,9 @@ export default function KnmQuiz() {
                 >
                     {isLast ? '看成績' : '繼續'}
                 </button>
+                <button type="button" className="kq-btn ghost" onClick={retryAll}>
+                    全部重新作答
+                </button>
             </div>
         </div>
         </QuizShell>
@@ -182,8 +185,8 @@ const KQ_CSS = `
     min-height: 0;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
-    padding: 0 16px 16px;
+    overflow-y: auto;
+    padding: 0 16px 20px;
     width: 100%;
 }
 .kq-tabs {
@@ -249,9 +252,7 @@ const KQ_CSS = `
     display: flex;
     flex-direction: column;
     gap: 8px;
-    overflow-y: auto;
-    flex: 1;
-    min-height: 0;
+    flex: 0 0 auto;
 }
 .kq-opt {
     width: 100%;
@@ -303,28 +304,43 @@ const KQ_CSS = `
     color: var(--text-secondary);
 }
 .kq-nav {
-    display: flex;
-    justify-content: flex-end;
-    gap: 8px;
-    margin-top: 12px;
+    display: grid;
+    grid-template-columns: 1fr 1.35fr;
+    gap: 10px;
+    margin-top: 10px;
+    padding-top: 2px;
     flex-shrink: 0;
 }
 .kq-btn {
-    height: 36px;
-    padding: 0 14px;
+    min-height: 48px;
+    height: auto;
+    padding: 12px 16px;
     border-radius: var(--radius-btn);
     border: 1px solid var(--border-default);
     background: var(--bg-surface);
     color: var(--text-primary);
-    font-size: 0.82rem;
+    font-size: 0.95rem;
     font-weight: 700;
     cursor: pointer;
+    line-height: 1.2;
 }
 .kq-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .kq-btn.primary {
     background: var(--brand-accent);
     border-color: var(--brand-accent);
     color: var(--text-on-accent);
+}
+.kq-btn.ghost {
+    grid-column: 1 / -1;
+    min-height: 44px;
+    background: transparent;
+    border-color: var(--border-default);
+    color: var(--text-secondary);
+    font-size: 0.88rem;
+}
+.kq-btn.ghost:hover {
+    color: var(--text-primary);
+    background: var(--bg-tint);
 }
 .kq-results {
     flex: 1;

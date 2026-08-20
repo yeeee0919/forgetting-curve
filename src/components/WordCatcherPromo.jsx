@@ -41,7 +41,7 @@ export function ExtensionDownloadCard({ onOpenGuide }) {
                     target="_blank"
                     rel="noreferrer"
                 >
-                    <Icon name="plus" size={16} strokeWidth={2} />
+                    <Icon name="puzzle" size={16} strokeWidth={2} />
                     安裝 Chrome 擴充功能
                 </a>
             ) : (
