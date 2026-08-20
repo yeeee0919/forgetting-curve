@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react'
-import { getCards, saveCards, clearCards, getSettings, saveSettings, generateId, getSessionState, saveSessionState } from './services/storage'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { getCards, saveCards, clearCards, cancelPendingCardSaves, getSettings, saveSettings, generateId, getSessionState, saveSessionState } from './services/storage'
 import { initCard, scheduleCard, buildSessionSequence, migrateCards } from './services/srs'
 import { parseTextToCardsWithSession, fetchAiQuota } from './services/ai'
 import { mergeIncomingCards, toCardContent } from './services/cardFields'
@@ -58,6 +58,7 @@ export default function App() {
     const [lastSynced, setLastSynced] = useState(null)
     const [sessionState, setSessionState] = useState(getSessionState())
     const [aiQuota, setAiQuota] = useState(null)
+    const [cardsReady, setCardsReady] = useState(true) // 訪客一開始即可寫入；登入後等同步完成
     const userId = session?.user?.id || ''
     const accessToken = session?.access_token || ''
 
@@ -91,11 +92,62 @@ export default function App() {
         setCards(loaded)
         setSettings(getSettings())
         setInboxWords(getLocalInbox())
+        setCardsReady(true)
     }, [])
 
     useEffect(() => {
         return subscribeAuth(setSession)
     }, [])
+
+    const prevUserIdRef = useRef(undefined)
+
+    // 換帳號／登出：立刻清空畫面與共用複習進度，避免 A/B/訪客互相污染
+    // 初次掛載不要清 activeSession，否則訪客重新整理會斷掉進行中的複習
+    useEffect(() => {
+        const prev = prevUserIdRef.current
+        prevUserIdRef.current = userId
+        const isFirst = prev === undefined
+        const switched = !isFirst && prev !== userId
+
+        cancelPendingCardSaves()
+
+        if (switched) {
+            const cur = getSessionState()
+            const emptySession = {
+                activeSession: null,
+                history: [],
+                sessionSize: cur.sessionSize || 30,
+                bufferCapacity: cur.bufferCapacity || 50,
+            }
+            setSessionState(emptySession)
+            saveSessionState(emptySession)
+            setDismissedWeakCards([])
+            setView('home')
+        }
+
+        if (!userId) {
+            setCardsReady(true)
+            if (switched) {
+                // 從帳號登出：洗掉本機（訪客）單字與 inbox，避免殘留混到下次登入
+                cancelPendingCardSaves()
+                clearCards(null)
+                clearLocalInbox()
+                setCards([])
+                setInboxWords([])
+                setAiQuota(null)
+                setLastSynced(null)
+            }
+            return
+        }
+
+        if (isFirst || switched) {
+            setCardsReady(false)
+            setCards([])
+            setInboxWords([])
+            setAiQuota(null)
+            setLastSynced(null)
+        }
+    }, [userId])
 
     useEffect(() => {
         const onMessage = (event) => {
@@ -114,7 +166,6 @@ export default function App() {
             ackExtensionQueue(incoming.map(i => i.id).filter(Boolean))
         }
         window.addEventListener('message', onMessage)
-        // 擴充功能可能在 React 掛載前就 flush，進頁後再要一次
         requestExtensionInboxFlush()
         const t1 = setTimeout(requestExtensionInboxFlush, 500)
         const t2 = setTimeout(requestExtensionInboxFlush, 2000)
@@ -130,14 +181,16 @@ export default function App() {
         let cancelled = false
         ;(async () => {
             try {
-                // 只同步「這個帳號」的快取 ↔ 雲端，禁止把訪客／其他帳號的本機字卡塞進來
+                // 雲端為準；本機只作同帳號離線快取，絕不帶入訪客或其他帳號
                 const remoteCards = await getCloudCards(userId)
+                if (cancelled) return
                 const userLocalCards = getCards(userId)
                 const merged = mergeCardsByUpdatedAt(userLocalCards, remoteCards)
                 const { migrated: migratedMerged } = migrateCards(merged, 60)
                 if (cancelled) return
                 setCards(migratedMerged)
                 saveCards(migratedMerged, userId)
+                setCardsReady(true)
                 setLastSynced(Date.now())
                 const toPush = migratedMerged.filter(c => {
                     const remote = remoteCards.find(r => r.id === c.id)
@@ -145,19 +198,20 @@ export default function App() {
                 })
                 if (toPush.length > 0) await upsertCloudCards(userId, toPush)
 
-                const localInbox = getLocalInbox()
-                if (localInbox.length) {
-                    await upsertCloudInbox(userId, localInbox).catch(() => {})
-                }
+                // 登入後 inbox 以該帳雲端為準，勿把訪客本機 inbox 灌進帳號
                 const freshInbox = await getCloudInbox(userId)
                 if (cancelled) return
-                const mergedInbox = mergeInboxItems(freshInbox || [], localInbox)
-                setInboxWords(mergedInbox)
-                saveLocalInbox(mergedInbox)
+                const cloudInbox = Array.isArray(freshInbox) ? freshInbox : []
+                setInboxWords(cloudInbox)
+                saveLocalInbox(cloudInbox)
                 const quota = await fetchAiQuota(accessToken).catch(() => null)
                 if (!cancelled) setAiQuota(quota)
             } catch (e) {
                 console.error('Sync failed:', e)
+                if (!cancelled) {
+                    setCards(getCards(userId))
+                    setCardsReady(true)
+                }
             }
         })()
         return () => { cancelled = true }
@@ -227,6 +281,8 @@ export default function App() {
     }
 
     const updateCards = useCallback((newCards) => {
+        // 登入後同步完成前禁止寫入，避免把訪客／上一帳的記憶體字卡寫進新帳
+        if (userId && !cardsReady) return
         setCards(prevCards => {
             const timestamped = newCards.map(c => {
                 const oldCard = prevCards.find(old => old.id === c.id);
@@ -248,7 +304,7 @@ export default function App() {
 
             return timestamped;
         });
-    }, [userId])
+    }, [userId, cardsReady])
 
 
     const dismissWeakCard = (cardId) => {
@@ -399,20 +455,16 @@ export default function App() {
     }
 
     const handleLogout = async () => {
-        if (!window.confirm('確定登出？字卡不會不見，下次用同一個 Google 帳號登入就會回來。')) return
+        if (!window.confirm('確定登出？字卡不會不見，下次用同一個 Google 帳號登入就會回來。本機暫存的單字會清掉。')) return
+        cancelPendingCardSaves()
         try {
             await signOutUser()
         } catch (e) {
             console.error('Logout failed:', e)
         }
         setSession(null)
-        setCards([])
-        clearCards(null)
-        setInboxWords([])
-        clearLocalInbox()
-        setLastSynced(null)
-        setAiQuota(null)
         setShowSettings(false)
+        // 本機訪客字卡／inbox 由 userId 切換 effect 洗掉
     }
 
     const openImport = useCallback((opts = {}) => {
@@ -534,6 +586,7 @@ export default function App() {
                 )}
                 {view === 'review' && (
                     <ReviewCard
+                        key={userId || 'guest'}
                         dueCards={dueCards}
                         onRate={handleRate}
                         onDone={handleSessionDone}

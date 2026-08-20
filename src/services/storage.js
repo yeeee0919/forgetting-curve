@@ -36,6 +36,15 @@ export function clearCards(userId = null) {
     }
 }
 
+/** 取消任何尚未寫入的字卡 debounce，避免換帳號時寫錯 key */
+export function cancelPendingCardSaves() {
+    if (cardsTimeout) {
+        clearTimeout(cardsTimeout)
+        cardsTimeout = null
+        pendingCardsKey = null
+    }
+}
+
 export function saveCards(cards, userId = null) {
     // 移至下一個 Event Loop 執行，並加入 Debounce 防抖，
     // 避免短時間內連按造成多個大型陣列的 closure 堆積與 CPU 瞬間負載過高，進而引發 Compositor Crash。
