@@ -1,19 +1,49 @@
 /* ── Layout ── */
 .rc-layout {
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 580px) minmax(0, 1fr);
     gap: var(--space-lg);
     justify-content: center;
-    align-items: flex-start;
+    align-items: start;
     width: 100%;
     max-width: 100%;
     min-width: 0;
 }
 
+.rc-left-cluster {
+    justify-self: end;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: var(--space-md);
+    min-width: 0;
+    max-width: 100%;
+    position: sticky;
+    top: 24px;
+}
+
 @media (max-width: 860px) {
     .rc-layout {
+        display: flex;
         flex-direction: column;
         align-items: center;
         gap: var(--space-md);
+    }
+
+    .rc-left-cluster {
+        position: relative;
+        top: 0;
+        width: 100%;
+        justify-self: stretch;
+        flex-direction: row;
+        align-items: stretch;
+    }
+}
+
+@media (max-width: 1280px) {
+    .rc-left-cluster {
+        flex-direction: column;
+        align-items: flex-end;
     }
 }
 
@@ -27,6 +57,7 @@
 .rc-wrap {
     width: 100%;
     max-width: 580px;
+    justify-self: center;
     flex: 1 1 auto;
     min-width: 0;
     display: flex;
@@ -41,8 +72,6 @@
     align-items: center;
     gap: var(--space-xl);
     padding-top: var(--space-md);
-    position: sticky;
-    top: 24px;
     flex-shrink: 0;
 }
 
@@ -756,6 +785,7 @@
     width: 180px;
     flex: 0 0 180px;
     min-width: 0;
+    justify-self: start;
     background: var(--bg-surface);
     border: 2px solid rgba(255, 75, 75, 0.2);
     border-radius: var(--radius-lg);

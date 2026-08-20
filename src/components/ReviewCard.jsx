@@ -4,7 +4,11 @@ import { RATING, previewLabel, getStage } from '../services/srs'
 import { getCardRoots, segmentWord } from '../services/wordUtils'
 import { parseFormEntry } from '../services/cardFields'
 import Icon from './Icons'
-import ReviewKeysDemo, { shouldShowReviewKeysDemo } from './ReviewKeysDemo'
+import ReviewKeysDemo, {
+  shouldShowReviewKeysDemo,
+  hideReviewKeysDemo,
+  showReviewKeysDemo,
+} from './ReviewKeysDemo'
 
 const LANG_MAP = {
   nl: 'nl-NL', en: 'en-US', ja: 'ja-JP',
@@ -418,6 +422,7 @@ export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdat
     <div className="rc-layout" style={{ position: 'relative' }}>
 
       {/* ── 新的左側進度與控制區 ── */}
+      <div className="rc-left-cluster">
       <div className="rc-left-sidebar">
         <div className="rc-vertical-progress">
           <div className="rc-progress-fraction">
@@ -447,24 +452,32 @@ export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdat
           <Icon name={earMode ? 'ear' : 'eye'} size={18} />
         </button>
 
-        {!isMobile && !showKeysDemo && (
+        {!isMobile && (
           <button
-            className="rc-autoplay-btn"
-            onClick={() => setShowKeysDemo(true)}
-            title="快捷鍵教學"
+            className={`rc-autoplay-btn ${showKeysDemo ? 'on' : ''}`}
+            onClick={() => {
+              if (showKeysDemo) {
+                hideReviewKeysDemo()
+                setShowKeysDemo(false)
+              } else {
+                showReviewKeysDemo()
+                setShowKeysDemo(true)
+              }
+            }}
+            title={showKeysDemo ? '關閉快捷鍵提示' : '開啟快捷鍵提示'}
           >
             <Icon name="keyboard" size={18} />
           </button>
         )}
       </div>
 
+      {showKeysDemo && !isMobile && (
+        <ReviewKeysDemo onClose={() => setShowKeysDemo(false)} />
+      )}
+      </div>
+
       {/* ── 主要複習區 ── */}
       <div className="rc-wrap">
-
-        {/* 卡片區域（單張卡片 DOM 重複利用） */}
-        {showKeysDemo && !isMobile && (
-          <ReviewKeysDemo onClose={() => setShowKeysDemo(false)} />
-        )}
 
         <div className="rc-single-card-wrap" style={{ width: '100%', display: 'flex', flexDirection: 'column' }}>
 

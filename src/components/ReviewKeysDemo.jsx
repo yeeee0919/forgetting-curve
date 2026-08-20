@@ -19,6 +19,14 @@ export function hideReviewKeysDemo() {
     }
 }
 
+export function showReviewKeysDemo() {
+    try {
+        localStorage.removeItem(HIDE_KEY)
+    } catch {
+        /* private mode */
+    }
+}
+
 export default function ReviewKeysDemo({ onClose }) {
     const dismiss = () => {
         hideReviewKeysDemo()
@@ -41,12 +49,6 @@ export default function ReviewKeysDemo({ onClose }) {
                     <div className="rkd-face rkd-back">
                         <span className="rkd-kicker">答案</span>
                         <span className="rkd-word">房子</span>
-                        <div className="rkd-rates">
-                            <span className="rkd-rate">不記得</span>
-                            <span className="rkd-rate">模糊</span>
-                            <span className="rkd-rate rkd-rate-good">記得了</span>
-                            <span className="rkd-rate">完全記得</span>
-                        </div>
                     </div>
                 </div>
 
