@@ -48,17 +48,61 @@ export function sanitizeJsonText(raw) {
     let s = String(raw || '').trim()
     s = s.replace(/```(?:json|JSON)?\s*([\s\S]*?)```/g, '$1')
     s = s.replace(/```(?:json|JSON)?/g, '')
-    s = s.replace(/[\u201C\u201D\u300C\u300D]/g, '"')
+    s = s.replace(/[\u201C\u201D]/g, '"')
     s = s.replace(/[\u2018\u2019]/g, "'")
     s = s.replace(/,(\s*[}\]])/g, '$1')
+    s = escapeRawNewlinesInStrings(s)
     return s.trim()
+}
+
+function escapeRawNewlinesInStrings(s) {
+    let out = ''
+    let inString = false
+    let escape = false
+    for (let i = 0; i < s.length; i++) {
+        const c = s[i]
+        if (inString) {
+            if (escape) {
+                out += c
+                escape = false
+                continue
+            }
+            if (c === '\\') {
+                out += c
+                escape = true
+                continue
+            }
+            if (c === '"') {
+                inString = false
+                out += c
+                continue
+            }
+            if (c === '\n') {
+                out += '\\n'
+                continue
+            }
+            if (c === '\r') continue
+            out += c
+            continue
+        }
+        if (c === '"') inString = true
+        out += c
+    }
+    return out
 }
 
 function asCardArray(value) {
     if (!value) return []
     const arr = Array.isArray(value) ? value : (value.cards || value.items)
     if (!Array.isArray(arr)) return []
-    return arr.filter(x => x && typeof x === 'object' && String(x.front || '').trim())
+    return arr.map(normalizeCard).filter(Boolean)
+}
+
+function normalizeCard(x) {
+    if (!x || typeof x !== 'object') return null
+    const front = String(x.front || x.word || x.term || '').trim()
+    if (!front) return null
+    return { ...x, front }
 }
 
 /**
