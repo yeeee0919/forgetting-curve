@@ -242,8 +242,7 @@ export default function App() {
             }
             updateCards(next)
             if (onSuccess) await onSuccess()
-            setShowImport(false)
-            return { added, updated, relearned }
+            return { added, updated, relearned, quota: quotaInfo }
         } catch (err) {
             if (err.quota) setAiQuota(err.quota)
             setImportError(err.message)
@@ -259,7 +258,7 @@ export default function App() {
             alert(`【負荷預警】你目前將有超過 150 張卡片待複習，建議這批單字分 3 天分批排入，以免負擔過重而產生放棄感！\n目前將為你照常匯入，但我們強烈建議控制每日新字數量。`)
         }
         updateCards(next)
-        return { added, updated, relearned }
+        return { added, updated, relearned, quota: aiQuota }
     }
 
     const handleRate = useCallback((cardId, rating) => {

@@ -151,7 +151,16 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
                                     辨識到 {detectedCount} 張卡
                                 </div>
                             )}
-                            {jsonError && <div className="im-error-v4" style={{ flexShrink: 0 }}>{jsonError}</div>}
+                        </div>
+                    )}
+                </div>
+
+                <div className="im-status-bar" aria-live="polite">
+                    {jsonError && <div className="im-error-v4">{jsonError}</div>}
+                    {error && <div className="im-error-v4">{error}</div>}
+                    {result && (
+                        <div className="im-success-v4">
+                            {formatImportSuccess(result, quota)}
                         </div>
                     )}
                 </div>
@@ -182,15 +191,6 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
                         </button>
                     </div>
                 </div>
-
-                {/* Progress Status Bar */}
-                {(error || result || jsonError) && (
-                    <div className="im-status-bar">
-                        {jsonError && <div className="im-error-v4">{jsonError}</div>}
-                        {error && <div className="im-error-v4">{error}</div>}
-                        {result && <div className="im-success-v4">成功匯入 {result.added} 張{result.updated > 0 ? `（更新 ${result.updated} 張` : ''}{result.relearned > 0 ? `，${result.relearned} 張進入重學` : ''}{result.updated > 0 ? '）' : ''}</div>}
-                    </div>
-                )}
 
                 <style>{`
                     .im-modal-v5 {
@@ -323,9 +323,17 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
                     }
                     .btn-secondary.im-btn-v5 { border: 2px solid var(--border-default); background: var(--bg-canvas); color: var(--text-primary); }
 
-                    .im-status-bar { padding: 4px 24px; display: flex; gap: 12px; position: absolute; bottom: 68px; width: 100%; pointer-events: none; z-index: 100; }
-                    .im-success-v4 { font-size: 0.82rem; font-weight: 700; color: var(--good); background: var(--good-bg); padding: 4px 10px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-                    .im-error-v4 { font-size: 0.82rem; font-weight: 700; color: var(--again); background: var(--again-bg); padding: 4px 10px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+                    .im-status-bar {
+                        flex-shrink: 0;
+                        min-height: 36px;
+                        margin: 0 var(--space-lg);
+                        padding: 0 0 var(--space-sm);
+                        display: flex;
+                        align-items: center;
+                        gap: 12px;
+                    }
+                    .im-success-v4 { font-size: 0.82rem; font-weight: 700; color: var(--good); background: var(--good-bg); padding: 6px 12px; border-radius: 8px; }
+                    .im-error-v4 { font-size: 0.82rem; font-weight: 700; color: var(--again); background: var(--again-bg); padding: 6px 12px; border-radius: 8px; }
 
                     .im-code-editor { font-family: 'JetBrains Mono', monospace; background: #1a1a1a; color: #e0e0e0; }
 
@@ -877,6 +885,26 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
             </div>
         </div>
     )
+}
+
+function formatImportSuccess(result, quota) {
+    const added = result?.added || 0
+    const extra = [
+        result?.updated > 0 ? `更新 ${result.updated} 張` : '',
+        result?.relearned > 0 ? `${result.relearned} 張進入重學` : '',
+    ].filter(Boolean)
+    const q = result?.quota || quota
+    const limit = Number(q?.limit ?? 50)
+    const remaining = q
+        ? Number(q.remaining ?? Math.max(0, limit - Number(q.used ?? 0)))
+        : null
+    let text = `成功匯入 ${added} 張`
+    if (extra.length) text += `（${extra.join('，')}）`
+    if (remaining != null) {
+        text += `。AI 名額還剩 ${remaining} / ${limit}`
+        if (remaining === 0) text += '，之後請用手動匯入'
+    }
+    return text
 }
 
 function ManualGuide() {
