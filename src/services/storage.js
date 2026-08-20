@@ -1,13 +1,18 @@
 /**
  * localStorage 資料管理
+ * 字卡依帳號隔離：訪客用 memoflip_cards，登入用 memoflip_cards:<userId>
  */
 
 const CARDS_KEY = 'memoflip_cards'
 const SETTINGS_KEY = 'memoflip_settings'
 
-export function getCards() {
+function cardsKey(userId) {
+    return userId ? `${CARDS_KEY}:${userId}` : CARDS_KEY
+}
+
+export function getCards(userId = null) {
     try {
-        const raw = localStorage.getItem(CARDS_KEY)
+        const raw = localStorage.getItem(cardsKey(userId))
         return raw ? JSON.parse(raw) : []
     } catch {
         return []
@@ -16,25 +21,36 @@ export function getCards() {
 
 let cardsTimeout = null
 let settingsTimeout = null
+let pendingCardsKey = null
 
-export function clearCards() {
+export function clearCards(userId = null) {
+    if (cardsTimeout && pendingCardsKey === cardsKey(userId)) {
+        clearTimeout(cardsTimeout)
+        cardsTimeout = null
+        pendingCardsKey = null
+    }
     try {
-        localStorage.removeItem(CARDS_KEY)
+        localStorage.removeItem(cardsKey(userId))
     } catch {
         /* ignore */
     }
 }
 
-export function saveCards(cards) {
+export function saveCards(cards, userId = null) {
     // 移至下一個 Event Loop 執行，並加入 Debounce 防抖，
     // 避免短時間內連按造成多個大型陣列的 closure 堆積與 CPU 瞬間負載過高，進而引發 Compositor Crash。
+    const key = cardsKey(userId)
     if (cardsTimeout) clearTimeout(cardsTimeout)
+    pendingCardsKey = key
 
     cardsTimeout = setTimeout(() => {
         try {
-            localStorage.setItem(CARDS_KEY, JSON.stringify(cards))
+            localStorage.setItem(key, JSON.stringify(cards))
         } catch (e) {
             console.error('Failed to save cards:', e)
+        } finally {
+            cardsTimeout = null
+            pendingCardsKey = null
         }
     }, 150) // 延遲時間從 10ms 拉長到 150ms 確保真的防抖
 }

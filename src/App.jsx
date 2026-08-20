@@ -3,7 +3,7 @@ import { getCards, saveCards, clearCards, getSettings, saveSettings, generateId,
 import { initCard, scheduleCard, buildSessionSequence, migrateCards } from './services/srs'
 import { parseTextToCardsWithSession, fetchAiQuota } from './services/ai'
 import { mergeIncomingCards, toCardContent } from './services/cardFields'
-import { getCloudCards, upsertCloudCards, deleteCloudCard, getCloudInbox, upsertCloudInbox, deleteCloudInboxItem, clearCloudInbox, mergeCardsByUpdatedAt } from './services/supabase'
+import { getCloudCards, upsertCloudCards, deleteCloudCard, deleteAllCloudCards, getCloudInbox, upsertCloudInbox, deleteCloudInboxItem, clearCloudInbox, mergeCardsByUpdatedAt } from './services/supabase'
 import { subscribeAuth, signInWithGoogle, signOutUser, ackExtensionQueue } from './services/auth'
 import { getLocalInbox, saveLocalInbox, clearLocalInbox, mergeInboxItems } from './services/inbox'
 import { parseSimpleCards, looksLikeSimpleList } from './services/simpleImport'
@@ -78,11 +78,11 @@ export default function App() {
     const [inboxWords, setInboxWords] = useState([])
 
     useEffect(() => {
-        let loaded = getCards()
-        // Data Migration for Three-Layer Architecture
+        // 未登入：只載訪客本機字卡，絕不與帳號混用
+        let loaded = getCards(null)
         const { migrated, updated } = migrateCards(loaded, 60)
         if (updated) {
-            saveCards(migrated)
+            saveCards(migrated, null)
             loaded = migrated
         }
         setCards(loaded)
@@ -119,13 +119,14 @@ export default function App() {
         let cancelled = false
         ;(async () => {
             try {
+                // 只同步「這個帳號」的快取 ↔ 雲端，禁止把訪客／其他帳號的本機字卡塞進來
                 const remoteCards = await getCloudCards(userId)
-                const currentLocalCards = getCards()
-                const merged = mergeCardsByUpdatedAt(currentLocalCards, remoteCards)
+                const userLocalCards = getCards(userId)
+                const merged = mergeCardsByUpdatedAt(userLocalCards, remoteCards)
                 const { migrated: migratedMerged } = migrateCards(merged, 60)
                 if (cancelled) return
                 setCards(migratedMerged)
-                saveCards(migratedMerged)
+                saveCards(migratedMerged, userId)
                 setLastSynced(Date.now())
                 const toPush = migratedMerged.filter(c => {
                     const remote = remoteCards.find(r => r.id === c.id)
@@ -148,8 +149,7 @@ export default function App() {
             }
         })()
         return () => { cancelled = true }
-    }, [userId])
-
+    }, [userId, accessToken])
     useEffect(() => {
         const onFocus = () => {
             if (!userId) return
@@ -191,7 +191,7 @@ export default function App() {
                 return { ...c, updatedAt: Date.now() };
             });
 
-            saveCards(timestamped)
+            saveCards(timestamped, userId || null)
 
             if (userId) {
                 const changedCards = timestamped.filter(c => {
@@ -289,6 +289,18 @@ export default function App() {
         }
     }, [cards, updateCards, userId])
 
+    const handleClearAllCards = useCallback(async () => {
+        if (!window.confirm(`確定清空目前這 ${cards.length} 張字卡？此帳號雲端也會一起刪除，無法復原。`)) return
+        try {
+            if (userId) await deleteAllCloudCards(userId)
+            setCards([])
+            clearCards(userId || null)
+        } catch (e) {
+            console.error('Clear all cards failed:', e)
+            alert('清空失敗，請稍後再試')
+        }
+    }, [cards.length, userId])
+
     const handleUpdateNote = useCallback((cardId, note) => {
         const updated = cards.map(c => {
             const baseId = cardId.split('_retry_')[0]
@@ -341,7 +353,7 @@ export default function App() {
     }
 
     const handleLogout = async () => {
-        if (!window.confirm('登出後這台裝置上的字卡與 inbox 會清空。雲端帳號裡的資料還在，下次用同一個 Google 登入會回來。')) return
+        if (!window.confirm('確定登出？字卡不會不見，下次用同一個 Google 帳號登入就會回來。')) return
         try {
             await signOutUser()
         } catch (e) {
@@ -349,7 +361,7 @@ export default function App() {
         }
         setSession(null)
         setCards([])
-        clearCards()
+        clearCards(null)
         setInboxWords([])
         clearLocalInbox()
         setLastSynced(null)
@@ -616,6 +628,7 @@ export default function App() {
                     onClose={() => setShowSettings(false)}
                     onExport={handleExport}
                     onRestore={handleRestoreBackup}
+                    onClearAllCards={handleClearAllCards}
                     user={session?.user || null}
                     quota={aiQuota}
                     lastSynced={lastSynced}

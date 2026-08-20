@@ -77,6 +77,18 @@ export async function deleteCloudCard(userId, cardId) {
     if (error) console.error('deleteCloudCard error:', error)
 }
 
+export async function deleteAllCloudCards(userId) {
+    if (!userId) return
+    const { error } = await supabase
+        .from('user_cards')
+        .delete()
+        .eq('user_id', userId)
+    if (error) {
+        console.error('deleteAllCloudCards error:', error)
+        throw error
+    }
+}
+
 export async function getCloudInbox(userId) {
     if (!userId) return []
     const { data, error } = await supabase

@@ -14,7 +14,24 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
     const [result, setResult] = useState(null)
     const [jsonError, setJsonError] = useState('')
     const [copiedTarget, setCopiedTarget] = useState(null)
+    const [etaSeconds, setEtaSeconds] = useState(0)
+    const [etaTotal, setEtaTotal] = useState(0)
     const inboxWords = inboxFromApp || []
+
+    useEffect(() => {
+        if (!importing || tab !== 'ai') {
+            setEtaSeconds(0)
+            setEtaTotal(0)
+            return
+        }
+        const total = estimateAiSeconds(text)
+        setEtaTotal(total)
+        setEtaSeconds(total)
+        const id = setInterval(() => {
+            setEtaSeconds(s => (s > 0 ? s - 1 : 0))
+        }, 1000)
+        return () => clearInterval(id)
+    }, [importing, tab]) // eslint-disable-line react-hooks/exhaustive-deps -- freeze estimate at start
 
     const handlePasteInbox = () => {
         if (inboxWords.length === 0) return
@@ -57,6 +74,14 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
     }
 
     const detectedCount = countCardsInJson(jsonText)
+    const etaProgress = etaTotal > 0
+        ? Math.min(92, ((etaTotal - etaSeconds) / etaTotal) * 100)
+        : 0
+
+    const requestClose = () => {
+        if (importing) return
+        onClose()
+    }
 
     const getPromptForExternal = () => {
         const content = text.trim()
@@ -82,23 +107,25 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
     }
 
     return (
-        <div className="modal-overlay" onClick={onClose}>
+        <div className="modal-overlay" onClick={requestClose}>
             <div className="modal im-modal-v5" onClick={e => e.stopPropagation()}>
                 {/* Header with Dual Tabs - Compressed for space */}
                 <div className="im-header">
                     <div className="im-header-main">
                         <h2 className="im-title">匯入單字</h2>
                         <div className="im-tabs-horizontal">
-                            <button className={`im-tab-h ${tab === 'ai' ? 'active' : ''}`} onClick={() => setTab('ai')}>
+                            <button className={`im-tab-h ${tab === 'ai' ? 'active' : ''}`} onClick={() => !importing && setTab('ai')} disabled={importing}>
                                 AI 自動解析
                             </button>
-                            <button className={`im-tab-h ${tab === 'manual' ? 'active' : ''}`} onClick={() => setTab('manual')}>
+                            <button className={`im-tab-h ${tab === 'manual' ? 'active' : ''}`} onClick={() => !importing && setTab('manual')} disabled={importing}>
                                 手動 / JSON
                             </button>
                         </div>
                     </div>
                     <div className="im-header-actions">
-                        <button className="im-close-v4" onClick={onClose}><Icon name="x" size={16} /></button>
+                        <button className="im-close-v4" onClick={requestClose} disabled={importing} aria-label="關閉">
+                            <Icon name="x" size={16} />
+                        </button>
                     </div>
                 </div>
 
@@ -112,11 +139,29 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
                                     placeholder="直接貼上網頁內容、文章或單字列表，AI 將自動為您提取單字、音標、例句並生成聯想記憶法..."
                                     value={text}
                                     onChange={e => setText(e.target.value)}
+                                    disabled={importing}
                                 />
-                                {inboxWords.length > 0 && (
+                                {inboxWords.length > 0 && !importing && (
                                     <button className="im-paste-inbox-btn" onClick={handlePasteInbox}>
                                         📥 貼上已收集的 {inboxWords.length} 個單字
                                     </button>
+                                )}
+                                {importing && (
+                                    <div className="im-loading-overlay" role="status" aria-live="polite">
+                                        <div className="im-loading-card">
+                                            <div className="im-loading-spinner" aria-hidden="true" />
+                                            <p className="im-loading-title">AI 正在解析單字…</p>
+                                            <p className="im-loading-eta">
+                                                {etaSeconds > 0
+                                                    ? `預估還需約 ${etaSeconds} 秒`
+                                                    : '快好了，再等一下…'}
+                                            </p>
+                                            <div className="im-loading-bar" aria-hidden="true">
+                                                <div className="im-loading-bar-fill" style={{ width: `${etaProgress}%` }} />
+                                            </div>
+                                            <p className="im-loading-hint">字越多越久，請勿關閉視窗</p>
+                                        </div>
+                                    </div>
                                 )}
                             </div>
                             <div className="im-field-hint">
@@ -129,7 +174,7 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
                                     使用 Google 登入以啟用 AI
                                 </button>
                             )}
-                            {inboxWords.length > 0 && onInboxDirectAdd && (
+                            {inboxWords.length > 0 && onInboxDirectAdd && !importing && (
                                 <button type="button" className="im-paste-inbox-btn" onClick={onInboxDirectAdd} style={{ position: 'relative', marginTop: 8 }}>
                                     捕捉區 {inboxWords.length} 個字，不用 AI 直接加入牌組
                                 </button>
@@ -158,7 +203,7 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
                 <div className="im-status-bar" aria-live="polite">
                     {jsonError && <div className="im-error-v4">{jsonError}</div>}
                     {error && <div className="im-error-v4">{error}</div>}
-                    {result && (
+                    {!importing && result && (
                         <div className="im-success-v4">
                             {formatImportSuccess(result, quota)}
                         </div>
@@ -181,13 +226,15 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
                     </div>
 
                     <div className="im-footer-right">
-                        <button className="btn-secondary im-btn-v5" onClick={onClose}>取消</button>
+                        <button className="btn-secondary im-btn-v5" onClick={requestClose} disabled={importing}>取消</button>
                         <button
                             className="btn-primary im-btn-v5"
                             onClick={tab === 'manual' ? handleJsonSubmit : handleAiSubmit}
                             disabled={importing || (tab === 'manual' ? !jsonText.trim() : !text.trim())}
                         >
-                            {importing ? '解析中…' : '匯入'}
+                            {importing
+                                ? (etaSeconds > 0 ? `解析中 ${etaSeconds}s` : '快好了…')
+                                : '匯入'}
                         </button>
                     </div>
                 </div>
@@ -244,6 +291,77 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
                     .im-ai-container, .im-manual-container { flex: 1; display: flex; flex-direction: column; min-height: 0; overflow-y: auto; }
                     .im-manual-container { gap: 12px; }
                     .im-textarea-wrapper { position: relative; flex: 1; display: flex; flex-direction: column; min-height: 0; }
+                    .im-loading-overlay {
+                        position: absolute;
+                        inset: 0;
+                        z-index: 20;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        padding: var(--space-lg);
+                        background: rgba(255, 255, 255, 0.82);
+                        backdrop-filter: blur(4px);
+                    }
+                    .im-loading-card {
+                        width: min(360px, 100%);
+                        text-align: center;
+                        padding: var(--space-lg) var(--space-xl);
+                        border-radius: var(--radius-lg);
+                        background: var(--bg-surface);
+                        box-shadow: var(--elevation-2, 0 8px 24px rgba(0,0,0,0.08));
+                        border: 1px solid var(--border-default);
+                    }
+                    .im-loading-spinner {
+                        width: 36px;
+                        height: 36px;
+                        margin: 0 auto 14px;
+                        border: 3px solid var(--border-default);
+                        border-top-color: var(--brand-primary);
+                        border-radius: 50%;
+                        animation: imSpin 0.8s linear infinite;
+                    }
+                    @keyframes imSpin { to { transform: rotate(360deg); } }
+                    .im-loading-title {
+                        margin: 0 0 6px;
+                        font-size: 1rem;
+                        font-weight: 800;
+                        color: var(--text-primary);
+                    }
+                    .im-loading-eta {
+                        margin: 0 0 14px;
+                        font-size: 0.92rem;
+                        font-weight: 700;
+                        color: var(--brand-primary);
+                        font-variant-numeric: tabular-nums;
+                    }
+                    .im-loading-bar {
+                        height: 6px;
+                        border-radius: 999px;
+                        background: var(--border-default);
+                        overflow: hidden;
+                        margin-bottom: 10px;
+                    }
+                    .im-loading-bar-fill {
+                        height: 100%;
+                        border-radius: inherit;
+                        background: var(--brand-primary);
+                        transition: width 0.9s linear;
+                    }
+                    .im-loading-hint {
+                        margin: 0;
+                        font-size: 0.75rem;
+                        font-weight: 600;
+                        color: var(--text-secondary);
+                    }
+                    .im-close-v4:disabled,
+                    .im-tab-h:disabled {
+                        opacity: 0.4;
+                        cursor: not-allowed;
+                    }
+                    .im-btn-v5:disabled {
+                        opacity: 0.65;
+                        cursor: not-allowed;
+                    }
                     
                     .im-textarea-v4 {
                         flex: 1; width: 100%; border: 2px solid var(--border-default); border-radius: var(--radius-md); padding: var(--space-lg);
@@ -366,7 +484,7 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
                     .im-flow-window {
                         width: 100%;
                         aspect-ratio: 16 / 9;
-                        max-height: 196px;
+                        max-height: 210px;
                         border: 1px solid var(--border-default);
                         border-radius: 12px;
                         overflow: hidden;
@@ -493,6 +611,7 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
                     }
 
                     .im-mini-modal {
+                        position: relative;
                         height: 100%;
                         background: #fff;
                         border-radius: 10px;
@@ -513,23 +632,65 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
                         font-size: 0.68rem; color: #d7e0e6; white-space: pre-wrap; line-height: 1.4;
                         opacity: 0;
                     }
-                    .im-flow-demo[data-step="5"] .im-flow-placeholder { opacity: 0; }
-                    .im-flow-demo[data-step="5"] .im-flow-pasted { opacity: 1; }
+                    .im-flow-demo[data-step="5"] .im-flow-placeholder {
+                        animation: imAppPhHide 5s ease-in-out infinite;
+                    }
+                    .im-flow-demo[data-step="5"] .im-flow-pasted {
+                        animation: imAppPasteIn 5s ease-in-out infinite;
+                    }
+                    .im-flow-demo[data-step="5"] .im-mini-box {
+                        animation: imAppBoxFill 5s ease-in-out infinite;
+                    }
+                    .im-app-paste-flag {
+                        position: absolute;
+                        right: 16px;
+                        top: 36px;
+                        font-size: 0.68rem;
+                        font-weight: 800;
+                        border-radius: 99px;
+                        padding: 3px 8px;
+                        color: var(--brand-accent);
+                        background: rgba(241, 90, 41, 0.12);
+                        opacity: 0;
+                        z-index: 3;
+                    }
+                    .im-flow-demo[data-step="5"] .im-app-paste-flag {
+                        animation: imFlagIn 5s ease-in-out infinite;
+                    }
+                    @keyframes imAppPhHide {
+                        0%, 18% { opacity: 0.7; }
+                        28%, 100% { opacity: 0; }
+                    }
+                    @keyframes imAppPasteIn {
+                        0%, 22% {
+                            opacity: 0;
+                            clip-path: inset(0 0 100% 0);
+                            transform: translateY(6px);
+                        }
+                        38%, 100% {
+                            opacity: 1;
+                            clip-path: inset(0 0 0 0);
+                            transform: none;
+                        }
+                    }
+                    @keyframes imAppBoxFill {
+                        0%, 18% { box-shadow: inset 0 0 0 0 rgba(241, 90, 41, 0); }
+                        28%, 100% { box-shadow: inset 0 0 0 1px rgba(241, 90, 41, 0.35); }
+                    }
                     .im-flow-app-btns { display: flex; gap: 6px; }
                     .im-view.app .im-flow-chip { font-size: 0.66rem; padding: 5px 8px; }
 
                     .im-chat-thread {
                         flex: 1; min-height: 0; overflow: hidden;
-                        padding: 10px 14px 8px;
-                        display: flex; flex-direction: column; gap: 8px; justify-content: flex-end;
+                        padding: 8px 12px 6px;
+                        display: flex; flex-direction: column; gap: 6px; justify-content: flex-end;
                     }
                     .im-bubble {
-                        max-width: 78%;
-                        font-size: 0.74rem; line-height: 1.45; font-weight: 500;
-                        padding: 8px 10px; border-radius: 14px;
+                        max-width: 82%;
+                        font-size: 0.7rem; line-height: 1.4; font-weight: 500;
+                        padding: 7px 9px; border-radius: 12px;
                         opacity: 0;
                         transform: translateY(6px);
-                        transition: opacity 0.35s ease, transform 0.35s ease;
                     }
                     .im-bubble.user {
                         align-self: flex-end;
@@ -537,70 +698,179 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
                     }
                     .im-bubble.bot {
                         align-self: flex-start;
+                        position: relative;
                         background: #fff; color: var(--brand-ink);
                         border: 1px solid var(--border-subtle);
-                        max-width: 86%;
+                        max-width: 88%;
+                        padding-bottom: 22px;
                     }
                     .im-bubble.prompt {
-                        display: -webkit-box;
-                        -webkit-line-clamp: 2;
-                        -webkit-box-orient: vertical;
                         overflow: hidden;
+                        max-height: 0;
+                        padding-top: 0;
+                        padding-bottom: 0;
                     }
-                    .im-flow-demo[data-step="2"] .im-bubble.prompt,
-                    .im-flow-demo[data-step="3"] .im-bubble.prompt,
-                    .im-flow-demo[data-step="4"] .im-bubble.prompt {
-                        display: block;
-                        -webkit-line-clamp: unset;
-                    }
-                    .im-flow-demo[data-step="2"] .im-bubble.prompt,
-                    .im-flow-demo[data-step="3"] .im-bubble.prompt,
-                    .im-flow-demo[data-step="4"] .im-bubble.prompt { opacity: 1; transform: none; }
-                    .im-flow-demo[data-step="1"] .im-bubble.prompt {
-                        animation: imPromptPasteIn 5s ease-in-out infinite;
-                    }
+                    .im-prompt-body { display: block; }
                     .im-prompt-slot {
                         display: none;
-                        margin-top: 4px;
+                        margin-top: 5px;
                         padding: 3px 6px;
                         border-radius: 6px;
                         background: rgba(241, 90, 41, 0.14);
                         color: var(--brand-accent);
                         font-weight: 700;
+                        font-size: 0.66rem;
                     }
                     .im-prompt-words {
                         display: none;
-                        margin-top: 4px;
+                        margin-top: 5px;
                         padding: 3px 6px;
                         border-radius: 6px;
                         background: rgba(11, 143, 140, 0.12);
                         color: var(--good);
                         font-weight: 700;
+                        white-space: pre-line;
+                        font-size: 0.66rem;
+                    }
+
+                    /* Step 2 (index 1): paste prompt → composer grows → bubble grows */
+                    .im-flow-demo[data-step="1"] .im-composer {
+                        animation: imComposerExpand 5s ease-in-out infinite;
+                    }
+                    .im-flow-demo[data-step="1"] .im-composer-ph {
+                        animation: imCompPhHide 5s ease-in-out infinite;
+                    }
+                    .im-flow-demo[data-step="1"] .im-composer-prompt {
+                        animation: imPastePromptText 5s ease-in-out infinite;
+                        white-space: normal;
+                        display: -webkit-box;
+                        -webkit-box-orient: vertical;
+                        overflow: hidden;
+                    }
+                    .im-flow-demo[data-step="1"] .im-send {
+                        animation: imSendPulse 5s ease-in-out infinite;
+                    }
+                    .im-flow-demo[data-step="1"] .im-bubble.prompt {
+                        animation: imPromptBubbleGrow 5s ease-in-out infinite;
+                    }
+                    .im-flow-demo[data-step="1"] .im-paste-flag {
+                        animation: imFlagIn 5s ease-in-out infinite;
+                    }
+                    @keyframes imComposerExpand {
+                        0%, 8% { height: 32px; }
+                        18%, 42% { height: 58px; }
+                        52%, 100% { height: 32px; }
+                    }
+                    @keyframes imCompPhHide {
+                        0%, 10% { opacity: 1; }
+                        16%, 52% { opacity: 0; }
+                        60%, 100% { opacity: 1; }
+                    }
+                    @keyframes imPastePromptText {
+                        0%, 12% {
+                            opacity: 0;
+                            -webkit-line-clamp: 1;
+                            max-height: 1.2em;
+                        }
+                        20% {
+                            opacity: 1;
+                            -webkit-line-clamp: 1;
+                            max-height: 1.2em;
+                        }
+                        30%, 48% {
+                            opacity: 1;
+                            -webkit-line-clamp: 3;
+                            max-height: 3.6em;
+                        }
+                        58%, 100% { opacity: 0; max-height: 0; }
+                    }
+                    @keyframes imSendPulse {
+                        0%, 40% { transform: scale(1); box-shadow: none; }
+                        46% { transform: scale(0.88); }
+                        52%, 62% { transform: scale(1.08); box-shadow: 0 0 0 4px rgba(11, 31, 51, 0.18); }
+                        70%, 100% { transform: scale(1); box-shadow: none; }
+                    }
+                    @keyframes imPromptBubbleGrow {
+                        0%, 48% {
+                            opacity: 0;
+                            max-height: 0;
+                            padding-top: 0;
+                            padding-bottom: 0;
+                            transform: translateY(8px);
+                        }
+                        56% {
+                            opacity: 1;
+                            max-height: 28px;
+                            padding: 7px 9px;
+                            transform: none;
+                        }
+                        70%, 100% {
+                            opacity: 1;
+                            max-height: 72px;
+                            padding: 7px 9px;
+                            transform: none;
+                        }
+                    }
+
+                    /* Step 3 (index 2): paste words at end of prompt, bubble grows */
+                    .im-flow-demo[data-step="2"] .im-bubble.prompt {
+                        opacity: 1;
+                        transform: none;
+                        padding: 7px 9px;
+                        animation: imWordsBubbleGrow 5s ease-in-out infinite;
                     }
                     .im-flow-demo[data-step="2"] .im-prompt-slot {
-                        display: inline-block;
-                        animation: imSlotPulse 5s ease-in-out infinite;
+                        display: block;
+                        animation: imSlotFade 5s ease-in-out infinite;
                     }
                     .im-flow-demo[data-step="2"] .im-prompt-words {
-                        display: inline-block;
-                        animation: imWordsIntoPrompt 5s ease-in-out infinite;
+                        display: block;
+                        animation: imWordsPasteEnd 5s ease-in-out infinite;
+                    }
+                    .im-flow-demo[data-step="2"] .im-words-flag {
+                        animation: imFlagIn 5s ease-in-out infinite;
+                    }
+                    .im-flow-demo[data-step="2"] .im-composer-ph { opacity: 1; }
+                    @keyframes imWordsBubbleGrow {
+                        0%, 22% { max-height: 56px; }
+                        40%, 100% { max-height: 110px; }
+                    }
+                    @keyframes imSlotFade {
+                        0%, 18% { opacity: 1; max-height: 24px; margin-top: 5px; }
+                        30%, 100% { opacity: 0; max-height: 0; margin-top: 0; padding: 0; overflow: hidden; }
+                    }
+                    @keyframes imWordsPasteEnd {
+                        0%, 24% {
+                            opacity: 0;
+                            max-height: 0;
+                            margin-top: 0;
+                            transform: translateY(4px);
+                        }
+                        38%, 100% {
+                            opacity: 1;
+                            max-height: 48px;
+                            margin-top: 5px;
+                            transform: none;
+                        }
+                    }
+
+                    /* Steps 4–5: waiting / answer */
+                    .im-flow-demo[data-step="3"] .im-bubble.prompt,
+                    .im-flow-demo[data-step="4"] .im-bubble.prompt {
+                        opacity: 1;
+                        transform: none;
+                        max-height: 110px;
+                        padding: 7px 9px;
                     }
                     .im-flow-demo[data-step="3"] .im-prompt-words,
-                    .im-flow-demo[data-step="4"] .im-prompt-words { display: inline-block; }
-                    @keyframes imPromptPasteIn {
-                        0%, 48% { opacity: 0; transform: translateY(6px); }
-                        58%, 100% { opacity: 1; transform: none; }
-                    }
-                    @keyframes imSlotPulse {
-                        0%, 18% { opacity: 1; }
-                        28%, 100% { opacity: 0; }
-                    }
-                    @keyframes imWordsIntoPrompt {
-                        0%, 26% { opacity: 0; }
-                        34%, 100% { opacity: 1; }
+                    .im-flow-demo[data-step="4"] .im-prompt-words {
+                        display: block;
                     }
                     .im-flow-demo[data-step="3"] .im-bubble.bot,
-                    .im-flow-demo[data-step="4"] .im-bubble.bot { opacity: 1; transform: none; }
+                    .im-flow-demo[data-step="4"] .im-bubble.bot {
+                        opacity: 1;
+                        transform: none;
+                    }
                     .im-typing {
                         display: inline-flex; gap: 4px; padding: 2px 2px;
                         opacity: 0;
@@ -614,60 +884,109 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
                     @keyframes imDot { 0%, 80%, 100% { opacity: 0.3; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-2px); } }
                     .im-json {
                         margin: 0; font-family: ui-monospace, Menlo, monospace;
-                        font-size: 0.66rem; line-height: 1.4; color: #2A241C;
+                        font-size: 0.64rem; line-height: 1.35; color: #2A241C;
                         white-space: pre-wrap; opacity: 0;
                     }
                     .im-flow-demo[data-step="3"] .im-typing { opacity: 1; }
                     .im-flow-demo[data-step="3"] .im-json { opacity: 0; }
+                    .im-flow-demo[data-step="3"] .im-copy-btn { opacity: 0; }
                     .im-flow-demo[data-step="4"] .im-typing { opacity: 0; }
                     .im-flow-demo[data-step="4"] .im-json { opacity: 1; }
+
+                    .im-copy-btn {
+                        position: absolute;
+                        right: 6px;
+                        bottom: 4px;
+                        width: 18px;
+                        height: 18px;
+                        border: none;
+                        border-radius: 5px;
+                        background: transparent;
+                        color: #6B7A8A;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        opacity: 0;
+                        padding: 0;
+                    }
+                    .im-flow-demo[data-step="4"] .im-copy-btn {
+                        opacity: 1;
+                        animation: imCopyClick 5s ease-in-out infinite;
+                    }
+                    .im-flow-cursor.copy-cursor {
+                        position: absolute;
+                        right: -2px;
+                        bottom: -6px;
+                        width: 12px;
+                        height: 12px;
+                        background: var(--brand-ink);
+                        clip-path: polygon(0 0, 100% 70%, 45% 70%, 60% 100%, 40% 100%, 28% 70%, 0 78%);
+                        opacity: 0;
+                        z-index: 2;
+                        filter: drop-shadow(0 1px 1px rgba(255,255,255,0.8));
+                    }
+                    .im-flow-demo[data-step="4"] .im-flow-cursor.copy-cursor {
+                        opacity: 1;
+                        animation: imCopyCursor 5s ease-in-out infinite;
+                    }
+                    @keyframes imCopyCursor {
+                        0%, 20% { transform: translate(16px, -14px); opacity: 0; }
+                        28% { opacity: 1; transform: translate(16px, -14px); }
+                        42% { transform: translate(0, 0); }
+                        50% { transform: translate(0, 2px) scale(0.88); }
+                        58%, 100% { transform: translate(0, 0); opacity: 1; }
+                    }
+                    @keyframes imCopyClick {
+                        0%, 46% { background: transparent; color: #6B7A8A; box-shadow: none; }
+                        50%, 62% { background: rgba(11, 143, 140, 0.16); color: var(--good); box-shadow: 0 0 0 3px rgba(11, 143, 140, 0.2); }
+                        72%, 100% { background: transparent; color: #6B7A8A; box-shadow: none; }
+                    }
+
                     .im-composer {
                         flex-shrink: 0;
                         margin: 0 10px 8px;
-                        height: 34px;
-                        border-radius: 18px;
+                        height: 32px;
+                        border-radius: 16px;
                         background: #fff;
                         border: 1px solid var(--border-default);
-                        display: flex; align-items: center;
-                        padding: 0 8px 0 12px;
+                        display: flex; align-items: flex-end;
+                        padding: 4px 8px 4px 10px;
                         position: relative;
+                        overflow: hidden;
+                    }
+                    .im-composer-inner {
+                        flex: 1;
+                        min-width: 0;
+                        min-height: 22px;
+                        position: relative;
+                        display: flex;
+                        align-items: center;
                     }
                     .im-composer-ph, .im-composer-prompt, .im-composer-type {
-                        font-size: 0.7rem; white-space: nowrap; overflow: hidden;
+                        font-size: 0.68rem;
+                        line-height: 1.25;
                     }
                     .im-composer-ph { color: var(--text-secondary); opacity: 1; }
                     .im-composer-prompt,
                     .im-composer-type {
-                        position: absolute; left: 12px; right: 36px;
+                        position: absolute; left: 0; right: 0; top: 0;
                         color: var(--brand-ink); font-weight: 600;
                         opacity: 0;
                     }
-                    .im-flow-demo[data-step="1"] .im-composer-ph { animation: imCompPhHide 5s ease-in-out infinite; }
-                    .im-flow-demo[data-step="1"] .im-composer-prompt { animation: imPasteIntoComposer 5s ease-in-out infinite; }
-                    .im-flow-demo[data-step="2"] .im-composer-ph { animation: imCompPhHide 5s ease-in-out infinite; }
-                    .im-flow-demo[data-step="2"] .im-composer-type { animation: imPasteIntoComposer 5s ease-in-out infinite; }
-                    @keyframes imCompPhHide {
-                        0%, 10% { opacity: 1; }
-                        16%, 52% { opacity: 0; }
-                        60%, 100% { opacity: 1; }
-                    }
-                    @keyframes imPasteIntoComposer {
-                        0%, 12% { opacity: 0; }
-                        18%, 50% { opacity: 1; }
-                        58%, 100% { opacity: 0; }
-                    }
                     .im-send {
-                        margin-left: auto; width: 22px; height: 22px; border-radius: 50%;
+                        flex-shrink: 0;
+                        margin-left: 6px; width: 22px; height: 22px; border-radius: 50%;
                         background: #0B1F33; color: #fff; font-size: 12px; font-weight: 800;
                         display: flex; align-items: center; justify-content: center;
                     }
                     .im-paste-flag,
                     .im-words-flag,
                     .im-copied-flag {
-                        position: absolute; right: 12px; top: 10px;
-                        font-size: 0.7rem; font-weight: 800;
+                        position: absolute; right: 12px; top: 8px;
+                        font-size: 0.68rem; font-weight: 800;
                         border-radius: 99px; padding: 3px 8px;
                         opacity: 0;
+                        z-index: 2;
                     }
                     .im-paste-flag, .im-words-flag {
                         color: var(--brand-accent);
@@ -677,25 +996,18 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
                         color: #0B6B4F;
                         background: #D8F3E8;
                     }
-                    .im-flow-demo[data-step="1"] .im-paste-flag { animation: imFlagIn 5s ease-in-out infinite; }
-                    .im-flow-demo[data-step="2"] .im-words-flag { animation: imFlagIn 5s ease-in-out infinite; }
-                    .im-flow-demo[data-step="4"] .im-copied-flag { opacity: 1; }
+                    .im-flow-demo[data-step="4"] .im-copied-flag {
+                        animation: imCopiedPop 5s ease-in-out infinite;
+                    }
                     @keyframes imFlagIn {
                         0%, 6% { opacity: 0; transform: translateY(-6px); }
-                        12%, 40% { opacity: 1; transform: none; }
-                        50%, 100% { opacity: 0; }
+                        12%, 36% { opacity: 1; transform: none; }
+                        48%, 100% { opacity: 0; }
                     }
-                    .im-flow-demo[data-paused="1"] .im-click-target,
-                    .im-flow-demo[data-paused="1"] .im-flow-cursor,
-                    .im-flow-demo[data-paused="1"] .im-bubble.prompt,
-                    .im-flow-demo[data-paused="1"] .im-prompt-slot,
-                    .im-flow-demo[data-paused="1"] .im-prompt-words,
-                    .im-flow-demo[data-paused="1"] .im-composer-ph,
-                    .im-flow-demo[data-paused="1"] .im-composer-prompt,
-                    .im-flow-demo[data-paused="1"] .im-composer-type,
-                    .im-flow-demo[data-paused="1"] .im-paste-flag,
-                    .im-flow-demo[data-paused="1"] .im-words-flag {
-                        animation-play-state: paused;
+                    @keyframes imCopiedPop {
+                        0%, 52% { opacity: 0; transform: translateY(-6px); }
+                        60%, 88% { opacity: 1; transform: none; }
+                        100% { opacity: 0; }
                     }
 
                     .im-flow-caps {
@@ -887,6 +1199,16 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
     )
 }
 
+function estimateAiSeconds(text) {
+    const raw = (text || '').trim()
+    if (!raw) return 15
+    const lines = raw.split(/\n/).map(l => l.trim()).filter(Boolean).length
+    const tokens = raw.split(/[\s,，、;；/|]+/).filter(Boolean).length
+    const units = Math.max(lines, Math.ceil(tokens * 0.6))
+    // 經驗值：固定開銷 + 每個單位約 1.2 秒，夾在 12–90 秒
+    return Math.min(90, Math.max(12, 8 + Math.round(units * 1.2)))
+}
+
 function formatImportSuccess(result, quota) {
     const added = result?.added || 0
     const extra = [
@@ -910,15 +1232,16 @@ function formatImportSuccess(result, quota) {
 function ManualGuide() {
     const [step, setStep] = useState(0)
     const [progress, setProgress] = useState(0)
-    const [paused, setPaused] = useState(false)
+    const [hold, setHold] = useState(false)
     const progressRef = useRef(0)
+    const holdRef = useRef(false)
     progressRef.current = progress
+    holdRef.current = hold
 
     useEffect(() => {
-        if (paused) return
         let raf
-        const t0 = performance.now()
-        const origin = progressRef.current / 100
+        let t0 = performance.now()
+        let origin = progressRef.current / 100
         const tick = (now) => {
             const p = Math.min(1, origin + (now - t0) / STEP_MS)
             progressRef.current = p * 100
@@ -926,6 +1249,13 @@ function ManualGuide() {
             if (p >= 1) {
                 progressRef.current = 0
                 setProgress(0)
+                if (holdRef.current) {
+                    // 停在此步驟重播動畫，不跳下一步
+                    t0 = now
+                    origin = 0
+                    raf = requestAnimationFrame(tick)
+                    return
+                }
                 setStep(s => (s + 1) % FLOW_STEPS.length)
                 return
             }
@@ -933,10 +1263,10 @@ function ManualGuide() {
         }
         raf = requestAnimationFrame(tick)
         return () => cancelAnimationFrame(raf)
-    }, [paused, step])
+    }, [step])
 
     const hoverStep = (i) => {
-        setPaused(true)
+        setHold(true)
         if (i !== step) {
             progressRef.current = 0
             setProgress(0)
@@ -950,8 +1280,8 @@ function ManualGuide() {
                 <p className="im-manual-lead">用 ChatGPT / Gemini 整理成 JSON，再貼回這裡。</p>
                 <ol
                     className="im-flow-caps"
-                    onMouseEnter={() => setPaused(true)}
-                    onMouseLeave={() => setPaused(false)}
+                    onMouseEnter={() => setHold(true)}
+                    onMouseLeave={() => setHold(false)}
                 >
                     {FLOW_STEPS.map((s, i) => (
                         <li
@@ -967,7 +1297,7 @@ function ManualGuide() {
                     ))}
                 </ol>
             </div>
-            <ExternalAiDemo step={step} paused={paused} />
+            <ExternalAiDemo step={step} />
         </div>
     )
 }
@@ -977,15 +1307,15 @@ const STEP_MS = 5000
 const FLOW_STEPS = [
     { n: 1, label: '步驟 1 · 點擊複製提示並開啟', text: '點擊下方「複製提示並開啟 ChatGPT」' },
     { n: 2, label: '步驟 2 · 貼上提示詞', text: '把提示詞貼進 ChatGPT 對話' },
-    { n: 3, label: '步驟 3 · 加上自己的單字', text: '在提示詞裡貼上要學的單字' },
+    { n: 3, label: '步驟 3 · 加上自己的單字', text: '在提示詞最後貼上要學的單字' },
     { n: 4, label: '步驟 4 · 等待 JSON', text: '等待 AI 輸出 JSON' },
-    { n: 5, label: '步驟 5 · 複製結果', text: '複製整段結果' },
+    { n: 5, label: '步驟 5 · 複製結果', text: '點右下角複製圖示' },
     { n: 6, label: '步驟 6 · 貼回這裡匯入', text: '回到這裡，貼上結果後匯入' },
 ]
 
-function ExternalAiDemo({ step, paused }) {
+function ExternalAiDemo({ step }) {
     return (
-        <div className="im-flow-demo" data-step={step} data-paused={paused ? '1' : '0'} aria-hidden="true">
+        <div className="im-flow-demo" data-step={step} aria-hidden="true">
             <div className="im-flow-window">
                 <div className="im-browser-bar">
                     <span className="im-browser-dots" />
@@ -1018,6 +1348,7 @@ function ExternalAiDemo({ step, paused }) {
   { "front": "huiswerk", "lemma": "huiswerk" }
 ]`}</pre>
                             </div>
+                            <span className="im-app-paste-flag">⌘V 貼上結果</span>
                             <div className="im-flow-app-btns">
                                 <span className="im-flow-chip gpt">複製提示並開啟 ChatGPT ↗</span>
                                 <span className="im-flow-chip gem">Gemini ↗</span>
@@ -1028,23 +1359,31 @@ function ExternalAiDemo({ step, paused }) {
                     <div className="im-view chat">
                         <div className="im-chat-thread">
                             <div className="im-bubble user prompt">
-                                你是荷蘭語教授。請把單字整理成純 JSON 陣列，含 front、lemma、forms、例句…
-                                <span className="im-prompt-slot">（←在這裡貼上你的單字）</span>
-                                <span className="im-prompt-words">kinderen / huiswerk / opbellen</span>
+                                <span className="im-prompt-body">你是荷蘭語教授。請把單字整理成純 JSON 陣列，含 front、lemma、forms、例句與聯想記憶法。</span>
+                                <span className="im-prompt-slot">（←在這裡貼上你的單字，然後送出）</span>
+                                <span className="im-prompt-words">{`kinderen
+huiswerk
+opbellen`}</span>
                             </div>
                             <div className="im-bubble bot">
                                 <span className="im-typing"><i /><i /><i /></span>
                                 <pre className="im-json">{`[{ "front": "kinderen", "lemma": "kind", "back": "孩子們" }]`}</pre>
+                                <span className="im-copy-btn" aria-hidden="true">
+                                    <Icon name="copy" size={12} />
+                                    <span className="im-flow-cursor copy-cursor" />
+                                </span>
                             </div>
                         </div>
                         <div className="im-composer">
-                            <span className="im-composer-ph">詢問任何問題</span>
-                            <span className="im-composer-prompt">你是荷蘭語教授。請把單字整理成純 JSON…</span>
-                            <span className="im-composer-type">kinderen / huiswerk / opbellen</span>
+                            <div className="im-composer-inner">
+                                <span className="im-composer-ph">詢問任何問題</span>
+                                <span className="im-composer-prompt">你是荷蘭語教授。請把單字整理成純 JSON 陣列，含 front、lemma、forms、例句與聯想記憶法。 （←在這裡貼上你的單字，然後送出）</span>
+                                <span className="im-composer-type">kinderen / huiswerk / opbellen</span>
+                            </div>
                             <span className="im-send">↑</span>
                         </div>
                         <span className="im-paste-flag">⌘V 貼上提示詞</span>
-                        <span className="im-words-flag">貼上單字</span>
+                        <span className="im-words-flag">貼到提示詞最後</span>
                         <span className="im-copied-flag">已複製結果</span>
                     </div>
                 </div>

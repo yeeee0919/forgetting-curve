@@ -12,7 +12,7 @@ const PAGE_TITLE = {
     backup: '資料備份',
 }
 
-export default function SettingsModal({ settings, onSave, onClose, onExport, onRestore, user, quota, lastSynced, onGoogleLogin, onLogout }) {
+export default function SettingsModal({ settings, onSave, onClose, onExport, onRestore, onClearAllCards, user, quota, lastSynced, onGoogleLogin, onLogout }) {
     const [page, setPage] = useState('home')
     const [geminiKey, setGeminiKey] = useState(settings.geminiKey || '')
     const [elevenLabsKey, setElevenLabsKey] = useState(settings.elevenLabsKey || '')
@@ -221,6 +221,16 @@ export default function SettingsModal({ settings, onSave, onClose, onExport, onR
                                 reader.readAsText(file)
                             }}
                         />
+                        {onClearAllCards && (
+                            <>
+                                <p className="sm-id-hint" style={{ marginTop: 16 }}>
+                                    若登入後出現不屬於你的字卡，可在此清空本帳號後重加。
+                                </p>
+                                <button className="btn-secondary" style={{ color: 'var(--again)' }} onClick={onClearAllCards}>
+                                    清空本帳號全部字卡
+                                </button>
+                            </>
+                        )}
                     </div>
                 )}
             </div>
