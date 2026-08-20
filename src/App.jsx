@@ -4,7 +4,7 @@ import { initCard, scheduleCard, buildSessionSequence, migrateCards } from './se
 import { parseTextToCardsWithSession, fetchAiQuota } from './services/ai'
 import { mergeIncomingCards, toCardContent } from './services/cardFields'
 import { getCloudCards, upsertCloudCards, deleteCloudCard, deleteAllCloudCards, getCloudInbox, upsertCloudInbox, deleteCloudInboxItem, clearCloudInbox, mergeCardsByUpdatedAt } from './services/supabase'
-import { subscribeAuth, signInWithGoogle, signOutUser, ackExtensionQueue } from './services/auth'
+import { subscribeAuth, signInWithGoogle, signOutUser, ackExtensionQueue, requestExtensionInboxFlush } from './services/auth'
 import { getLocalInbox, saveLocalInbox, clearLocalInbox, mergeInboxItems } from './services/inbox'
 import { parseSimpleCards } from './services/simpleImport'
 import { validateAiWordList } from './services/aiWordList'
@@ -105,7 +105,7 @@ export default function App() {
             if (!incoming.length) return
             setInboxWords(prev => {
                 const merged = mergeInboxItems(prev, incoming)
-                if (!userId) saveLocalInbox(merged)
+                saveLocalInbox(merged)
                 return merged
             })
             if (userId) {
@@ -114,7 +114,15 @@ export default function App() {
             ackExtensionQueue(incoming.map(i => i.id).filter(Boolean))
         }
         window.addEventListener('message', onMessage)
-        return () => window.removeEventListener('message', onMessage)
+        // 擴充功能可能在 React 掛載前就 flush，進頁後再要一次
+        requestExtensionInboxFlush()
+        const t1 = setTimeout(requestExtensionInboxFlush, 500)
+        const t2 = setTimeout(requestExtensionInboxFlush, 2000)
+        return () => {
+            window.removeEventListener('message', onMessage)
+            clearTimeout(t1)
+            clearTimeout(t2)
+        }
     }, [userId])
 
     useEffect(() => {
@@ -139,12 +147,13 @@ export default function App() {
 
                 const localInbox = getLocalInbox()
                 if (localInbox.length) {
-                    await upsertCloudInbox(userId, localInbox)
-                    clearLocalInbox()
+                    await upsertCloudInbox(userId, localInbox).catch(() => {})
                 }
                 const freshInbox = await getCloudInbox(userId)
                 if (cancelled) return
-                setInboxWords(freshInbox || [])
+                const mergedInbox = mergeInboxItems(freshInbox || [], localInbox)
+                setInboxWords(mergedInbox)
+                saveLocalInbox(mergedInbox)
                 const quota = await fetchAiQuota(accessToken).catch(() => null)
                 if (!cancelled) setAiQuota(quota)
             } catch (e) {
@@ -153,13 +162,33 @@ export default function App() {
         })()
         return () => { cancelled = true }
     }, [userId, accessToken])
+
     useEffect(() => {
-        const onFocus = () => {
-            if (!userId) return
-            getCloudInbox(userId).then(data => setInboxWords(data || [])).catch(() => {})
+        const pullInbox = () => {
+            requestExtensionInboxFlush()
+            if (!userId) {
+                setInboxWords(getLocalInbox())
+                return
+            }
+            getCloudInbox(userId)
+                .then(data => {
+                    setInboxWords(prev => {
+                        const merged = mergeInboxItems(data || [], prev)
+                        saveLocalInbox(merged)
+                        return merged
+                    })
+                })
+                .catch(() => {})
         }
-        window.addEventListener('focus', onFocus)
-        return () => window.removeEventListener('focus', onFocus)
+        window.addEventListener('focus', pullInbox)
+        const onVis = () => {
+            if (document.visibilityState === 'visible') pullInbox()
+        }
+        document.addEventListener('visibilitychange', onVis)
+        return () => {
+            window.removeEventListener('focus', pullInbox)
+            document.removeEventListener('visibilitychange', onVis)
+        }
     }, [userId])
 
     useEffect(() => {
@@ -770,6 +799,13 @@ function HomePage({
                                     ? '今日任務已清空。新字要等緩衝區有空位才會進來。'
                                     : '匯入單字後，從總量池 → 緩衝區 → 已熟練 → 成熟，一步步把字從日常磨字裡淡出。'}
                     </p>
+                    {inboxWords.length > 0 && (
+                        <button type="button" className="home-catch-banner" onClick={onImportCatch || onImport}>
+                            <span className="home-catch-banner-label">Word Catcher</span>
+                            <span className="home-catch-banner-title">Catch 了 {inboxWords.length} 個單字</span>
+                            <span className="home-catch-banner-cta">點這裡匯入 →</span>
+                        </button>
+                    )}
                 </header>
 
                 <div className="home-actions">
@@ -799,12 +835,6 @@ function HomePage({
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path></svg>
                         匯入新單字
                     </button>
-                    {inboxWords.length > 0 && (
-                        <button className="btn-inbox" onClick={onImportCatch || onImport}>
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path><circle cx="12" cy="12" r="4"></circle></svg>
-                            Catch 了 {inboxWords.length} 個單字
-                        </button>
-                    )}
 
                     {showExtCard && (
                         <ExtensionDownloadCard onOpenGuide={onOpenExtGuide} />

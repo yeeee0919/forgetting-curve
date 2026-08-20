@@ -37,6 +37,34 @@ export function ackExtensionQueue(ids) {
     }
 }
 
+/** 向擴充功能／content script 再要一次 Catch 佇列（避免頁面還沒掛好監聽就送完） */
+export function requestExtensionInboxFlush() {
+    try {
+        window.postMessage({ source: 'toocheep-app', type: 'request-inbox-flush' }, '*')
+    } catch {
+        /* ignore */
+    }
+    const runtime = window.chrome?.runtime
+    if (!runtime?.sendMessage || !CHROME_EXTENSION_ID) return
+    try {
+        runtime.sendMessage(CHROME_EXTENSION_ID, { type: 'toocheep-peek-queue' }, (res) => {
+            if (runtime.lastError) return
+            const items = res?.items || []
+            if (!items.length) return
+            try {
+                window.postMessage(
+                    { source: 'toocheep-word-catcher', type: 'inbox-flush', items },
+                    '*'
+                )
+            } catch {
+                /* ignore */
+            }
+        })
+    } catch {
+        /* ignore */
+    }
+}
+
 export function subscribeAuth(onSession) {
     supabase.auth.getSession().then(({ data }) => {
         onSession(data.session || null)

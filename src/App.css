@@ -627,6 +627,50 @@
     line-height: 1.55;
 }
 
+.home-catch-banner {
+    margin-top: var(--space-sm);
+    width: 100%;
+    max-width: 36rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    text-align: left;
+    padding: 14px 16px;
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+    background: linear-gradient(135deg, rgba(241, 90, 41, 0.14), rgba(241, 90, 41, 0.06));
+    box-shadow: inset 0 0 0 1.5px rgba(241, 90, 41, 0.35);
+    transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.home-catch-banner:hover {
+    filter: brightness(1.03);
+    transform: translateY(-1px);
+}
+
+.home-catch-banner-label {
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--brand-accent);
+}
+
+.home-catch-banner-title {
+    flex: 1;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--brand-ink);
+}
+
+.home-catch-banner-cta {
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: var(--brand-accent);
+}
+
 /* Memory board */
 .memory-board {
     display: flex;
