@@ -1,22 +1,26 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { generateId } from '../services/storage'
 import { initCard } from '../services/srs'
 import { EXTERNAL_JSON_PROMPT } from '../services/cardPrompt'
 import { parseCardsJson, countCardsInJson } from '../services/jsonImport'
 import { parseSimpleCards } from '../services/simpleImport'
+import { validateAiWordList } from '../services/aiWordList'
 import { toCardContent } from '../services/cardFields'
 import Icon from './Icons'
 
-export default function ImportModal({ onImport, onClose, importing, error, loggedIn, quota, onLogin, onImportDirect, inboxWords: inboxFromApp, onInboxDirectAdd, onClearInbox }) {
+export default function ImportModal({ onImport, onClose, importing, error, loggedIn, quota, onLogin, onImportDirect, onSuccessFeedback, initialText = '', inboxWords: inboxFromApp, onInboxDirectAdd, onClearInbox }) {
     const [tab, setTab] = useState('ai')
-    const [text, setText] = useState('')
+    const [text, setText] = useState(() => initialText || '')
     const [jsonText, setJsonText] = useState('')
-    const [result, setResult] = useState(null)
     const [jsonError, setJsonError] = useState('')
     const [copiedTarget, setCopiedTarget] = useState(null)
     const [etaSeconds, setEtaSeconds] = useState(0)
     const [etaTotal, setEtaTotal] = useState(0)
     const inboxWords = inboxFromApp || []
+
+    useEffect(() => {
+        if (initialText) setText(initialText)
+    }, [initialText])
 
     useEffect(() => {
         if (!importing || tab !== 'ai') {
@@ -33,20 +37,31 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
         return () => clearInterval(id)
     }, [importing, tab]) // eslint-disable-line react-hooks/exhaustive-deps -- freeze estimate at start
 
+    const finishSuccess = (res) => {
+        onSuccessFeedback?.(formatImportSuccess(res, quota))
+        onClose()
+    }
+
     const handlePasteInbox = () => {
         if (inboxWords.length === 0) return
-        const wordsString = inboxWords.map(w => w.word).join('\n')
-        setText(prev => (prev ? prev + '\n' + wordsString : wordsString))
+        const wordsString = inboxWords.map(w => w.word).filter(Boolean).join('\n')
+        setText(wordsString)
     }
+
+    const inboxText = inboxWords.map(w => w.word).filter(Boolean).join('\n')
+    const inboxAlreadyInField = !!inboxText && text.trim() === inboxText.trim()
 
     const handleAiSubmit = async () => {
         try {
-            setResult(null)
+            const remaining = Number(
+                quota?.remaining ?? Math.max(0, Number(quota?.limit ?? 50) - Number(quota?.used ?? 0))
+            )
+            const check = validateAiWordList(text, { remainingQuota: remaining })
+            if (!check.ok) return
             const inboxText = inboxWords.map(w => w.word).join('\n')
             const isInboxImport = inboxWords.length > 0 && text.trim() === inboxText.trim()
             const res = await onImport(text, 'openai', isInboxImport ? onClearInbox : null)
-            setResult(res)
-            setText('')
+            if (res) finishSuccess(res)
         } catch (e) {
             console.error(e)
         }
@@ -54,7 +69,6 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
 
     const handleJsonSubmit = () => {
         setJsonError('')
-        setResult(null)
         try {
             let arr = parseCardsJson(jsonText)
             if (!arr.length) arr = parseSimpleCards(jsonText)
@@ -66,14 +80,23 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
                 ...initCard(),
             }))
             const res = onImportDirect(cards)
-            setResult(res)
-            setJsonText('')
+            if (res) finishSuccess(res)
         } catch (e) {
             setJsonError('格式錯誤：' + e.message)
         }
     }
 
     const detectedCount = countCardsInJson(jsonText)
+    const remainingQuota = Number(
+        quota?.remaining ?? Math.max(0, Number(quota?.limit ?? 50) - Number(quota?.used ?? 0))
+    )
+    const listCheck = useMemo(() => {
+        if (!text.trim()) {
+            return { ok: false, reason: '', words: [], count: 0, maxAllowed: Math.min(40, remainingQuota) }
+        }
+        return validateAiWordList(text, { remainingQuota })
+    }, [text, remainingQuota])
+    const aiBlocked = tab === 'ai' && !!text.trim() && !listCheck.ok
     const etaProgress = etaTotal > 0
         ? Math.min(92, ((etaTotal - etaSeconds) / etaTotal) * 100)
         : 0
@@ -136,14 +159,20 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
                             <div className="im-textarea-wrapper">
                                 <textarea
                                     className="im-textarea-v4"
-                                    placeholder="直接貼上網頁內容、文章或單字列表，AI 將自動為您提取單字、音標、例句並生成聯想記憶法..."
+                                    placeholder={'每行一個單字，或：\nhuis / 房子\nhuis, fiets, water'}
                                     value={text}
                                     onChange={e => setText(e.target.value)}
                                     disabled={importing}
                                 />
                                 {inboxWords.length > 0 && !importing && (
-                                    <button className="im-paste-inbox-btn" onClick={handlePasteInbox}>
-                                        📥 貼上已收集的 {inboxWords.length} 個單字
+                                    <button
+                                        className="im-paste-inbox-btn"
+                                        onClick={handlePasteInbox}
+                                        disabled={inboxAlreadyInField}
+                                    >
+                                        {inboxAlreadyInField
+                                            ? `已填入 Catch 的 ${inboxWords.length} 個單字`
+                                            : `貼上 Catch 的 ${inboxWords.length} 個單字`}
                                     </button>
                                 )}
                                 {importing && (
@@ -166,9 +195,14 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
                             </div>
                             <div className="im-field-hint">
                                 {loggedIn
-                                    ? `💡 貼上任意文字，AI 會拆成字卡。額度 ${quota?.used ?? 0}/${quota?.limit ?? 50}。用完請改「手動」頁，每行「原文 / 譯文」。`
+                                    ? `💡 只接受單字列表（一行一字、NL / 中文、逗號分隔）。一次最多 ${Math.min(40, remainingQuota)} 個。額度 ${quota?.used ?? 0}/${quota?.limit ?? 50}。文章請改「手動」頁。`
                                     : '💡 尚未登入：請每行「原文 / 譯文」，或先 Google 登入再用 AI。'}
                             </div>
+                            {!aiBlocked && listCheck.ok && text.trim() && (
+                                <div className="im-field-hint" style={{ color: 'var(--good)', marginTop: 4 }}>
+                                    辨識到 {listCheck.count} 個單字，可匯入
+                                </div>
+                            )}
                             {!loggedIn && (
                                 <button type="button" className="im-paste-inbox-btn" onClick={onLogin} style={{ position: 'relative', marginTop: 8 }}>
                                     使用 Google 登入以啟用 AI
@@ -203,10 +237,8 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
                 <div className="im-status-bar" aria-live="polite">
                     {jsonError && <div className="im-error-v4">{jsonError}</div>}
                     {error && <div className="im-error-v4">{error}</div>}
-                    {!importing && result && (
-                        <div className="im-success-v4">
-                            {formatImportSuccess(result, quota)}
-                        </div>
+                    {!error && aiBlocked && (
+                        <div className="im-error-v4">{listCheck.reason}</div>
                     )}
                 </div>
 
@@ -230,7 +262,10 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
                         <button
                             className="btn-primary im-btn-v5"
                             onClick={tab === 'manual' ? handleJsonSubmit : handleAiSubmit}
-                            disabled={importing || (tab === 'manual' ? !jsonText.trim() : !text.trim())}
+                            disabled={
+                                importing
+                                || (tab === 'manual' ? !jsonText.trim() : !text.trim() || !listCheck.ok || !loggedIn)
+                            }
                         >
                             {importing
                                 ? (etaSeconds > 0 ? `解析中 ${etaSeconds}s` : '快好了…')
@@ -378,6 +413,13 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
                         white-space: nowrap; z-index: 10;
                     }
                     .im-paste-inbox-btn:hover { transform: translateY(-3px); filter: brightness(1.1); box-shadow: 0 8px 20px rgba(241, 90, 41, 0.5); }
+                    .im-paste-inbox-btn:disabled {
+                        opacity: 0.75;
+                        cursor: default;
+                        transform: none;
+                        filter: none;
+                        box-shadow: 0 4px 12px rgba(241, 90, 41, 0.25);
+                    }
                     
                     .im-field-hint { margin-top: var(--space-sm); font-size: 0.75rem; color: var(--text-secondary); font-weight: 600; flex-shrink: 0; }
 
@@ -712,7 +754,7 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
                     }
                     .im-prompt-body { display: block; }
                     .im-prompt-slot {
-                        display: none;
+                        display: block;
                         margin-top: 5px;
                         padding: 3px 6px;
                         border-radius: 6px;
@@ -722,7 +764,7 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
                         font-size: 0.66rem;
                     }
                     .im-prompt-words {
-                        display: none;
+                        display: block;
                         margin-top: 5px;
                         padding: 3px 6px;
                         border-radius: 6px;
@@ -733,139 +775,195 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
                         font-size: 0.66rem;
                     }
 
-                    /* Step 2 (index 1): paste prompt → composer grows → bubble grows */
-                    .im-flow-demo[data-step="1"] .im-composer {
-                        animation: imComposerExpand 5s ease-in-out infinite;
-                    }
-                    .im-flow-demo[data-step="1"] .im-composer-ph {
-                        animation: imCompPhHide 5s ease-in-out infinite;
-                    }
-                    .im-flow-demo[data-step="1"] .im-composer-prompt {
-                        animation: imPastePromptText 5s ease-in-out infinite;
-                        white-space: normal;
-                        display: -webkit-box;
-                        -webkit-box-orient: vertical;
+                    .im-composer {
+                        flex-shrink: 0;
+                        margin: 0 10px 8px;
+                        height: 32px;
+                        border-radius: 16px;
+                        background: #fff;
+                        border: 1px solid var(--border-default);
+                        display: flex; align-items: flex-end;
+                        padding: 4px 8px 4px 10px;
+                        position: relative;
                         overflow: hidden;
                     }
-                    .im-flow-demo[data-step="1"] .im-send {
-                        animation: imSendPulse 5s ease-in-out infinite;
+                    .im-composer-inner {
+                        flex: 1;
+                        min-width: 0;
+                        min-height: 22px;
+                        height: 100%;
+                        position: relative;
+                        display: flex;
+                        align-items: stretch;
                     }
-                    .im-flow-demo[data-step="1"] .im-bubble.prompt {
-                        animation: imPromptBubbleGrow 5s ease-in-out infinite;
+                    .im-composer-ph {
+                        position: absolute;
+                        left: 0; top: 50%;
+                        transform: translateY(-50%);
+                        font-size: 0.68rem;
+                        color: var(--text-secondary);
+                        opacity: 1;
+                        z-index: 1;
+                    }
+                    .im-composer-scroll {
+                        flex: 1;
+                        min-height: 0;
+                        overflow: hidden;
+                        opacity: 0;
+                        mask-image: linear-gradient(180deg, transparent 0%, #000 12%, #000 88%, transparent 100%);
+                    }
+                    .im-composer-draft {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 3px;
+                        font-size: 0.64rem;
+                        line-height: 1.35;
+                        font-weight: 600;
+                        color: var(--brand-ink);
+                        transform: translateY(0);
+                    }
+                    .im-draft-line { display: block; }
+                    .im-draft-slot {
+                        display: block;
+                        margin-top: 2px;
+                        padding: 2px 5px;
+                        border-radius: 5px;
+                        background: rgba(241, 90, 41, 0.14);
+                        color: var(--brand-accent);
+                        font-weight: 800;
+                    }
+                    .im-draft-words {
+                        display: block;
+                        margin-top: 2px;
+                        padding: 2px 5px;
+                        border-radius: 5px;
+                        background: rgba(11, 143, 140, 0.12);
+                        color: var(--good);
+                        font-weight: 800;
+                        white-space: pre-line;
+                        max-height: 0;
+                        opacity: 0;
+                        overflow: hidden;
+                    }
+                    .im-send {
+                        flex-shrink: 0;
+                        margin-left: 6px; width: 22px; height: 22px; border-radius: 50%;
+                        background: #0B1F33; color: #fff; font-size: 12px; font-weight: 800;
+                        display: flex; align-items: center; justify-content: center;
+                    }
+
+                    /* Step 2: paste prompt into composer only — no send */
+                    .im-flow-demo[data-step="1"] .im-composer {
+                        animation: imComposerPasteOnly 5s ease-in-out infinite;
+                    }
+                    .im-flow-demo[data-step="1"] .im-composer-ph {
+                        animation: imPhFadeOutStay 5s ease-in-out infinite;
+                    }
+                    .im-flow-demo[data-step="1"] .im-composer-scroll {
+                        animation: imScrollShow 5s ease-in-out infinite;
+                    }
+                    .im-flow-demo[data-step="1"] .im-composer-draft {
+                        transform: translateY(0);
+                    }
+                    .im-flow-demo[data-step="1"] .im-draft-words {
+                        display: none;
                     }
                     .im-flow-demo[data-step="1"] .im-paste-flag {
                         animation: imFlagIn 5s ease-in-out infinite;
                     }
-                    @keyframes imComposerExpand {
-                        0%, 8% { height: 32px; }
-                        18%, 42% { height: 58px; }
-                        52%, 100% { height: 32px; }
+                    @keyframes imComposerPasteOnly {
+                        0%, 10% { height: 32px; }
+                        22%, 100% { height: 72px; }
                     }
-                    @keyframes imCompPhHide {
+                    @keyframes imPhFadeOutStay {
                         0%, 10% { opacity: 1; }
-                        16%, 52% { opacity: 0; }
-                        60%, 100% { opacity: 1; }
+                        18%, 100% { opacity: 0; }
                     }
-                    @keyframes imPastePromptText {
-                        0%, 12% {
-                            opacity: 0;
-                            -webkit-line-clamp: 1;
-                            max-height: 1.2em;
-                        }
-                        20% {
-                            opacity: 1;
-                            -webkit-line-clamp: 1;
-                            max-height: 1.2em;
-                        }
-                        30%, 48% {
-                            opacity: 1;
-                            -webkit-line-clamp: 3;
-                            max-height: 3.6em;
-                        }
-                        58%, 100% { opacity: 0; max-height: 0; }
+                    @keyframes imScrollShow {
+                        0%, 12% { opacity: 0; }
+                        20%, 100% { opacity: 1; }
+                    }
+
+                    /* Step 3: scroll to last line → paste words → send → bubble */
+                    .im-flow-demo[data-step="2"] .im-composer {
+                        animation: imComposerThenSend 5s ease-in-out infinite;
+                    }
+                    .im-flow-demo[data-step="2"] .im-composer-ph { opacity: 0; }
+                    .im-flow-demo[data-step="2"] .im-composer-scroll {
+                        opacity: 1;
+                        animation: imScrollHideAfterSend 5s ease-in-out infinite;
+                    }
+                    .im-flow-demo[data-step="2"] .im-composer-draft {
+                        animation: imDraftScrollToEnd 5s ease-in-out infinite;
+                    }
+                    .im-flow-demo[data-step="2"] .im-draft-slot {
+                        animation: imSlotHighlight 5s ease-in-out infinite;
+                    }
+                    .im-flow-demo[data-step="2"] .im-draft-words {
+                        animation: imDraftWordsIn 5s ease-in-out infinite;
+                    }
+                    .im-flow-demo[data-step="2"] .im-send {
+                        animation: imSendPulse 5s ease-in-out infinite;
+                    }
+                    .im-flow-demo[data-step="2"] .im-words-flag {
+                        animation: imFlagIn 5s ease-in-out infinite;
+                    }
+                    .im-flow-demo[data-step="2"] .im-bubble.prompt {
+                        animation: imPromptBubbleAfterSend 5s ease-in-out infinite;
+                    }
+                    @keyframes imComposerThenSend {
+                        0%, 72% { height: 72px; }
+                        82%, 100% { height: 32px; }
+                    }
+                    @keyframes imScrollHideAfterSend {
+                        0%, 74% { opacity: 1; }
+                        82%, 100% { opacity: 0; }
+                    }
+                    @keyframes imDraftScrollToEnd {
+                        0%, 12% { transform: translateY(0); }
+                        28%, 100% { transform: translateY(-42px); }
+                    }
+                    @keyframes imSlotHighlight {
+                        0%, 24% { box-shadow: none; }
+                        30%, 48% { box-shadow: 0 0 0 2px rgba(241, 90, 41, 0.35); }
+                        58%, 100% { box-shadow: none; opacity: 0.55; }
+                    }
+                    @keyframes imDraftWordsIn {
+                        0%, 36% { opacity: 0; max-height: 0; padding-top: 0; padding-bottom: 0; }
+                        48%, 100% { opacity: 1; max-height: 40px; padding: 2px 5px; }
                     }
                     @keyframes imSendPulse {
-                        0%, 40% { transform: scale(1); box-shadow: none; }
-                        46% { transform: scale(0.88); }
-                        52%, 62% { transform: scale(1.08); box-shadow: 0 0 0 4px rgba(11, 31, 51, 0.18); }
-                        70%, 100% { transform: scale(1); box-shadow: none; }
+                        0%, 58% { transform: scale(1); box-shadow: none; }
+                        64% { transform: scale(0.88); }
+                        70%, 78% { transform: scale(1.08); box-shadow: 0 0 0 4px rgba(11, 31, 51, 0.18); }
+                        86%, 100% { transform: scale(1); box-shadow: none; }
                     }
-                    @keyframes imPromptBubbleGrow {
-                        0%, 48% {
+                    @keyframes imPromptBubbleAfterSend {
+                        0%, 72% {
                             opacity: 0;
                             max-height: 0;
                             padding-top: 0;
                             padding-bottom: 0;
                             transform: translateY(8px);
                         }
-                        56% {
+                        82%, 100% {
                             opacity: 1;
-                            max-height: 28px;
-                            padding: 7px 9px;
-                            transform: none;
-                        }
-                        70%, 100% {
-                            opacity: 1;
-                            max-height: 72px;
+                            max-height: 96px;
                             padding: 7px 9px;
                             transform: none;
                         }
                     }
 
-                    /* Step 3 (index 2): paste words at end of prompt, bubble grows */
-                    .im-flow-demo[data-step="2"] .im-bubble.prompt {
-                        opacity: 1;
-                        transform: none;
-                        padding: 7px 9px;
-                        animation: imWordsBubbleGrow 5s ease-in-out infinite;
-                    }
-                    .im-flow-demo[data-step="2"] .im-prompt-slot {
-                        display: block;
-                        animation: imSlotFade 5s ease-in-out infinite;
-                    }
-                    .im-flow-demo[data-step="2"] .im-prompt-words {
-                        display: block;
-                        animation: imWordsPasteEnd 5s ease-in-out infinite;
-                    }
-                    .im-flow-demo[data-step="2"] .im-words-flag {
-                        animation: imFlagIn 5s ease-in-out infinite;
-                    }
-                    .im-flow-demo[data-step="2"] .im-composer-ph { opacity: 1; }
-                    @keyframes imWordsBubbleGrow {
-                        0%, 22% { max-height: 56px; }
-                        40%, 100% { max-height: 110px; }
-                    }
-                    @keyframes imSlotFade {
-                        0%, 18% { opacity: 1; max-height: 24px; margin-top: 5px; }
-                        30%, 100% { opacity: 0; max-height: 0; margin-top: 0; padding: 0; overflow: hidden; }
-                    }
-                    @keyframes imWordsPasteEnd {
-                        0%, 24% {
-                            opacity: 0;
-                            max-height: 0;
-                            margin-top: 0;
-                            transform: translateY(4px);
-                        }
-                        38%, 100% {
-                            opacity: 1;
-                            max-height: 48px;
-                            margin-top: 5px;
-                            transform: none;
-                        }
-                    }
-
-                    /* Steps 4–5: waiting / answer */
+                    /* Steps 4–5: waiting / answer — prompt already sent */
                     .im-flow-demo[data-step="3"] .im-bubble.prompt,
                     .im-flow-demo[data-step="4"] .im-bubble.prompt {
                         opacity: 1;
                         transform: none;
-                        max-height: 110px;
+                        max-height: 96px;
                         padding: 7px 9px;
                     }
-                    .im-flow-demo[data-step="3"] .im-prompt-words,
-                    .im-flow-demo[data-step="4"] .im-prompt-words {
-                        display: block;
-                    }
+                    .im-flow-demo[data-step="3"] .im-composer-ph,
+                    .im-flow-demo[data-step="4"] .im-composer-ph { opacity: 1; }
                     .im-flow-demo[data-step="3"] .im-bubble.bot,
                     .im-flow-demo[data-step="4"] .im-bubble.bot {
                         opacity: 1;
@@ -942,43 +1040,6 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
                         72%, 100% { background: transparent; color: #6B7A8A; box-shadow: none; }
                     }
 
-                    .im-composer {
-                        flex-shrink: 0;
-                        margin: 0 10px 8px;
-                        height: 32px;
-                        border-radius: 16px;
-                        background: #fff;
-                        border: 1px solid var(--border-default);
-                        display: flex; align-items: flex-end;
-                        padding: 4px 8px 4px 10px;
-                        position: relative;
-                        overflow: hidden;
-                    }
-                    .im-composer-inner {
-                        flex: 1;
-                        min-width: 0;
-                        min-height: 22px;
-                        position: relative;
-                        display: flex;
-                        align-items: center;
-                    }
-                    .im-composer-ph, .im-composer-prompt, .im-composer-type {
-                        font-size: 0.68rem;
-                        line-height: 1.25;
-                    }
-                    .im-composer-ph { color: var(--text-secondary); opacity: 1; }
-                    .im-composer-prompt,
-                    .im-composer-type {
-                        position: absolute; left: 0; right: 0; top: 0;
-                        color: var(--brand-ink); font-weight: 600;
-                        opacity: 0;
-                    }
-                    .im-send {
-                        flex-shrink: 0;
-                        margin-left: 6px; width: 22px; height: 22px; border-radius: 50%;
-                        background: #0B1F33; color: #fff; font-size: 12px; font-weight: 800;
-                        display: flex; align-items: center; justify-content: center;
-                    }
                     .im-paste-flag,
                     .im-words-flag,
                     .im-copied-flag {
@@ -1201,15 +1262,16 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
 
 function estimateAiSeconds(text) {
     const raw = (text || '').trim()
-    if (!raw) return 15
+    if (!raw) return 18
     const lines = raw.split(/\n/).map(l => l.trim()).filter(Boolean).length
     const tokens = raw.split(/[\s,，、;；/|]+/).filter(Boolean).length
     const units = Math.max(lines, Math.ceil(tokens * 0.6))
-    // 經驗值：固定開銷 + 每個單位約 1.2 秒，夾在 12–90 秒
-    return Math.min(90, Math.max(12, 8 + Math.round(units * 1.2)))
+    // 經驗值再 ×1.2，避免倒數比實際還快
+    const base = Math.min(90, Math.max(12, 8 + Math.round(units * 1.2)))
+    return Math.min(108, Math.max(15, Math.round(base * 1.2)))
 }
 
-function formatImportSuccess(result, quota) {
+export function formatImportSuccess(result, quota) {
     const added = result?.added || 0
     const extra = [
         result?.updated > 0 ? `更新 ${result.updated} 張` : '',
@@ -1306,8 +1368,8 @@ const STEP_MS = 5000
 
 const FLOW_STEPS = [
     { n: 1, label: '步驟 1 · 點擊複製提示並開啟', text: '點擊下方「複製提示並開啟 ChatGPT」' },
-    { n: 2, label: '步驟 2 · 貼上提示詞', text: '把提示詞貼進 ChatGPT 對話' },
-    { n: 3, label: '步驟 3 · 加上自己的單字', text: '在提示詞最後貼上要學的單字' },
+    { n: 2, label: '步驟 2 · 貼上提示詞', text: '把提示詞貼進輸入框（先別送出）' },
+    { n: 3, label: '步驟 3 · 加上自己的單字', text: '滑到提示詞最後，貼上生字後再送出' },
     { n: 4, label: '步驟 4 · 等待 JSON', text: '等待 AI 輸出 JSON' },
     { n: 5, label: '步驟 5 · 複製結果', text: '點右下角複製圖示' },
     { n: 6, label: '步驟 6 · 貼回這裡匯入', text: '回到這裡，貼上結果後匯入' },
@@ -1377,13 +1439,22 @@ opbellen`}</span>
                         <div className="im-composer">
                             <div className="im-composer-inner">
                                 <span className="im-composer-ph">詢問任何問題</span>
-                                <span className="im-composer-prompt">你是荷蘭語教授。請把單字整理成純 JSON 陣列，含 front、lemma、forms、例句與聯想記憶法。 （←在這裡貼上你的單字，然後送出）</span>
-                                <span className="im-composer-type">kinderen / huiswerk / opbellen</span>
+                                <div className="im-composer-scroll">
+                                    <div className="im-composer-draft">
+                                        <span className="im-draft-line">你是荷蘭語教授。請把單字整理成純 JSON 陣列。</span>
+                                        <span className="im-draft-line">每張卡含 front、lemma、forms、例句與聯想記憶法。</span>
+                                        <span className="im-draft-line">只輸出 JSON，不要其他說明文字。</span>
+                                        <span className="im-draft-slot">（←在這裡貼上你的單字，然後送出）</span>
+                                        <span className="im-draft-words">{`kinderen
+huiswerk
+opbellen`}</span>
+                                    </div>
+                                </div>
                             </div>
                             <span className="im-send">↑</span>
                         </div>
                         <span className="im-paste-flag">⌘V 貼上提示詞</span>
-                        <span className="im-words-flag">貼到提示詞最後</span>
+                        <span className="im-words-flag">滑到最後再貼生字</span>
                         <span className="im-copied-flag">已複製結果</span>
                     </div>
                 </div>

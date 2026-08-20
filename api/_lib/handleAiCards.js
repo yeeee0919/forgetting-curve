@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { SYSTEM_PROMPT, ALCHEMIST_SYSTEM_PROMPT } from '../../src/services/cardPrompt.js'
-import { parseCardsJson, parseSingleCardJson } from '../../src/services/jsonImport.js'
+import { validateAiWordList } from '../../src/services/aiWordList.js'
 
 function supabaseUrl() {
     return process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || 'https://ttfjdxnasklhealmxgoz.supabase.co'
@@ -122,6 +122,12 @@ export async function handleAiCards({ accessToken, body }) {
     const text = String(body.text || '').trim()
     if (!text) {
         const err = new Error('請先輸入要匯入的文字')
+        err.status = 400
+        throw err
+    }
+    const listCheck = validateAiWordList(text, { remainingQuota: remaining })
+    if (!listCheck.ok) {
+        const err = new Error(listCheck.reason || '輸入不符合 AI 匯入格式')
         err.status = 400
         throw err
     }

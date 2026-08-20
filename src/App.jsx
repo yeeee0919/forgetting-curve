@@ -6,7 +6,8 @@ import { mergeIncomingCards, toCardContent } from './services/cardFields'
 import { getCloudCards, upsertCloudCards, deleteCloudCard, deleteAllCloudCards, getCloudInbox, upsertCloudInbox, deleteCloudInboxItem, clearCloudInbox, mergeCardsByUpdatedAt } from './services/supabase'
 import { subscribeAuth, signInWithGoogle, signOutUser, ackExtensionQueue } from './services/auth'
 import { getLocalInbox, saveLocalInbox, clearLocalInbox, mergeInboxItems } from './services/inbox'
-import { parseSimpleCards, looksLikeSimpleList } from './services/simpleImport'
+import { parseSimpleCards } from './services/simpleImport'
+import { validateAiWordList } from './services/aiWordList'
 
 import ReviewCard from './components/ReviewCard'
 import CardList from './components/CardList'
@@ -14,7 +15,7 @@ import GrammarView from './components/GrammarView'
 import KnmView from './components/KnmView'
 import ListeningLab from './components/ListeningLab'
 import SpeakingLab from './components/SpeakingLab'
-import ImportModal from './components/ImportModal'
+import ImportModal, { formatImportSuccess } from './components/ImportModal'
 import SettingsModal from './components/SettingsModal'
 import Icon from './components/Icons'
 import { ExtensionDownloadCard, ExtensionGuideModal } from './components/WordCatcherPromo'
@@ -46,11 +47,13 @@ export default function App() {
     const [settings, setSettings] = useState({ openaiKey: '' })
     const [view, setView] = useState('home')
     const [showImport, setShowImport] = useState(false)
+    const [importSeed, setImportSeed] = useState('')
     const [showSettings, setShowSettings] = useState(false)
     const [showExtGuide, setShowExtGuide] = useState(false)
     const extensionInstalled = useExtensionInstalled()
     const [importing, setImporting] = useState(false)
     const [importError, setImportError] = useState('')
+    const [toast, setToast] = useState(null)
     const [session, setSession] = useState(null)
     const [lastSynced, setLastSynced] = useState(null)
     const [sessionState, setSessionState] = useState(getSessionState())
@@ -159,6 +162,17 @@ export default function App() {
         return () => window.removeEventListener('focus', onFocus)
     }, [userId])
 
+    useEffect(() => {
+        if (!toast) return
+        const t = setTimeout(() => setToast(null), 4500)
+        return () => clearTimeout(t)
+    }, [toast])
+
+    const showToast = useCallback((message) => {
+        if (!message) return
+        setToast({ id: Date.now(), message })
+    }, [])
+
     const handleDeleteInboxWord = async (id) => {
         try {
             if (userId) await deleteCloudInboxItem(userId, id)
@@ -221,9 +235,12 @@ export default function App() {
             if (!accessToken) {
                 parsed = parseSimpleCards(text)
                 if (!parsed.length) throw new Error('沒登入時請用「原文 / 譯文」格式，或先 Google 登入再用 AI')
-            } else if (looksLikeSimpleList(text) && !text.trim().startsWith('{') && !text.trim().startsWith('[')) {
-                parsed = parseSimpleCards(text)
             } else {
+                const remaining = Number(
+                    aiQuota?.remaining ?? Math.max(0, Number(aiQuota?.limit ?? 50) - Number(aiQuota?.used ?? 0))
+                )
+                const listCheck = validateAiWordList(text, { remainingQuota: remaining })
+                if (!listCheck.ok) throw new Error(listCheck.reason)
                 const data = await parseTextToCardsWithSession(text, accessToken)
                 parsed = data.cards || []
                 quotaInfo = data.quota
@@ -382,7 +399,10 @@ export default function App() {
             createdAt: Date.now(),
             ...initCard(),
         }))
-        handleImportDirect(newCards)
+        const res = handleImportDirect(newCards)
+        showToast(formatImportSuccess(res, aiQuota))
+        setShowImport(false)
+        setImportError('')
         const ids = new Set(list.map(i => i.id))
         try {
             if (userId) await clearCloudInbox(userId, [...ids])
@@ -395,6 +415,16 @@ export default function App() {
             return next
         })
     }
+
+    const openImport = useCallback((opts = {}) => {
+        if (opts.prefillInbox && inboxWords.length > 0) {
+            setImportSeed(inboxWords.map(w => w.word).filter(Boolean).join('\n'))
+        } else {
+            setImportSeed('')
+        }
+        setImportError('')
+        setShowImport(true)
+    }, [inboxWords])
 
     const sequence = buildSessionSequence(cards, 60, sessionState.sessionSize)
     const dueCards = sequence.sessionCards
@@ -466,7 +496,7 @@ export default function App() {
                                 <Icon name="puzzle" size={20} strokeWidth={2} />
                             </button>
                         )}
-                        <button className="icon-btn primary-glow" onClick={() => setShowImport(true)} title="匯入單字">
+                        <button className="icon-btn primary-glow" onClick={() => openImport()} title="匯入單字">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path></svg>
                         </button>
                         <button className="icon-btn" onClick={() => setShowSettings(true)} title="設定">
@@ -485,7 +515,8 @@ export default function App() {
                         bufferCapacity={60}
                         dueCount={dueCount}
                         onStartReview={() => setView('review')}
-                        onImport={() => setShowImport(true)}
+                        onImport={() => openImport()}
+                        onImportCatch={() => openImport({ prefillInbox: true })}
                         inboxWords={inboxWords}
                         onDeleteInboxWord={handleDeleteInboxWord}
                         onClearInbox={handleClearInbox}
@@ -606,17 +637,24 @@ export default function App() {
             {showImport && (
                 <ImportModal
                     onImport={handleImport}
-                    onClose={() => { setShowImport(false); setImportError('') }}
+                    onClose={() => { setShowImport(false); setImportError(''); setImportSeed('') }}
                     importing={importing}
                     error={importError}
                     loggedIn={!!userId}
                     quota={aiQuota}
                     onLogin={() => signInWithGoogle().catch(err => alert(err.message))}
                     onImportDirect={handleImportDirect}
+                    onSuccessFeedback={showToast}
+                    initialText={importSeed}
                     inboxWords={inboxWords}
                     onInboxDirectAdd={() => handleInboxDirectAdd()}
                     onClearInbox={handleClearInbox}
                 />
+            )}
+            {toast && (
+                <div className="app-toast" role="status" aria-live="polite" key={toast.id}>
+                    {toast.message}
+                </div>
             )}
             {showSettings && (
                 <SettingsModal
@@ -673,7 +711,7 @@ function ProgressRing({ value, max }) {
 const HIDE_STICKY_NOTES_KEY = 'memoflip_hide_sticky_notes'
 
 function HomePage({
-    totalCards, stats, bufferCapacity, dueCount, onStartReview, onImport,
+    totalCards, stats, bufferCapacity, dueCount, onStartReview, onImport, onImportCatch,
     inboxWords, onDeleteInboxWord, onClearInbox, weakCards, dismissWeakCard,
     activityLog, isMobile, sessionSize, dueCards, hasActiveSession,
     extensionInstalled, onOpenExtGuide,
@@ -762,9 +800,9 @@ function HomePage({
                         匯入新單字
                     </button>
                     {inboxWords.length > 0 && (
-                        <button className="btn-inbox" onClick={onImport}>
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                            解析 Catcher 收集（{inboxWords.length}）
+                        <button className="btn-inbox" onClick={onImportCatch || onImport}>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path><circle cx="12" cy="12" r="4"></circle></svg>
+                            Catch 了 {inboxWords.length} 個單字
                         </button>
                     )}
 
@@ -897,14 +935,21 @@ function HomePage({
                     <div className="sticky-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <h3 className="sticky-title" style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)' }}>
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
-                            網頁收集 <span style={{ opacity: 0.6, fontSize: '0.75rem', fontWeight: 600 }}>{inboxWords.length}</span>
+                            Catch <span style={{ opacity: 0.6, fontSize: '0.75rem', fontWeight: 600 }}>{inboxWords.length}</span>
                         </h3>
-                        <button
-                            onClick={onClearInbox}
-                            style={{ background: 'none', border: 'none', color: 'var(--text-tertiary)', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', padding: '4px', letterSpacing: '0.02em', transition: 'color 0.2s', display: 'flex', alignItems: 'center', gap: '4px' }}
-                            onMouseOver={e => e.target.style.color = 'var(--again)'}
-                            onMouseOut={e => e.target.style.color = 'var(--text-tertiary)'}
-                        >清空</button>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <button
+                                type="button"
+                                onClick={onImportCatch || onImport}
+                                style={{ background: 'none', border: 'none', color: 'var(--brand-accent)', fontSize: '0.75rem', fontWeight: 800, cursor: 'pointer', padding: '4px' }}
+                            >匯入</button>
+                            <button
+                                onClick={onClearInbox}
+                                style={{ background: 'none', border: 'none', color: 'var(--text-tertiary)', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', padding: '4px', letterSpacing: '0.02em', transition: 'color 0.2s', display: 'flex', alignItems: 'center', gap: '4px' }}
+                                onMouseOver={e => e.target.style.color = 'var(--again)'}
+                                onMouseOut={e => e.target.style.color = 'var(--text-tertiary)'}
+                            >清空</button>
+                        </div>
                     </div>
                     <div className="catcher-table">
                         {inboxWords.slice(0, 18).map(word => (
