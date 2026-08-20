@@ -6,6 +6,7 @@ import { parseCardsJson, countCardsInJson } from '../services/jsonImport'
 import { parseSimpleCards } from '../services/simpleImport'
 import { validateAiWordList } from '../services/aiWordList'
 import { toCardContent } from '../services/cardFields'
+import { requestExtensionInboxFlush } from '../services/auth'
 import Icon from './Icons'
 
 export default function ImportModal({ onImport, onClose, importing, error, loggedIn, quota, onLogin, onImportDirect, onSuccessFeedback, initialText = '', inboxWords: inboxFromApp, onInboxDirectAdd, onClearInbox }) {
@@ -21,6 +22,12 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
     useEffect(() => {
         if (initialText) setText(initialText)
     }, [initialText])
+
+    useEffect(() => {
+        requestExtensionInboxFlush()
+        const t = setTimeout(requestExtensionInboxFlush, 400)
+        return () => clearTimeout(t)
+    }, [])
 
     useEffect(() => {
         if (!importing || tab !== 'ai') {
@@ -164,17 +171,6 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
                                     onChange={e => setText(e.target.value)}
                                     disabled={importing}
                                 />
-                                {inboxWords.length > 0 && !importing && (
-                                    <button
-                                        className="im-paste-inbox-btn"
-                                        onClick={handlePasteInbox}
-                                        disabled={inboxAlreadyInField}
-                                    >
-                                        {inboxAlreadyInField
-                                            ? `已填入 Catch 的 ${inboxWords.length} 個單字`
-                                            : `貼上 Catch 的 ${inboxWords.length} 個單字`}
-                                    </button>
-                                )}
                                 {importing && (
                                     <div className="im-loading-overlay" role="status" aria-live="polite">
                                         <div className="im-loading-card">
@@ -193,6 +189,25 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
                                     </div>
                                 )}
                             </div>
+                            {!importing && (
+                                <div className="im-catch-row">
+                                    <button
+                                        type="button"
+                                        className="im-catch-paste-btn"
+                                        onClick={handlePasteInbox}
+                                        disabled={inboxWords.length === 0 || inboxAlreadyInField}
+                                    >
+                                        {inboxWords.length === 0
+                                            ? '尚未收到 Catch 單字'
+                                            : inboxAlreadyInField
+                                                ? `已填入 Catch 的 ${inboxWords.length} 個單字`
+                                                : `貼上 Catch 的 ${inboxWords.length} 個單字`}
+                                    </button>
+                                    {inboxWords.length === 0 && (
+                                        <span className="im-catch-hint">用擴充功能選字後，回到此頁再按一次，或重新整理</span>
+                                    )}
+                                </div>
+                            )}
                             <div className="im-field-hint">
                                 {loggedIn
                                     ? `💡 只接受單字列表（一行一字、NL / 中文、逗號分隔）。一次最多 ${Math.min(40, remainingQuota)} 個。額度 ${quota?.used ?? 0}/${quota?.limit ?? 50}。文章請改「手動」頁。`
@@ -204,13 +219,13 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
                                 </div>
                             )}
                             {!loggedIn && (
-                                <button type="button" className="im-paste-inbox-btn" onClick={onLogin} style={{ position: 'relative', marginTop: 8 }}>
+                                <button type="button" className="im-catch-paste-btn" onClick={onLogin} style={{ marginTop: 8 }}>
                                     使用 Google 登入以啟用 AI
                                 </button>
                             )}
                             {inboxWords.length > 0 && onInboxDirectAdd && !importing && (
-                                <button type="button" className="im-paste-inbox-btn" onClick={onInboxDirectAdd} style={{ position: 'relative', marginTop: 8 }}>
-                                    捕捉區 {inboxWords.length} 個字，不用 AI 直接加入牌組
+                                <button type="button" className="im-catch-paste-btn im-catch-secondary" onClick={onInboxDirectAdd} style={{ marginTop: 8 }}>
+                                    Catch 的 {inboxWords.length} 個字，不用 AI 直接加入牌組
                                 </button>
                             )}
                         </div>
@@ -419,6 +434,43 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
                         transform: none;
                         filter: none;
                         box-shadow: 0 4px 12px rgba(241, 90, 41, 0.25);
+                    }
+                    .im-catch-row {
+                        flex-shrink: 0;
+                        display: flex;
+                        flex-wrap: wrap;
+                        align-items: center;
+                        gap: 8px 12px;
+                        margin-top: var(--space-sm);
+                    }
+                    .im-catch-paste-btn {
+                        background: var(--brand-accent);
+                        color: #fff;
+                        border: none;
+                        border-radius: var(--radius-sm);
+                        padding: 10px 14px;
+                        font-weight: 800;
+                        font-size: 0.88rem;
+                        cursor: pointer;
+                        box-shadow: 0 4px 12px rgba(241, 90, 41, 0.28);
+                    }
+                    .im-catch-paste-btn:hover:not(:disabled) {
+                        filter: brightness(1.06);
+                    }
+                    .im-catch-paste-btn:disabled {
+                        opacity: 0.55;
+                        cursor: not-allowed;
+                        box-shadow: none;
+                    }
+                    .im-catch-paste-btn.im-catch-secondary {
+                        background: #fff;
+                        color: var(--brand-accent);
+                        box-shadow: inset 0 0 0 2px var(--brand-accent);
+                    }
+                    .im-catch-hint {
+                        font-size: 0.75rem;
+                        font-weight: 600;
+                        color: var(--text-secondary);
                     }
                     
                     .im-field-hint { margin-top: var(--space-sm); font-size: 0.75rem; color: var(--text-secondary); font-weight: 600; flex-shrink: 0; }

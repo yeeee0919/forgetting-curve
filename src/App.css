@@ -650,6 +650,29 @@
     transform: translateY(-1px);
 }
 
+.home-catch-banner.is-empty {
+    cursor: default;
+    background: var(--bg-tint, #F3F5F7);
+    box-shadow: inset 0 0 0 1px var(--border-default);
+    opacity: 0.92;
+}
+
+.home-catch-banner.is-empty:hover {
+    filter: none;
+    transform: none;
+}
+
+.home-catch-banner.is-empty .home-catch-banner-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+}
+
+.home-catch-banner.is-empty .home-catch-banner-cta {
+    color: var(--text-tertiary);
+    font-weight: 600;
+}
+
 .home-catch-banner-label {
     font-size: 0.7rem;
     font-weight: 800;

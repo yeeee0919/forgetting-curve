@@ -446,6 +446,7 @@ export default function App() {
     }
 
     const openImport = useCallback((opts = {}) => {
+        requestExtensionInboxFlush()
         if (opts.prefillInbox && inboxWords.length > 0) {
             setImportSeed(inboxWords.map(w => w.word).filter(Boolean).join('\n'))
         } else {
@@ -799,12 +800,18 @@ function HomePage({
                                     ? '今日任務已清空。新字要等緩衝區有空位才會進來。'
                                     : '匯入單字後，從總量池 → 緩衝區 → 已熟練 → 成熟，一步步把字從日常磨字裡淡出。'}
                     </p>
-                    {inboxWords.length > 0 && (
+                    {inboxWords.length > 0 ? (
                         <button type="button" className="home-catch-banner" onClick={onImportCatch || onImport}>
                             <span className="home-catch-banner-label">Word Catcher</span>
                             <span className="home-catch-banner-title">Catch 了 {inboxWords.length} 個單字</span>
                             <span className="home-catch-banner-cta">點這裡匯入 →</span>
                         </button>
+                    ) : (
+                        <div className="home-catch-banner is-empty" role="status">
+                            <span className="home-catch-banner-label">Word Catcher</span>
+                            <span className="home-catch-banner-title">還沒收到 Catch 單字</span>
+                            <span className="home-catch-banner-cta">用擴充功能選字後會出現在這裡</span>
+                        </div>
                     )}
                 </header>
 
