@@ -1301,6 +1301,7 @@
     max-height: 92vh;
     max-height: 92dvh;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     box-shadow: var(--elevation-3);
     animation: slideUpModal 0.28s var(--spring-smooth);
 }

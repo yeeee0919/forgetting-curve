@@ -108,6 +108,23 @@ export default function SettingsModal({ settings, onSave, onClose, onExport, onR
                         </section>
 
                         <nav className="sm-list">
+                            {onReplayTour && (
+                                <button
+                                    type="button"
+                                    className="sm-row"
+                                    onClick={() => {
+                                        onClose()
+                                        // 等設定關掉再播，避免兩層 modal 打架
+                                        setTimeout(() => onReplayTour(), 80)
+                                    }}
+                                >
+                                    <span className="sm-row-text">
+                                        <span className="sm-row-title">重新播放導覽</span>
+                                        <span className="sm-row-meta">重看匯入、複習與漏斗說明</span>
+                                    </span>
+                                    <Icon name="sparkle" size={18} />
+                                </button>
+                            )}
                             <button type="button" className="sm-row" onClick={() => setPage('api')}>
                                 <span className="sm-row-text">
                                     <span className="sm-row-title">API 金鑰</span>
@@ -131,22 +148,6 @@ export default function SettingsModal({ settings, onSave, onClose, onExport, onR
                                 </span>
                                 <Icon name="chevronRight" size={18} />
                             </button>
-                            {onReplayTour && (
-                                <button
-                                    type="button"
-                                    className="sm-row"
-                                    onClick={() => {
-                                        onClose()
-                                        onReplayTour()
-                                    }}
-                                >
-                                    <span className="sm-row-text">
-                                        <span className="sm-row-title">重新播放導覽</span>
-                                        <span className="sm-row-meta">第一次使用的 Spotlight 說明</span>
-                                    </span>
-                                    <Icon name="chevronRight" size={18} />
-                                </button>
-                            )}
                         </nav>
                     </div>
                 )}
