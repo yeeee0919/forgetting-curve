@@ -415,36 +415,6 @@ export default function App() {
         setShowSettings(false)
     }
 
-    const handleInboxDirectAdd = async (items) => {
-        const list = items || inboxWords
-        if (!list.length) return
-        const newCards = list.map(item => ({
-            id: generateId(),
-            ...toCardContent({
-                front: item.word,
-                back: item.translation || '',
-                example_1: item.context_sentence || '',
-            }),
-            createdAt: Date.now(),
-            ...initCard(),
-        }))
-        const res = handleImportDirect(newCards)
-        showToast(formatImportSuccess(res, aiQuota))
-        setShowImport(false)
-        setImportError('')
-        const ids = new Set(list.map(i => i.id))
-        try {
-            if (userId) await clearCloudInbox(userId, [...ids])
-        } catch (e) {
-            console.error('Failed to clear inbox after import:', e)
-        }
-        setInboxWords(prev => {
-            const next = prev.filter(w => !ids.has(w.id))
-            if (!userId) saveLocalInbox(next)
-            return next
-        })
-    }
-
     const openImport = useCallback((opts = {}) => {
         requestExtensionInboxFlush()
         if (opts.prefillInbox && inboxWords.length > 0) {
@@ -509,7 +479,7 @@ export default function App() {
                     </div>
                     <div className="header-actions">
                         {!userId ? (
-                            <button className="btn-secondary header-login-btn" onClick={() => signInWithGoogle().catch(err => alert(err.message))}>
+                            <button className="header-login-btn" onClick={() => signInWithGoogle().catch(err => alert(err.message))}>
                                 登入
                             </button>
                         ) : (
@@ -517,7 +487,7 @@ export default function App() {
                                 {(session?.user?.email || '帳號').split('@')[0]}
                             </button>
                         )}
-                        {!isMobile && (
+                        {userId && !isMobile && (
                             <button
                                 className={`icon-btn ${extensionInstalled ? '' : 'ext-pending'}`}
                                 onClick={() => setShowExtGuide(true)}
@@ -526,7 +496,7 @@ export default function App() {
                                 <Icon name="puzzle" size={20} strokeWidth={2} />
                             </button>
                         )}
-                        <button className="icon-btn primary-glow" onClick={() => openImport()} title="匯入單字">
+                        <button className="icon-btn" onClick={() => openImport()} title="匯入單字">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path></svg>
                         </button>
                         <button className="icon-btn" onClick={() => setShowSettings(true)} title="設定">
@@ -677,7 +647,6 @@ export default function App() {
                     onSuccessFeedback={showToast}
                     initialText={importSeed}
                     inboxWords={inboxWords}
-                    onInboxDirectAdd={() => handleInboxDirectAdd()}
                     onClearInbox={handleClearInbox}
                 />
             )}
@@ -800,19 +769,6 @@ function HomePage({
                                     ? '今日任務已清空。新字要等緩衝區有空位才會進來。'
                                     : '匯入單字後，從總量池 → 緩衝區 → 已熟練 → 成熟，一步步把字從日常磨字裡淡出。'}
                     </p>
-                    {inboxWords.length > 0 ? (
-                        <button type="button" className="home-catch-banner" onClick={onImportCatch || onImport}>
-                            <span className="home-catch-banner-label">Word Catcher</span>
-                            <span className="home-catch-banner-title">Catch 了 {inboxWords.length} 個單字</span>
-                            <span className="home-catch-banner-cta">點這裡匯入 →</span>
-                        </button>
-                    ) : (
-                        <div className="home-catch-banner is-empty" role="status">
-                            <span className="home-catch-banner-label">Word Catcher</span>
-                            <span className="home-catch-banner-title">還沒收到 Catch 單字</span>
-                            <span className="home-catch-banner-cta">用擴充功能選字後會出現在這裡</span>
-                        </div>
-                    )}
                 </header>
 
                 <div className="home-actions">

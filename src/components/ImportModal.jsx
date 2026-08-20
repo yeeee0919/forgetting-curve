@@ -9,7 +9,7 @@ import { toCardContent } from '../services/cardFields'
 import { requestExtensionInboxFlush } from '../services/auth'
 import Icon from './Icons'
 
-export default function ImportModal({ onImport, onClose, importing, error, loggedIn, quota, onLogin, onImportDirect, onSuccessFeedback, initialText = '', inboxWords: inboxFromApp, onInboxDirectAdd, onClearInbox }) {
+export default function ImportModal({ onImport, onClose, importing, error, loggedIn, quota, onLogin, onImportDirect, onSuccessFeedback, initialText = '', inboxWords: inboxFromApp, onClearInbox }) {
     const [tab, setTab] = useState('ai')
     const [text, setText] = useState(() => initialText || '')
     const [jsonText, setJsonText] = useState('')
@@ -221,11 +221,6 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
                             {!loggedIn && (
                                 <button type="button" className="im-catch-paste-btn" onClick={onLogin} style={{ marginTop: 8 }}>
                                     使用 Google 登入以啟用 AI
-                                </button>
-                            )}
-                            {inboxWords.length > 0 && onInboxDirectAdd && !importing && (
-                                <button type="button" className="im-catch-paste-btn im-catch-secondary" onClick={onInboxDirectAdd} style={{ marginTop: 8 }}>
-                                    Catch 的 {inboxWords.length} 個字，不用 AI 直接加入牌組
                                 </button>
                             )}
                         </div>
@@ -461,11 +456,6 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
                         opacity: 0.55;
                         cursor: not-allowed;
                         box-shadow: none;
-                    }
-                    .im-catch-paste-btn.im-catch-secondary {
-                        background: #fff;
-                        color: var(--brand-accent);
-                        box-shadow: inset 0 0 0 2px var(--brand-accent);
                     }
                     .im-catch-hint {
                         font-size: 0.75rem;
