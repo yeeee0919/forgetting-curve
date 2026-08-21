@@ -12,31 +12,38 @@
     cursor: default;
 }
 
-.obt-hole {
-    position: absolute;
-    border-radius: 12px;
-    box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.58);
-    outline: 2px solid rgba(255, 255, 255, 0.92);
-    outline-offset: 2px;
-    pointer-events: none;
-}
-
+/* 全頁暗場；被 spotlight 的元素會抬到這層之上 */
 .obt-veil {
     position: absolute;
     inset: 0;
     background: rgba(15, 23, 42, 0.58);
     pointer-events: none;
+    opacity: 1;
+    transition: opacity 0.3s ease;
 }
 
-.obt-hole.is-missing {
-    top: 18%;
-    left: 50%;
-    width: min(420px, 86vw);
-    height: 8px;
-    transform: translateX(-50%);
+.obt-veil.is-soft {
+    opacity: 0.92;
+}
+
+/* 白框環：標示焦點位置（真正「發亮」靠抬高層級，不靠挖洞透光） */
+.obt-ring {
+    position: absolute;
+    border-radius: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.95);
+    box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.2);
+    pointer-events: none;
     opacity: 0;
-    box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.5);
-    outline: none;
+    transition:
+        opacity 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+        top 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+        left 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+        width 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+        height 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.obt-ring.is-visible {
+    opacity: 1;
 }
 
 .obt-card {
@@ -48,11 +55,19 @@
     padding: 16px 16px 14px;
     pointer-events: auto;
     color: #0f172a;
-    z-index: 1;
+    z-index: 2;
+    opacity: 0;
+    transform: translateY(10px);
+    transition:
+        opacity 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+        top 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+        left 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.obt-card.is-settling {
-    opacity: 0.92;
+.obt-card.is-visible {
+    opacity: 1;
+    transform: translateY(0);
 }
 
 .obt-card-top {
@@ -139,7 +154,7 @@
     color: #334155;
 }
 
-.obt-btn:hover {
+.obt-btn:hover:not(:disabled) {
     background: #f8fafc;
 }
 
@@ -149,7 +164,7 @@
     color: #fff;
 }
 
-.obt-btn-primary:hover {
+.obt-btn-primary:hover:not(:disabled) {
     background: #1e293b;
 }
 
@@ -173,8 +188,96 @@
     cursor: not-allowed;
 }
 
-/* 導覽期間目標元素抬高，避免被遮罩蓋住視覺（仍由 blocker 擋點擊） */
+@media (prefers-reduced-motion: reduce) {
+    .obt-ring,
+    .obt-card,
+    .obt-veil {
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/*
+ * 焦點目標抬到遮罩之上，並墊白底托盤，
+ * 避免淺灰卡片（總量池）被誤認為還在暗場裡。
+ */
 [data-tour-active='1'] {
-    position: relative;
+    position: relative !important;
     z-index: 12001 !important;
+    border-radius: 16px;
+    box-shadow:
+        0 0 0 12px #fff,
+        0 0 0 14px rgba(255, 255, 255, 0.95),
+        0 12px 40px rgba(15, 23, 42, 0.18) !important;
+}
+
+[data-tour-active='1'].memory-board,
+[data-tour-active='1'].memory-stages {
+    padding: 12px !important;
+    background: #fff !important;
+}
+
+[data-tour-active='1'] .memory-stage.pool,
+.memory-stage.pool {
+    background: #E8EEF7;
+}
+
+/*
+ * tabbar / header 有 backdrop-filter，會自成 stacking context。
+ * 用 React class 抬整條，不依賴 :has()。
+ */
+.tabbar.is-tour-raised,
+.app-header.is-tour-raised {
+    z-index: 12002 !important;
+}
+
+.tabbar.is-tour-raised {
+    background: rgba(255, 255, 255, 0.98);
+}
+
+.tabbar.is-tour-raised .tabbar-item:not(.is-tour-lit) {
+    opacity: 0.38;
+}
+
+.tabbar-item.is-tour-lit {
+    position: relative;
+    z-index: 1;
+    background: var(--bg-surface) !important;
+    box-shadow:
+        0 0 0 6px var(--bg-surface),
+        0 8px 24px rgba(15, 23, 42, 0.16) !important;
+    border-radius: 14px;
+}
+
+.tabbar-item.is-tour-lit.active {
+    background: var(--brand-accent-soft, #fce8e6) !important;
+}
+
+/* 對應頁面的左側／底部 Tab：一併抬亮（DOM 屬性備援） */
+[data-tour-lit='1'] {
+    position: relative !important;
+    z-index: 1 !important;
+    background: var(--bg-surface) !important;
+    box-shadow:
+        0 0 0 6px var(--bg-surface),
+        0 8px 24px rgba(15, 23, 42, 0.16) !important;
+    border-radius: 14px;
+}
+
+[data-tour-lit='1'].tabbar-item.active {
+    background: var(--brand-accent-soft, #fce8e6) !important;
+}
+
+.tabbar:has([data-tour-lit='1']),
+.tabbar:has([data-tour-active='1']),
+.app-header:has([data-tour-active='1']),
+.app-header:has([data-tour-lit='1']) {
+    z-index: 12002 !important;
+}
+
+.tabbar:has([data-tour-lit='1']) .tabbar-item:not([data-tour-lit='1']) {
+    opacity: 0.4;
+}
+
+.tabbar:has([data-tour-lit='1']) {
+    background: rgba(255, 255, 255, 0.96);
 }

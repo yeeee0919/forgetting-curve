@@ -405,6 +405,19 @@
     transform: scale(0.96);
 }
 
+.catch-net-icon {
+    display: block;
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+}
+
+.icon-btn .catch-net-icon {
+    width: 20px;
+    height: 20px;
+}
+
 /* ── Home Page ── */
 .home-layout {
     display: flex;
@@ -785,6 +798,10 @@
     font-size: 0.78rem;
     color: var(--text-secondary);
     font-weight: 500;
+}
+
+.memory-stage.pool {
+    background: #F1F5F9;
 }
 
 .memory-stage.buffer {

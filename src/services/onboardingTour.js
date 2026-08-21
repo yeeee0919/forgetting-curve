@@ -100,7 +100,6 @@ export function createTourDemoCards() {
 
 /**
  * @param {{ isMobile: boolean }} opts
- * @returns {Array<{ id: string, title: string, body: string, selector: string, view: string, openImport?: boolean, useDemoCards?: boolean, showExtIcon?: boolean, showCatchDemo?: boolean }>}
  */
 export function getOnboardingSteps({ isMobile }) {
     const importStep = {
@@ -110,6 +109,7 @@ export function getOnboardingSteps({ isMobile }) {
         selector: '[data-tour="import-modal"]',
         view: 'home',
         openImport: true,
+        litSelectors: ['[data-tour="home-tab"]'],
     }
     const reviewStep = {
         id: 'review',
@@ -119,14 +119,17 @@ export function getOnboardingSteps({ isMobile }) {
         view: 'review',
         useDemoCards: true,
         fallbackSelector: '[data-tour="review-tab"]',
+        litSelectors: ['[data-tour="review-tab"]'],
     }
     const numbersStep = {
         id: 'numbers',
         title: '數字在追蹤記憶進度',
         body: '總量池 → 緩衝區 → 已熟練 → 成熟。匯入的字會沿這條漏斗前進。',
-        selector: '[data-tour="memory-stages"]',
+        selector: '[data-tour="memory-board"]',
         view: 'home',
         useDemoCards: true,
+        fallbackSelector: '[data-tour="memory-stages"]',
+        litSelectors: ['[data-tour="home-tab"]'],
     }
 
     if (isMobile) {
@@ -137,11 +140,12 @@ export function getOnboardingSteps({ isMobile }) {
         {
             id: 'extension',
             title: '用 Catch 從網頁抓生字',
-            body: '安裝 Word Catcher 後，在荷蘭文網頁劃字就能收進網站。導覽結束後，登入才會常駐看到這個入口。',
+            body: '安裝 Word Catcher 後，在荷蘭文網頁劃字就能收進網站。點右上角這個入口可下載與查看用法。',
             selector: '[data-tour="ext-btn"]',
             view: 'home',
             showExtIcon: true,
             showCatchDemo: true,
+            litSelectors: ['[data-tour="home-tab"]'],
         },
         importStep,
         reviewStep,

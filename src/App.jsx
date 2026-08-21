@@ -19,6 +19,7 @@ import ImportModal, { formatImportSuccess } from './components/ImportModal'
 import SettingsModal from './components/SettingsModal'
 import OnboardingTour from './components/OnboardingTour'
 import Icon from './components/Icons'
+import CatchNetIcon from './components/CatchNetIcon'
 import { ExtensionDownloadCard, ExtensionGuideModal } from './components/WordCatcherPromo'
 import { useExtensionInstalled } from './hooks/useExtensionInstalled'
 import { HIDE_EXT_CARD_KEY } from './config/extension'
@@ -317,7 +318,7 @@ export default function App() {
         // 匯入步：先確保在 home 再開彈窗；離開匯入步再關，減少疊加閃爍
         if (step.openImport) {
             setView('home')
-            const t = setTimeout(() => setShowImport(true), 40)
+            const t = setTimeout(() => setShowImport(true), 120)
             return () => clearTimeout(t)
         }
 
@@ -597,7 +598,7 @@ export default function App() {
         <div className="app">
 
             {/* Top Header - Redesigned for unified visual identity */}
-            <header className="app-header">
+            <header className={`app-header${tourActive && (currentTourStep?.showExtIcon || currentTourStep?.openImport) ? ' is-tour-raised' : ''}`}>
                 <div className="app-header-inner">
                     <div className="app-logo">
                         <span className="logo-icon">
@@ -615,14 +616,14 @@ export default function App() {
                                 {(session?.user?.email || '帳號').split('@')[0]}
                             </button>
                         )}
-                        {(userId || (tourActive && currentTourStep?.showExtIcon)) && !isMobile && (
+                        {!isMobile && (
                             <button
                                 className={`icon-btn ${extensionInstalled ? '' : 'ext-pending'}`}
                                 data-tour="ext-btn"
                                 onClick={() => !tourActive && setShowExtGuide(true)}
                                 title="Word Catcher 擴充功能"
                             >
-                                <Icon name="catchNet" size={20} strokeWidth={2} />
+                                <CatchNetIcon size={20} />
                             </button>
                         )}
                         <button className="icon-btn" data-tour="import-btn" onClick={() => !tourActive && openImport()} title="匯入單字">
@@ -698,9 +699,10 @@ export default function App() {
             </main>
 
             {/* Side / Bottom Tab Bar */}
-            <nav className="tabbar">
+            <nav className={`tabbar${tourActive && currentTourStep?.litSelectors?.length ? ' is-tour-raised' : ''}`}>
                 <button
-                    className={`tabbar-item ${view === 'home' ? 'active' : ''}`}
+                    className={`tabbar-item ${view === 'home' ? 'active' : ''}${tourActive && currentTourStep?.view === 'home' ? ' is-tour-lit' : ''}`}
+                    data-tour="home-tab"
                     onClick={() => !tourActive && setView('home')}
                 >
                     <span className="tabbar-icon">
@@ -709,7 +711,7 @@ export default function App() {
                     首頁
                 </button>
                 <button
-                    className={`tabbar-item ${view === 'review' ? 'active' : ''}`}
+                    className={`tabbar-item ${view === 'review' ? 'active' : ''}${tourActive && currentTourStep?.view === 'review' ? ' is-tour-lit' : ''}`}
                     data-tour="review-tab"
                     onClick={() => !tourActive && setView('review')}
                 >
@@ -951,7 +953,7 @@ function HomePage({
                     )}
                 </div>
 
-                <section className="memory-board" aria-label="學習進度">
+                <section className="memory-board" data-tour="memory-board" aria-label="學習進度">
                     <div className="memory-due">
                         <span className="memory-due-label">今日待複習</span>
                         <span className={`memory-due-num ${dueCount > 0 ? 'hot' : ''}`}>{dueCount}</span>

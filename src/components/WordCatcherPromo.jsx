@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import Icon from './Icons'
+import CatchNetIcon from './CatchNetIcon'
 import {
     CHROME_EXTENSION_STORE_URL,
     CHROME_EXTENSION_ZIP_URL,
@@ -41,7 +42,7 @@ export function ExtensionDownloadCard({ onOpenGuide }) {
                     target="_blank"
                     rel="noreferrer"
                 >
-                    <Icon name="catchNet" size={16} strokeWidth={2} />
+                    <CatchNetIcon size={16} />
                     安裝 Chrome 擴充功能
                 </a>
             ) : (
@@ -108,7 +109,7 @@ export function ExtensionGuideModal({ open, onClose, installed }) {
                         target="_blank"
                         rel="noreferrer"
                     >
-                        <Icon name="catchNet" size={16} />
+                        <CatchNetIcon size={16} />
                         安裝 Chrome 擴充功能
                     </a>
                 ) : (

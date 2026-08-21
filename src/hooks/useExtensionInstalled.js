@@ -4,6 +4,7 @@ import { CHROME_EXTENSION_ID } from '../config/extension'
 const SESSION_KEY = 'memoflip_ext_installed'
 const PROBE_ID = 'toocheep-probe-element'
 const MARK_ATTR = 'data-toocheep-ext'
+const SETTLE_MS = 2500
 
 function hasProbeInTree() {
     if (typeof document === 'undefined') return false
@@ -39,61 +40,76 @@ function pingStoreExtension() {
     })
 }
 
+function readCached() {
+    try {
+        return sessionStorage.getItem(SESSION_KEY) === '1'
+    } catch {
+        return false
+    }
+}
+
+function writeCached(value) {
+    try {
+        if (value) sessionStorage.setItem(SESSION_KEY, '1')
+        else sessionStorage.removeItem(SESSION_KEY)
+    } catch {
+        /* private mode */
+    }
+}
+
 export function useExtensionInstalled() {
-    const [installed, setInstalled] = useState(() => {
-        try {
-            return sessionStorage.getItem(SESSION_KEY) === '1'
-        } catch {
-            return false
-        }
-    })
+    // 快取只當樂觀初始值；進頁後一定再探測，拿掉外掛要能變回未安裝
+    const [installed, setInstalled] = useState(readCached)
 
     useEffect(() => {
         let cancelled = false
-        let found = false
+        let confirmed = false
 
-        const markFound = () => {
-            if (cancelled || found) return
-            found = true
-            try {
-                sessionStorage.setItem(SESSION_KEY, '1')
-            } catch {
-                /* private mode */
-            }
+        const markInstalled = () => {
+            if (cancelled || confirmed) return
+            confirmed = true
+            writeCached(true)
             setInstalled(true)
         }
 
+        const markMissing = () => {
+            if (cancelled || confirmed) return
+            writeCached(false)
+            setInstalled(false)
+        }
+
         const check = () => {
-            if (hasProbeInTree()) markFound()
+            if (hasProbeInTree()) markInstalled()
         }
 
         const onMessage = (event) => {
             if (event.source !== window) return
             const data = event.data
             if (data?.source === 'toocheep-word-catcher' && data?.type === 'ready') {
-                markFound()
+                markInstalled()
             }
         }
 
         check()
         pingStoreExtension().then((ok) => {
-            if (ok) markFound()
+            if (ok) markInstalled()
         })
 
         window.addEventListener('message', onMessage)
         const observer = new MutationObserver(check)
         observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true })
         const timer = window.setInterval(check, 400)
-        const stop = window.setTimeout(() => {
+        const settle = window.setTimeout(() => {
             window.clearInterval(timer)
             observer.disconnect()
-        }, 8000)
+            if (!confirmed) markMissing()
+        }, SETTLE_MS)
 
         return () => {
             cancelled = true
             window.removeEventListener('message', onMessage)
             window.clearInterval(timer)
-            window.clearTimeout(stop)
+            window.clearTimeout(settle)
             observer.disconnect()
         }
     }, [])

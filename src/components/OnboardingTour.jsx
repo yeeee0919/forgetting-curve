@@ -3,8 +3,9 @@ import Icon from './Icons'
 import { CatcherDemo } from './WordCatcherPromo'
 import './OnboardingTour.css'
 
-const PAD = 6
-const SETTLE_MS = 260
+const PAD = 10
+const FADE_MS = 280
+const SETTLE_MS = 320
 
 function measure(selector, fallbackSelector) {
     const el =
@@ -14,10 +15,10 @@ function measure(selector, fallbackSelector) {
     const r = el.getBoundingClientRect()
     if (r.width < 2 && r.height < 2) return null
     return {
-        top: Math.max(8, r.top - PAD),
-        left: Math.max(8, r.left - PAD),
-        width: Math.min(window.innerWidth - 16, r.width + PAD * 2),
-        height: Math.min(window.innerHeight - 16, r.height + PAD * 2),
+        top: Math.max(4, r.top - PAD),
+        left: Math.max(4, r.left - PAD),
+        width: Math.min(window.innerWidth - 8, r.width + PAD * 2),
+        height: Math.min(window.innerHeight - 8, r.height + PAD * 2),
         el,
     }
 }
@@ -25,9 +26,9 @@ function measure(selector, fallbackSelector) {
 function placeCard(hole, cardW, cardH) {
     const vw = window.innerWidth
     const vh = window.innerHeight
-    const gap = 14
+    const gap = 16
     if (!hole) {
-        return { top: Math.max(24, vh * 0.2), left: Math.max(16, (vw - cardW) / 2) }
+        return { top: Math.max(24, vh * 0.22), left: Math.max(16, (vw - cardW) / 2) }
     }
     const below = hole.top + hole.height + gap
     const above = hole.top - cardH - gap
@@ -35,6 +36,18 @@ function placeCard(hole, cardW, cardH) {
     let left = hole.left + hole.width / 2 - cardW / 2
     left = Math.min(Math.max(12, left), vw - cardW - 12)
     return { top, left }
+}
+
+function clearTourActive() {
+    document.querySelectorAll('[data-tour-active="1"]').forEach(n => n.removeAttribute('data-tour-active'))
+    document.querySelectorAll('[data-tour-lit="1"]').forEach(n => n.removeAttribute('data-tour-lit'))
+}
+
+function lightExtraTargets(selectors = []) {
+    selectors.forEach(sel => {
+        const el = document.querySelector(sel)
+        if (el) el.setAttribute('data-tour-lit', '1')
+    })
 }
 
 export default function OnboardingTour({
@@ -48,97 +61,130 @@ export default function OnboardingTour({
     const total = steps.length
     const [hole, setHole] = useState(null)
     const [cardPos, setCardPos] = useState({ top: 80, left: 16 })
-    const [settling, setSettling] = useState(true)
-    const settleTimer = useRef(null)
+    const [phase, setPhase] = useState('settling')
+    const [displayStep, setDisplayStep] = useState(step)
+    const timers = useRef([])
+    const busy = phase !== 'ready'
 
-    const applyMeasure = useCallback(() => {
-        if (!step) return null
-        const next = measure(step.selector, step.fallbackSelector)
-        document.querySelectorAll('[data-tour-active="1"]').forEach(n => n.removeAttribute('data-tour-active'))
+    const clearTimers = () => {
+        timers.current.forEach(clearTimeout)
+        timers.current = []
+    }
+
+    const later = (fn, ms) => {
+        const id = setTimeout(fn, ms)
+        timers.current.push(id)
+        return id
+    }
+
+    const applyMeasure = useCallback((targetStep) => {
+        const s = targetStep || step
+        if (!s) return null
+        const next = measure(s.selector, s.fallbackSelector)
+        clearTourActive()
         if (next?.el) next.el.setAttribute('data-tour-active', '1')
+        lightExtraTargets(s.litSelectors)
         setHole(next)
+        const cardW = Math.min(360, window.innerWidth - 32)
+        const cardH = s.showCatchDemo ? 420 : 220
+        setCardPos(placeCard(next, cardW, cardH))
         return next
     }, [step])
 
-    // 切步時先鋪滿遮罩，等 view／modal 穩定再挖洞，避免洞位滑動造成閃爍
     useLayoutEffect(() => {
         if (!step) return undefined
-        setSettling(true)
+        clearTimers()
+        setPhase('settling')
         setHole(null)
-        document.querySelectorAll('[data-tour-active="1"]').forEach(n => n.removeAttribute('data-tour-active'))
+        clearTourActive()
 
-        if (settleTimer.current) clearTimeout(settleTimer.current)
-        settleTimer.current = setTimeout(() => {
-            applyMeasure()
-            // 再量一次，等 Import／Review 動畫開完
-            requestAnimationFrame(() => {
-                applyMeasure()
-                setSettling(false)
-            })
+        later(() => {
+            setDisplayStep(step)
+            applyMeasure(step)
+            later(() => {
+                applyMeasure(step)
+                setPhase('ready')
+            }, 40)
         }, SETTLE_MS)
 
         return () => {
-            if (settleTimer.current) clearTimeout(settleTimer.current)
-            document.querySelectorAll('[data-tour-active="1"]').forEach(n => n.removeAttribute('data-tour-active'))
+            clearTimers()
+            clearTourActive()
         }
-    }, [stepIndex, step, applyMeasure])
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [stepIndex])
 
     useEffect(() => {
-        if (settling) return undefined
-        const onResize = () => applyMeasure()
+        if (phase !== 'ready') return undefined
+        const onResize = () => applyMeasure(step)
         window.addEventListener('resize', onResize)
         window.addEventListener('scroll', onResize, true)
         return () => {
             window.removeEventListener('resize', onResize)
             window.removeEventListener('scroll', onResize, true)
         }
-    }, [settling, applyMeasure])
+    }, [phase, applyMeasure, step])
 
-    useLayoutEffect(() => {
-        const cardW = Math.min(360, window.innerWidth - 32)
-        const cardH = step?.showCatchDemo ? 420 : 220
-        setCardPos(placeCard(settling ? null : hole, cardW, cardH))
-    }, [hole, step, settling])
+    const runLeaveThen = (action) => {
+        if (busy) return
+        setPhase('leaving')
+        clearTourActive()
+        later(() => {
+            action()
+        }, FADE_MS)
+    }
 
-    if (!step) return null
+    if (!step || !displayStep) return null
 
     const isFirst = stepIndex === 0
     const isLast = stepIndex >= total - 1
+    const showRing = phase === 'ready' && hole
+    const cardVisible = phase === 'ready'
 
     return (
         <div className="obt-root" role="dialog" aria-modal="true" aria-labelledby="obt-title">
             <div className="obt-blocker" aria-hidden="true" />
-            {settling ? (
-                <div className="obt-veil" aria-hidden="true" />
-            ) : (
-                <div
-                    className={`obt-hole ${hole ? '' : 'is-missing'}`}
-                    style={
-                        hole
-                            ? { top: hole.top, left: hole.left, width: hole.width, height: hole.height }
-                            : undefined
-                    }
-                />
-            )}
-            <div className={`obt-card ${settling ? 'is-settling' : ''}`} style={{ top: cardPos.top, left: cardPos.left }}>
+            <div className={`obt-veil ${phase === 'ready' ? 'is-soft' : ''}`} aria-hidden="true" />
+            <div
+                className={`obt-ring ${showRing ? 'is-visible' : ''}`}
+                style={
+                    hole
+                        ? { top: hole.top, left: hole.left, width: hole.width, height: hole.height }
+                        : undefined
+                }
+            />
+            <div
+                className={`obt-card ${cardVisible ? 'is-visible' : ''}`}
+                style={{ top: cardPos.top, left: cardPos.left }}
+            >
                 <div className="obt-card-top">
                     <span className="obt-progress">{stepIndex + 1} / {total}</span>
                     <button type="button" className="obt-close" onClick={onSkip} aria-label="關閉導覽">
                         <Icon name="x" size={14} />
                     </button>
                 </div>
-                <h2 id="obt-title" className="obt-title">{step.title}</h2>
-                <p className="obt-body">{step.body}</p>
-                {step.showCatchDemo && (
+                <h2 id="obt-title" className="obt-title">{displayStep.title}</h2>
+                <p className="obt-body">{displayStep.body}</p>
+                {displayStep.showCatchDemo && (
                     <div className="obt-demo-wrap">
                         <CatcherDemo />
                     </div>
                 )}
                 <div className="obt-actions">
-                    <button type="button" className="obt-btn" onClick={onPrev} disabled={isFirst || settling}>
+                    <button
+                        type="button"
+                        className="obt-btn"
+                        onClick={() => runLeaveThen(onPrev)}
+                        disabled={isFirst || busy}
+                    >
                         上一步
                     </button>
-                    <button type="button" className="obt-btn obt-btn-primary" onClick={onNext} disabled={settling}>
+                    <button
+                        type="button"
+                        className="obt-btn obt-btn-primary"
+                        onClick={() => runLeaveThen(onNext)}
+                        disabled={busy}
+                    >
                         {isLast ? '完成' : '下一步'}
                     </button>
                     <button type="button" className="obt-btn-skip" onClick={onSkip}>
