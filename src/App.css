@@ -226,6 +226,16 @@
     color: var(--brand-ink);
 }
 
+.tabbar-item:disabled {
+    opacity: 0.38;
+    cursor: not-allowed;
+}
+
+.tabbar-item:disabled:hover {
+    background: transparent;
+    color: var(--text-tertiary);
+}
+
 .tabbar-icon {
     font-size: 1.4rem;
     line-height: 1;

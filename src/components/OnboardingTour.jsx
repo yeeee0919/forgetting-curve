@@ -23,12 +23,14 @@ function measure(selector, fallbackSelector) {
     }
 }
 
-function placeCard(hole, cardW, cardH) {
+function placeCard(hole, cardW, cardH, { preferCenter } = {}) {
     const vw = window.innerWidth
     const vh = window.innerHeight
     const gap = 16
-    if (!hole) {
-        return { top: Math.max(24, vh * 0.22), left: Math.max(16, (vw - cardW) / 2) }
+    const leftCenter = Math.min(Math.max(12, (vw - cardW) / 2), Math.max(12, vw - cardW - 12))
+    if (preferCenter || !hole) {
+        const top = Math.max(12, Math.min((vh - cardH) / 2, vh - cardH - 12))
+        return { top, left: leftCenter }
     }
     const below = hole.top + hole.height + gap
     const above = hole.top - cardH - gap
@@ -64,6 +66,7 @@ export default function OnboardingTour({
     const [phase, setPhase] = useState('settling')
     const [displayStep, setDisplayStep] = useState(step)
     const timers = useRef([])
+    const cardRef = useRef(null)
     const busy = phase !== 'ready'
 
     const clearTimers = () => {
@@ -85,9 +88,9 @@ export default function OnboardingTour({
         if (next?.el) next.el.setAttribute('data-tour-active', '1')
         lightExtraTargets(s.litSelectors)
         setHole(next)
-        const cardW = Math.min(360, window.innerWidth - 32)
-        const cardH = s.showCatchDemo ? 420 : 220
-        setCardPos(placeCard(next, cardW, cardH))
+        const cardW = Math.min(s.showCatchDemo ? 420 : 360, window.innerWidth - 32)
+        const cardH = cardRef.current?.offsetHeight || (s.showCatchDemo ? 580 : 220)
+        setCardPos(placeCard(next, cardW, cardH, { preferCenter: !!s.showCatchDemo }))
         return next
     }, [step])
 
@@ -113,6 +116,11 @@ export default function OnboardingTour({
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [stepIndex])
+
+    useLayoutEffect(() => {
+        if (phase !== 'ready' || !step) return
+        applyMeasure(step)
+    }, [phase, displayStep, applyMeasure, step])
 
     useEffect(() => {
         if (phase !== 'ready') return undefined
@@ -154,7 +162,8 @@ export default function OnboardingTour({
                 }
             />
             <div
-                className={`obt-card ${cardVisible ? 'is-visible' : ''}`}
+                ref={cardRef}
+                className={`obt-card ${cardVisible ? 'is-visible' : ''}${displayStep.showCatchDemo ? ' has-demo' : ''}`}
                 style={{ top: cardPos.top, left: cardPos.left }}
             >
                 <div className="obt-card-top">

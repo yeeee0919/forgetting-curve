@@ -65,6 +65,12 @@
         left 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+.obt-card.has-demo {
+    width: min(420px, calc(100vw - 32px));
+    max-height: calc(100vh - 24px);
+    overflow-y: auto;
+}
+
 .obt-card.is-visible {
     opacity: 1;
     transform: translateY(0);
@@ -119,16 +125,14 @@
 .obt-demo-wrap {
     margin-top: 12px;
     border-radius: 12px;
-    overflow: hidden;
+    overflow: visible;
     border: 1px solid #e2e8f0;
-    transform: scale(0.92);
-    transform-origin: top center;
-    max-height: 220px;
-    overflow: auto;
 }
 
 .obt-demo-wrap .catcher-demo {
     margin: 0;
+    border: none;
+    border-radius: 11px;
 }
 
 .obt-demo-wrap .catcher-demo-caption {
