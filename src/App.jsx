@@ -22,7 +22,7 @@ import Icon from './components/Icons'
 import CatchNetIcon from './components/CatchNetIcon'
 import { ExtensionDownloadCard, ExtensionGuideModal } from './components/WordCatcherPromo'
 import { useExtensionInstalled } from './hooks/useExtensionInstalled'
-import { HIDE_EXT_CARD_KEY } from './config/extension'
+import { HIDE_EXT_CARD_KEY, HIDE_EXT_TIP_KEY } from './config/extension'
 import {
     hasCompletedOnboardingTour,
     markOnboardingTourDone,
@@ -60,6 +60,13 @@ export default function App() {
     const [showSettings, setShowSettings] = useState(false)
     const [showExtGuide, setShowExtGuide] = useState(false)
     const extensionInstalled = useExtensionInstalled()
+    const [hideExtTip, setHideExtTip] = useState(() => {
+        try {
+            return localStorage.getItem(HIDE_EXT_TIP_KEY) === '1'
+        } catch {
+            return false
+        }
+    })
     const [importing, setImporting] = useState(false)
     const [importError, setImportError] = useState('')
     const [toast, setToast] = useState(null)
@@ -598,7 +605,7 @@ export default function App() {
         <div className="app">
 
             {/* Top Header - Redesigned for unified visual identity */}
-            <header className={`app-header${tourActive && (currentTourStep?.showExtIcon || currentTourStep?.openImport) ? ' is-tour-raised' : ''}`}>
+            <header className={`app-header${tourActive && currentTourStep?.showExtIcon ? ' is-tour-raised' : ''}`}>
                 <div className="app-header-inner">
                     <div className="app-logo">
                         <span className="logo-icon">
@@ -607,16 +614,7 @@ export default function App() {
                         <span className="logo-text">toocheep<span className="logo-sub">fordutch</span></span>
                     </div>
                     <div className="header-actions">
-                        {!userId ? (
-                            <button className="header-login-btn" onClick={() => signInWithGoogle().catch(err => alert(err.message))}>
-                                登入
-                            </button>
-                        ) : (
-                            <button className="header-user-btn" onClick={() => setShowSettings(true)} title={session?.user?.email || '已登入'}>
-                                {(session?.user?.email || '帳號').split('@')[0]}
-                            </button>
-                        )}
-                        {!isMobile && (
+                        <div className="header-ext-wrap">
                             <button
                                 className={`icon-btn ${extensionInstalled ? '' : 'ext-pending'}`}
                                 data-tour="ext-btn"
@@ -625,13 +623,31 @@ export default function App() {
                             >
                                 <CatchNetIcon size={20} />
                             </button>
-                        )}
-                        <button className="icon-btn" data-tour="import-btn" onClick={() => !tourActive && openImport()} title="匯入單字">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path></svg>
-                        </button>
-                        <button className="icon-btn" onClick={() => !tourActive && setShowSettings(true)} title="設定">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-                        </button>
+                            {!extensionInstalled && !hideExtTip && !tourActive && (
+                                <div className="ext-install-tip" role="status">
+                                    <button
+                                        type="button"
+                                        className="ext-install-tip-text"
+                                        onClick={() => setShowExtGuide(true)}
+                                    >
+                                        安裝插件更快加入單字
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="ext-install-tip-close"
+                                        aria-label="關閉提示"
+                                        onClick={() => {
+                                            setHideExtTip(true)
+                                            try {
+                                                localStorage.setItem(HIDE_EXT_TIP_KEY, '1')
+                                            } catch { /* private mode */ }
+                                        }}
+                                    >
+                                        <Icon name="x" size={12} />
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </header>
@@ -659,6 +675,8 @@ export default function App() {
                         hasActiveSession={!!sessionState.activeSession}
                         extensionInstalled={extensionInstalled}
                         onOpenExtGuide={() => setShowExtGuide(true)}
+                        loggedIn={!!userId}
+                        onOpenSettings={() => setShowSettings(true)}
                     />
 
                 )}
@@ -864,7 +882,7 @@ function HomePage({
     totalCards, stats, bufferCapacity, dueCount, onStartReview, onImport, onImportCatch,
     inboxWords, onDeleteInboxWord, onClearInbox, weakCards, dismissWeakCard,
     activityLog, isMobile, sessionSize, dueCards, hasActiveSession,
-    extensionInstalled, onOpenExtGuide,
+    extensionInstalled, onOpenExtGuide, loggedIn, onOpenSettings,
 }) {
     const greetingText = getGreeting()
     const [hideExtCard, setHideExtCard] = useState(() => {
@@ -907,7 +925,12 @@ function HomePage({
         <div className="home-layout">
             <div className="home-main">
                 <header className="home-hero">
-                    <p className="home-kicker">記憶漏斗</p>
+                    <div className="home-kicker-row">
+                        <p className="home-kicker">記憶漏斗</p>
+                        <button type="button" className="home-account-btn" onClick={onOpenSettings}>
+                            {loggedIn ? '設定' : '登入'}
+                        </button>
+                    </div>
                     <h1 className="home-greeting">
                         {greetingText}，<span>繼續學習吧</span>
                     </h1>

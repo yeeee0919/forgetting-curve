@@ -342,6 +342,67 @@
     align-items: center;
 }
 
+.header-ext-wrap {
+    position: relative;
+}
+
+.ext-install-tip {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    z-index: 1100;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    width: max-content;
+    max-width: min(240px, calc(100vw - 24px));
+    padding: 8px 6px 8px 10px;
+    background: #0f172a;
+    color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.22);
+}
+
+.ext-install-tip::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    right: 12px;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-bottom: 6px solid #0f172a;
+}
+
+.ext-install-tip-text {
+    border: none;
+    background: transparent;
+    color: inherit;
+    font-size: 0.78rem;
+    font-weight: 650;
+    line-height: 1.35;
+    text-align: left;
+    cursor: pointer;
+    padding: 0;
+}
+
+.ext-install-tip-close {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.72);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+}
+
+.ext-install-tip-close:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
 .header-login-btn {
     height: var(--icon-btn-size);
     padding: 0 14px;
@@ -634,12 +695,33 @@
     padding-top: var(--space-xs);
 }
 
+.home-kicker-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-sm);
+}
+
 .home-kicker {
     font-size: 0.72rem;
     font-weight: 700;
     letter-spacing: 0.12em;
     text-transform: uppercase;
     color: var(--brand-accent);
+}
+
+.home-account-btn {
+    border: none;
+    background: transparent;
+    color: var(--text-tertiary);
+    font-size: 0.78rem;
+    font-weight: 650;
+    cursor: pointer;
+    padding: 4px 2px;
+}
+
+.home-account-btn:hover {
+    color: var(--brand-ink);
 }
 
 .home-greeting {

@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { SYSTEM_PROMPT, ALCHEMIST_SYSTEM_PROMPT } from '../../src/services/cardPrompt.js'
 import { validateAiWordList } from '../../src/services/aiWordList.js'
+import { parseCardsJson, parseSingleCardJson } from '../../src/services/jsonImport.js'
 
 function supabaseUrl() {
     return process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || 'https://ttfjdxnasklhealmxgoz.supabase.co'

@@ -27,3 +27,4 @@ export const hasChromeStoreListing = Boolean(
 export const CHROME_EXTENSION_ID = 'doidjaenokgobflpfbeehhfmigjpkici'
 
 export const HIDE_EXT_CARD_KEY = 'memoflip_hide_ext_card'
+export const HIDE_EXT_TIP_KEY = 'memoflip_hide_ext_tip'
