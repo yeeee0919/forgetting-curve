@@ -1,6 +1,7 @@
 import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import { handleAiCards, handleGetQuota } from './api/_lib/handleAiCards.js'
+import { handleAdminStats } from './api/_lib/handleAdminStats.js'
 
 function readJsonBody(req) {
     return new Promise((resolve, reject) => {
@@ -52,13 +53,38 @@ function aiDevPlugin() {
                     res.end(JSON.stringify({ error: err.message || '伺服器錯誤', quota: err.quota || null }))
                 }
             })
+            server.middlewares.use('/api/admin-stats', async (req, res, next) => {
+                if (req.method === 'OPTIONS') {
+                    res.statusCode = 204
+                    res.end()
+                    return
+                }
+                if (req.method !== 'GET') {
+                    res.statusCode = 404
+                    res.setHeader('Content-Type', 'application/json; charset=utf-8')
+                    res.end(JSON.stringify({ error: 'Not found' }))
+                    return
+                }
+                try {
+                    const result = await handleAdminStats(bearer(req))
+                    res.setHeader('Content-Type', 'application/json; charset=utf-8')
+                    res.end(JSON.stringify(result))
+                } catch (err) {
+                    const status = err.status === 404 ? 404 : (err.status || 500)
+                    res.statusCode = status
+                    res.setHeader('Content-Type', 'application/json; charset=utf-8')
+                    res.end(JSON.stringify({
+                        error: status === 404 ? 'Not found' : (err.message || '伺服器錯誤'),
+                    }))
+                }
+            })
         },
     }
 }
 
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, process.cwd(), '')
-    for (const key of ['OPENAI_API_KEY', 'SUPABASE_URL', 'SUPABASE_ANON_KEY', 'VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY']) {
+    for (const key of ['OPENAI_API_KEY', 'SUPABASE_URL', 'SUPABASE_ANON_KEY', 'VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY', 'SUPABASE_SERVICE_ROLE_KEY', 'ADMIN_EMAILS']) {
         if (env[key] && !process.env[key]) process.env[key] = env[key]
     }
     return {
