@@ -1,5 +1,15 @@
-import { supabase } from './supabase'
+import { supabase, supabaseUrl } from './supabase'
 import { CHROME_EXTENSION_ID } from '../config/extension'
+import { authStorageKeyFromUrl, parseStoredSession, resolveAuthEvent } from './authSession'
+
+export function readStoredSession() {
+    try {
+        const key = authStorageKeyFromUrl(supabaseUrl)
+        return parseStoredSession(localStorage.getItem(key))
+    } catch {
+        return null
+    }
+}
 
 export function syncSessionToExtension(session) {
     const runtime = window.chrome?.runtime
@@ -66,15 +76,30 @@ export function requestExtensionInboxFlush() {
 }
 
 export function subscribeAuth(onSession) {
-    supabase.auth.getSession().then(({ data }) => {
-        onSession(data.session || null)
-        if (data.session) syncSessionToExtension(data.session)
-    })
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    let cancelled = false
+
+    const apply = (session) => {
+        if (cancelled) return
         onSession(session || null)
-        syncSessionToExtension(session)
+        syncSessionToExtension(session || null)
+    }
+
+    // getSession() 在 navigator.lock / token refresh 還沒完成時會先回 null。
+    // 只接受「確認有 session」；空值交給 onAuthStateChange 判斷，避免把本機登入洗成訪客。
+    supabase.auth.getSession().then(({ data }) => {
+        if (data.session?.user?.id) apply(data.session)
     })
-    return () => subscription.unsubscribe()
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+        const next = resolveAuthEvent(event, session, readStoredSession())
+        if (next === undefined) return
+        apply(next)
+    })
+
+    return () => {
+        cancelled = true
+        subscription.unsubscribe()
+    }
 }
 
 export async function signInWithGoogle() {

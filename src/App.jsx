@@ -4,7 +4,7 @@ import { initCard, scheduleCard, buildSessionSequence, migrateCards } from './se
 import { parseTextToCardsWithSession, fetchAiQuota } from './services/ai'
 import { mergeIncomingCards, toCardContent } from './services/cardFields'
 import { getCloudCards, upsertCloudCards, deleteCloudCard, deleteAllCloudCards, getCloudInbox, upsertCloudInbox, deleteCloudInboxItem, clearCloudInbox, mergeCardsByUpdatedAt } from './services/supabase'
-import { subscribeAuth, signInWithGoogle, signOutUser, ackExtensionQueue, requestExtensionInboxFlush } from './services/auth'
+import { subscribeAuth, signInWithGoogle, signOutUser, ackExtensionQueue, requestExtensionInboxFlush, readStoredSession } from './services/auth'
 import { getLocalInbox, saveLocalInbox, clearLocalInbox, mergeInboxItems } from './services/inbox'
 import { parseSimpleCards } from './services/simpleImport'
 import { validateAiWordList } from './services/aiWordList'
@@ -70,7 +70,7 @@ export default function App() {
     const [importing, setImporting] = useState(false)
     const [importError, setImportError] = useState('')
     const [toast, setToast] = useState(null)
-    const [session, setSession] = useState(null)
+    const [session, setSession] = useState(readStoredSession)
     const [lastSynced, setLastSynced] = useState(null)
     const [sessionState, setSessionState] = useState(getSessionState())
     const [aiQuota, setAiQuota] = useState(null)
@@ -104,6 +104,9 @@ export default function App() {
     const [inboxWords, setInboxWords] = useState([])
 
     useEffect(() => {
+        setSettings(getSettings())
+        // 已有本機 session 就不要先灌訪客卡，否則重整會閃「未登入」
+        if (session?.user?.id) return
         // 未登入：只載訪客本機字卡，絕不與帳號混用
         let loaded = getCards(null)
         const { migrated, updated } = migrateCards(loaded, 60)
@@ -112,7 +115,6 @@ export default function App() {
             loaded = migrated
         }
         setCards(loaded)
-        setSettings(getSettings())
         setInboxWords(getLocalInbox())
         setCardsReady(true)
     }, [])
