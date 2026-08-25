@@ -1,5 +1,43 @@
 const INBOX_KEY = 'memoflip_inbox'
 
+const WORD_MAX = 80
+const CONTEXT_MAX = 500
+const TRANSLATION_MAX = 200
+const URL_MAX = 500
+
+export function isTrustedInboxEvent(event, expectedOrigin) {
+    if (!event || !expectedOrigin) return false
+    if (typeof window !== 'undefined' && event.source !== window) return false
+    if (event.origin !== expectedOrigin) return false
+    const data = event.data
+    return data?.source === 'toocheep-word-catcher' && data?.type === 'inbox-flush'
+}
+
+export function sanitizeSourceUrl(url) {
+    const raw = String(url || '').trim()
+    if (!raw) return null
+    try {
+        const parsed = new URL(raw)
+        if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return null
+        return parsed.href.slice(0, URL_MAX)
+    } catch {
+        return null
+    }
+}
+
+export function sanitizeInboxItem(item) {
+    if (!item || typeof item !== 'object') return null
+    const word = String(item.word || '').trim().slice(0, WORD_MAX)
+    if (!word) return null
+    return {
+        ...item,
+        word,
+        context_sentence: String(item.context_sentence || item.word || '').slice(0, CONTEXT_MAX),
+        translation: String(item.translation || '').slice(0, TRANSLATION_MAX),
+        source_url: sanitizeSourceUrl(item.source_url),
+    }
+}
+
 export function getLocalInbox() {
     try {
         const raw = localStorage.getItem(INBOX_KEY)
@@ -31,7 +69,8 @@ export function mergeInboxItems(existing = [], incoming = []) {
     for (const item of existing) {
         if (item?.id) map.set(item.id, item)
     }
-    for (const item of incoming) {
+    for (const raw of incoming) {
+        const item = sanitizeInboxItem(raw)
         if (!item) continue
         const id = item.id || `local_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`
         if (!map.has(id)) map.set(id, { ...item, id })

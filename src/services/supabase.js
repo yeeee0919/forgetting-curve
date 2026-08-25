@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { sanitizeInboxItem } from './inbox'
 
 export const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://ttfjdxnasklhealmxgoz.supabase.co'
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_MTX2iPYA2Z52_0Bbt1JZrw_hTFNZODw'
@@ -113,7 +114,9 @@ export async function upsertCloudInbox(userId, items) {
     if (!userId || !items?.length) return []
     const withId = []
     const withoutId = []
-    for (const item of items) {
+    for (const raw of items) {
+        const item = sanitizeInboxItem(raw)
+        if (!item) continue
         const row = {
             user_id: userId,
             word: item.word,

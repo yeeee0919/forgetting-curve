@@ -5,7 +5,7 @@ import { parseTextToCardsWithSession, fetchAiQuota } from './services/ai'
 import { mergeIncomingCards, toCardContent } from './services/cardFields'
 import { getCloudCards, upsertCloudCards, deleteCloudCard, deleteAllCloudCards, getCloudInbox, upsertCloudInbox, deleteCloudInboxItem, clearCloudInbox, mergeCardsByUpdatedAt } from './services/supabase'
 import { subscribeAuth, signInWithGoogle, signOutUser, ackExtensionQueue, requestExtensionInboxFlush, readStoredSession } from './services/auth'
-import { getLocalInbox, saveLocalInbox, clearLocalInbox, mergeInboxItems } from './services/inbox'
+import { getLocalInbox, saveLocalInbox, clearLocalInbox, mergeInboxItems, isTrustedInboxEvent, sanitizeInboxItem } from './services/inbox'
 import { parseSimpleCards } from './services/simpleImport'
 import { validateAiWordList } from './services/aiWordList'
 
@@ -175,9 +175,10 @@ export default function App() {
 
     useEffect(() => {
         const onMessage = (event) => {
-            const data = event.data
-            if (data?.source !== 'toocheep-word-catcher' || data?.type !== 'inbox-flush') return
-            const incoming = Array.isArray(data.items) ? data.items : []
+            if (!isTrustedInboxEvent(event, window.location.origin)) return
+            const incoming = (Array.isArray(event.data.items) ? event.data.items : [])
+                .map(sanitizeInboxItem)
+                .filter(Boolean)
             if (!incoming.length) return
             setInboxWords(prev => {
                 const merged = mergeInboxItems(prev, incoming)

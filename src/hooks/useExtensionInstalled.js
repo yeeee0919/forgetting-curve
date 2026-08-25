@@ -84,6 +84,7 @@ export function useExtensionInstalled() {
 
         const onMessage = (event) => {
             if (event.source !== window) return
+            if (event.origin !== window.location.origin) return
             const data = event.data
             if (data?.source === 'toocheep-word-catcher' && data?.type === 'ready') {
                 markInstalled()

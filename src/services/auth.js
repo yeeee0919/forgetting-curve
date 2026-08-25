@@ -49,8 +49,9 @@ export function ackExtensionQueue(ids) {
 
 /** 向擴充功能／content script 再要一次 Catch 佇列（避免頁面還沒掛好監聽就送完） */
 export function requestExtensionInboxFlush() {
+    const origin = window.location.origin
     try {
-        window.postMessage({ source: 'toocheep-app', type: 'request-inbox-flush' }, '*')
+        window.postMessage({ source: 'toocheep-app', type: 'request-inbox-flush' }, origin)
     } catch {
         /* ignore */
     }
@@ -64,7 +65,7 @@ export function requestExtensionInboxFlush() {
             try {
                 window.postMessage(
                     { source: 'toocheep-word-catcher', type: 'inbox-flush', items },
-                    '*'
+                    origin
                 )
             } catch {
                 /* ignore */

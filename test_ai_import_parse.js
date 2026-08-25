@@ -15,6 +15,8 @@ const src = readFileSync(new URL('./api/_lib/handleAiCards.js', import.meta.url)
 assert(/from ['"][^'"]*jsonImport\.js['"]/.test(src), 'handleAiCards.js imports jsonImport.js')
 assert(/\bparseCardsJson\b/.test(src), 'handleAiCards.js calls parseCardsJson')
 assert(/\bparseSingleCardJson\b/.test(src), 'handleAiCards.js calls parseSingleCardJson')
+assert(/\breserveThenRun\b/.test(src), 'handleAiCards.js 先扣額度再打模型')
+assert(src.indexOf('consumeQuota') < src.indexOf('callOpenAi(['), 'consumeQuota 出現在呼叫模型之前')
 
 const cards = parseCardsJson(JSON.stringify({
     cards: [{ front: 'scheelt', back: '有差別' }, { front: 'slim', back: '聰明' }],

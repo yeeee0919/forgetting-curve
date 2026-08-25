@@ -1,4 +1,5 @@
 import { handleAiCards, handleGetQuota } from './_lib/handleAiCards.js'
+import { bodyTooLarge, payloadTooLarge } from './_lib/aiGuard.js'
 
 function send(res, status, payload) {
     res.statusCode = status
@@ -30,9 +31,17 @@ export default async function handler(req, res) {
             send(res, 405, { error: 'Method not allowed' })
             return
         }
+        if (payloadTooLarge(req.headers['content-length'])) {
+            send(res, 413, { error: '請求太大' })
+            return
+        }
         let body = req.body
         if (body && typeof body === 'string') body = JSON.parse(body || '{}')
         if (!body || typeof body !== 'object') body = {}
+        if (bodyTooLarge(body)) {
+            send(res, 413, { error: '請求太大' })
+            return
+        }
         const result = await handleAiCards({ accessToken, body })
         send(res, 200, result)
     } catch (err) {
