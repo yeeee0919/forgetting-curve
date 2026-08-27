@@ -128,14 +128,6 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
         window.open(url, '_blank')
     }
 
-    const openGemini = () => {
-        const prompt = getPromptForExternal()
-        navigator.clipboard.writeText(prompt).catch(() => { })
-        setCopiedTarget('gemini')
-        setTimeout(() => setCopiedTarget(null), 2000)
-        window.open('https://gemini.google.com/', '_blank')
-    }
-
     return (
         <div className="modal-overlay" onClick={tourMode ? undefined : requestClose}>
             <div className="modal im-modal-v5" data-tour="import-modal" onClick={e => e.stopPropagation()}>
@@ -228,22 +220,12 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
                     )}
 
                     {tab === 'manual' && (
-                        <div className="im-manual-container">
-                            <ManualGuide />
-                            <textarea
-                                className="im-textarea-v4 im-code-editor"
-                                placeholder={'JSON 或每行：huis / 房子'}
-                                value={jsonText}
-                                onChange={e => setJsonText(e.target.value)}
-                                disabled={tourMode}
-                                readOnly={tourMode}
-                            />
-                            {detectedCount > 0 && (
-                                <div className="im-field-hint" style={{ color: 'var(--good)', flexShrink: 0 }}>
-                                    辨識到 {detectedCount} 張卡
-                                </div>
-                            )}
-                        </div>
+                        <ManualPane
+                            jsonText={jsonText}
+                            onJsonChange={e => setJsonText(e.target.value)}
+                            tourMode={tourMode}
+                            detectedCount={detectedCount}
+                        />
                     )}
                 </div>
 
@@ -258,16 +240,18 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
                 {/* Redesigned Footer (V5.2 Max space) */}
                 <div className="im-footer-v5">
                     <div className="im-footer-left">
-                        {tab === 'manual' && (
-                            <div className="im-external-ai-group">
+                        <div className="im-external-ai-group">
+                            {tab === 'manual' ? (
                                 <button className={`im-footer-link-btn chatgpt ${copiedTarget === 'chatgpt' ? 'success' : ''}`} onClick={openChatGPT}>
-                                    {copiedTarget === 'chatgpt' ? <><Icon name="check" size={16} /> 已複製提示詞</> : <>複製提示並開啟 ChatGPT <Icon name="arrowUpRight" size={16} /></>}
+                                    {copiedTarget === 'chatgpt' ? <><Icon name="check" size={16} /> 已複製提示詞</> : <>
+                                        複製提示並開啟 ChatGPT
+                                        <Icon name="arrowUpRight" size={16} />
+                                    </>}
                                 </button>
-                                <button className={`im-footer-link-btn gemini ${copiedTarget === 'gemini' ? 'success' : ''}`} onClick={openGemini}>
-                                    {copiedTarget === 'gemini' ? <><Icon name="check" size={16} /> 已複製提示詞</> : <>複製提示並開啟 Gemini <Icon name="arrowUpRight" size={16} /></>}
-                                </button>
-                            </div>
-                        )}
+                            ) : (
+                                <span className="im-footer-link-btn im-footer-spacer" aria-hidden="true" />
+                            )}
+                        </div>
                     </div>
 
                     <div className="im-footer-right">
@@ -292,8 +276,8 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
                     .im-modal-v5 {
                         width: 820px;
                         max-width: 95vw;
-                        height: 700px;
-                        max-height: 92vh;
+                        height: min(700px, 92dvh);
+                        max-height: 92dvh;
                         background: var(--bg-surface);
                         border-radius: var(--radius-xl);
                         box-shadow: var(--elevation-3);
@@ -301,6 +285,7 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
                         flex-direction: column;
                         overflow: hidden;
                         position: relative;
+                        padding: 0;
                         animation: modalShow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
                     }
                     @keyframes modalShow { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
@@ -338,7 +323,63 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
                     .im-body { flex: 1; padding: var(--space-lg) var(--space-lg); display: flex; flex-direction: column; background: var(--bg-surface); overflow: hidden; }
                     
                     .im-ai-container, .im-manual-container { flex: 1; display: flex; flex-direction: column; min-height: 0; overflow-y: auto; }
-                    .im-manual-container { gap: 12px; }
+                    .im-manual-wrap {
+                        flex: 1;
+                        min-height: 0;
+                        position: relative;
+                        display: flex;
+                        flex-direction: column;
+                    }
+                    .im-manual-container {
+                        gap: 10px;
+                        padding: 4px;
+                        background: var(--bg-canvas);
+                        border-radius: 12px;
+                        scrollbar-width: thin;
+                        scrollbar-color: var(--brand-accent) transparent;
+                    }
+                    .im-manual-container::-webkit-scrollbar { width: 6px; }
+                    .im-manual-container::-webkit-scrollbar-thumb {
+                        background: var(--brand-accent);
+                        border-radius: 99px;
+                    }
+                    .im-scroll-cue {
+                        position: absolute;
+                        left: 0; right: 0; bottom: 0;
+                        pointer-events: none;
+                        z-index: 4;
+                        padding: 36px 12px 8px;
+                        background: linear-gradient(to top, var(--bg-canvas) 28%, transparent);
+                        text-align: center;
+                        font-size: 0.72rem;
+                        font-weight: 800;
+                        color: var(--brand-accent);
+                        letter-spacing: 0.02em;
+                    }
+                    .im-json-slot {
+                        flex: 1;
+                        min-height: 180px;
+                        display: flex;
+                        flex-direction: column;
+                        gap: 6px;
+                        padding: 8px;
+                        border-radius: 12px;
+                        background: #1a1a1a;
+                    }
+                    .im-json-slot-label {
+                        margin: 0;
+                        font-size: 0.68rem;
+                        font-weight: 800;
+                        color: #9aa4ad;
+                        letter-spacing: 0.04em;
+                    }
+                    .im-json-slot .im-textarea-v4 {
+                        flex: 1;
+                        min-height: 140px;
+                        height: auto;
+                        border: none;
+                        background: transparent;
+                    }
                     .im-textarea-wrapper { position: relative; flex: 1; display: flex; flex-direction: column; min-height: 0; }
                     .im-loading-overlay {
                         position: absolute;
@@ -495,23 +536,20 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
                         gap: 6px;
                         box-shadow: 0 4px 12px rgba(241, 90, 41, 0.28);
                     }
-                    .im-footer-link-btn.gemini {
-                        background: #fff;
-                        color: var(--brand-accent);
-                        box-shadow: none;
-                    }
                     .im-footer-link-btn:hover {
                         filter: brightness(1.06);
                         transform: translateY(-1px);
-                    }
-                    .im-footer-link-btn.gemini:hover {
-                        background: var(--brand-accent-soft);
-                        filter: none;
                     }
                     .im-footer-link-btn.success {
                         color: #fff !important;
                         border-color: var(--good) !important;
                         background: var(--good) !important;
+                        box-shadow: none;
+                    }
+                    .im-footer-spacer {
+                        display: none;
+                        visibility: hidden;
+                        pointer-events: none;
                         box-shadow: none;
                     }
 
@@ -545,41 +583,43 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
 
                     .im-manual-guide {
                         display: grid;
-                        grid-template-columns: minmax(0, 1fr) minmax(260px, 1.15fr);
-                        gap: 12px 20px;
+                        grid-template-columns: minmax(0, 1fr) minmax(240px, 1.1fr);
+                        grid-template-areas:
+                            "lead lead"
+                            "caps demo";
+                        gap: 10px 16px;
                         align-items: stretch;
                         flex-shrink: 0;
-                    }
-                    .im-manual-copy {
-                        display: flex;
-                        flex-direction: column;
-                        justify-content: center;
-                        gap: 10px;
-                        min-width: 0;
+                        padding: 12px;
+                        background: var(--bg-surface);
+                        border: 1px solid var(--border-subtle);
+                        border-radius: 14px;
                     }
                     .im-manual-lead {
+                        grid-area: lead;
                         margin: 0;
-                        font-size: 0.92rem;
+                        font-size: 0.88rem;
                         font-weight: 700;
                         color: var(--brand-ink);
                         line-height: 1.45;
                     }
-                    .im-manual-container .im-textarea-v4 {
-                        min-height: 240px;
-                    }
-
-                    .im-flow-demo { min-width: 0; }
+                    .im-flow-caps { grid-area: caps; }
+                    .im-flow-demo { grid-area: demo; min-width: 0; }
                     .im-flow-window {
                         width: 100%;
-                        aspect-ratio: 16 / 9;
-                        max-height: 210px;
-                        border: 1px solid var(--border-default);
-                        border-radius: 12px;
+                        height: 210px;
+                        border: 1px solid #e4e7ec;
+                        border-radius: 10px;
                         overflow: hidden;
                         background: #fff;
-                        box-shadow: var(--elevation-1);
+                        position: relative;
+                    }
+                    .im-flow-stage {
+                        width: 100%;
+                        height: 100%;
                         display: flex;
                         flex-direction: column;
+                        min-width: 0;
                     }
                     .im-browser-bar {
                         flex-shrink: 0;
@@ -588,8 +628,8 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
                         align-items: center;
                         gap: 10px;
                         padding: 0 12px;
-                        background: #F3F5F7;
-                        border-bottom: 1px solid var(--border-subtle);
+                        background: #ececf1;
+                        border-bottom: 1px solid #d9d9e3;
                     }
                     .im-browser-dots {
                         width: 42px; height: 10px; flex-shrink: 0; border-radius: 99px;
@@ -618,15 +658,23 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
                     .im-flow-demo[data-step="2"] .im-url.gpt,
                     .im-flow-demo[data-step="3"] .im-url.gpt,
                     .im-flow-demo[data-step="4"] .im-url.gpt { opacity: 1; }
-                    .im-browser-page { position: relative; flex: 1; min-height: 0; background: #F7F8FA; }
+                    .im-browser-page { position: relative; flex: 1; min-height: 0; background: #fff; overflow: hidden; }
                     .im-view {
                         position: absolute; inset: 0;
                         opacity: 0;
                         pointer-events: none;
                         transition: opacity 0.35s ease;
+                        overflow: hidden;
+                        min-width: 0;
+                        min-height: 0;
                     }
                     .im-view.chat { display: flex; flex-direction: column; }
-                    .im-view.app { padding: 10px 12px; }
+                    .im-view.app {
+                        padding: 8px;
+                        box-sizing: border-box;
+                        display: flex;
+                        background: repeating-linear-gradient(-45deg, #f3f6fb 0 8px, #eef2f8 8px 16px);
+                    }
                     .im-flow-demo[data-step="0"] .im-view.click { opacity: 1; }
                     .im-flow-demo[data-step="1"] .im-view.chat,
                     .im-flow-demo[data-step="2"] .im-view.chat,
@@ -634,33 +682,65 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
                     .im-flow-demo[data-step="4"] .im-view.chat { opacity: 1; }
                     .im-flow-demo[data-step="5"] .im-view.app { opacity: 1; }
 
+                    .im-place-tag {
+                        display: inline-flex;
+                        align-items: center;
+                        justify-content: center;
+                        flex: none;
+                        align-self: flex-start;
+                        height: 20px;
+                        max-height: 20px;
+                        max-width: 100%;
+                        margin: 0;
+                        font-size: 0.62rem;
+                        font-weight: 800;
+                        letter-spacing: 0.04em;
+                        border-radius: 6px;
+                        padding: 0 8px;
+                        width: auto;
+                        white-space: nowrap;
+                    }
+                    .im-place-tag.app {
+                        color: #5b3a00;
+                        background: #ffe8a3;
+                    }
                     .im-click-scene {
+                        box-sizing: border-box;
                         height: 100%;
-                        padding: 12px 14px 16px;
+                        max-height: 100%;
+                        padding: 10px 12px;
                         display: flex;
                         flex-direction: column;
-                        justify-content: flex-end;
-                        gap: 10px;
-                        background: linear-gradient(180deg, #F7F8FA 0%, #fff 55%);
+                        justify-content: center;
+                        align-items: flex-start;
+                        gap: 8px;
+                        overflow: hidden;
+                        background:
+                            repeating-linear-gradient(-45deg, #f3f6fb 0 8px, #eef2f8 8px 16px);
                     }
                     .im-click-label {
                         margin: 0;
-                        font-size: 0.72rem;
+                        font-size: 0.7rem;
                         font-weight: 700;
-                        color: var(--text-tertiary);
+                        color: #5c6b7a;
+                        flex: none;
                     }
                     .im-click-btns {
                         position: relative;
-                        display: flex;
-                        gap: 8px;
-                        flex-wrap: wrap;
+                        display: block;
+                        flex: none;
+                        max-width: 100%;
                     }
                     .im-click-target {
                         position: relative;
+                        display: inline-flex;
+                        max-width: 100%;
                     }
                     .im-flow-chip {
-                        font-size: 0.72rem; font-weight: 800; border-radius: 8px; padding: 8px 10px;
+                        font-size: 0.68rem; font-weight: 800; border-radius: 8px; padding: 7px 9px;
                         display: inline-flex; align-items: center; gap: 4px;
+                        max-width: 100%;
+                        box-sizing: border-box;
                     }
                     .im-flow-chip.gpt {
                         background: var(--brand-accent); color: #fff;
@@ -671,9 +751,9 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
                         animation: imClickBtn 1.8s ease-in-out infinite;
                     }
                     @keyframes imClickBtn {
-                        0%, 38% { transform: scale(1); box-shadow: 0 4px 12px rgba(241, 90, 41, 0.28); }
-                        48% { transform: scale(0.94); box-shadow: 0 1px 0 rgba(241, 90, 41, 0.2); }
-                        58%, 100% { transform: scale(1.03); box-shadow: 0 0 0 5px rgba(241, 90, 41, 0.22); }
+                        0%, 38% { transform: none; box-shadow: 0 4px 12px rgba(241, 90, 41, 0.28); }
+                        48% { box-shadow: 0 1px 0 rgba(241, 90, 41, 0.2); }
+                        58%, 100% { box-shadow: 0 0 0 4px rgba(241, 90, 41, 0.22); }
                     }
                     .im-flow-cursor {
                         position: absolute;
@@ -700,16 +780,25 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
 
                     .im-mini-modal {
                         position: relative;
-                        height: 100%;
-                        background: #fff;
+                        box-sizing: border-box;
+                        flex: 1;
+                        min-height: 0;
+                        overflow: hidden;
+                        background: #f7f3ea;
                         border-radius: 10px;
-                        border: 1px solid var(--border-subtle);
-                        padding: 8px 10px;
-                        display: flex; flex-direction: column; gap: 8px;
+                        border: 1.5px dashed #c4b38a;
+                        padding: 8px;
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: flex-start;
+                        align-items: stretch;
+                        gap: 6px;
                     }
-                    .im-mini-title { font-size: 0.72rem; font-weight: 800; color: var(--brand-ink); }
+                    .im-mini-title { font-size: 0.72rem; font-weight: 800; color: #5b3a00; flex: none; }
                     .im-mini-box {
-                        position: relative; flex: 1; min-height: 0;
+                        position: relative;
+                        flex: 1 1 auto;
+                        min-height: 40px;
                         border-radius: 8px; background: #1a1a1a; color: #9aa4ad;
                         padding: 8px 10px; font-size: 0.72rem; overflow: hidden;
                     }
@@ -765,32 +854,52 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
                         0%, 18% { box-shadow: inset 0 0 0 0 rgba(241, 90, 41, 0); }
                         28%, 100% { box-shadow: inset 0 0 0 1px rgba(241, 90, 41, 0.35); }
                     }
-                    .im-flow-app-btns { display: flex; gap: 6px; }
+                    .im-flow-app-btns { display: flex; gap: 6px; flex: none; max-width: 100%; }
                     .im-view.app .im-flow-chip { font-size: 0.66rem; padding: 5px 8px; }
 
+                    .im-gpt-top {
+                        flex-shrink: 0;
+                        height: 28px;
+                        display: flex;
+                        align-items: center;
+                        gap: 6px;
+                        padding: 0 12px;
+                        border-bottom: 1px solid #ececf1;
+                        background: #fff;
+                        font-size: 0.72rem;
+                        font-weight: 700;
+                        color: #0d0d0d;
+                    }
+                    .im-gpt-mark {
+                        width: 16px; height: 16px; border-radius: 50%;
+                        background: #10a37f;
+                        box-shadow: inset 0 0 0 2px rgba(255,255,255,0.35);
+                    }
                     .im-chat-thread {
                         flex: 1; min-height: 0; overflow: hidden;
                         padding: 8px 12px 6px;
                         display: flex; flex-direction: column; gap: 6px; justify-content: flex-end;
+                        background: #fff;
                     }
                     .im-bubble {
                         max-width: 82%;
                         font-size: 0.7rem; line-height: 1.4; font-weight: 500;
-                        padding: 7px 9px; border-radius: 12px;
+                        padding: 7px 9px; border-radius: 18px;
                         opacity: 0;
                         transform: translateY(6px);
                     }
                     .im-bubble.user {
                         align-self: flex-end;
-                        background: #E8EEF4; color: var(--brand-ink);
+                        background: #f4f4f4; color: #0d0d0d;
                     }
                     .im-bubble.bot {
                         align-self: flex-start;
                         position: relative;
-                        background: #fff; color: var(--brand-ink);
-                        border: 1px solid var(--border-subtle);
+                        background: #fff; color: #0d0d0d;
+                        border: 1px solid #ececf1;
                         max-width: 88%;
                         padding-bottom: 22px;
+                        border-radius: 18px;
                     }
                     .im-bubble.prompt {
                         overflow: hidden;
@@ -804,8 +913,8 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
                         margin-top: 5px;
                         padding: 3px 6px;
                         border-radius: 6px;
-                        background: rgba(241, 90, 41, 0.14);
-                        color: var(--brand-accent);
+                        background: rgba(16, 163, 127, 0.14);
+                        color: #0d7a5f;
                         font-weight: 700;
                         font-size: 0.66rem;
                     }
@@ -825,9 +934,9 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
                         flex-shrink: 0;
                         margin: 0 10px 8px;
                         height: 32px;
-                        border-radius: 16px;
+                        border-radius: 24px;
                         background: #fff;
-                        border: 1px solid var(--border-default);
+                        border: 1px solid #d9d9e3;
                         display: flex; align-items: flex-end;
                         padding: 4px 8px 4px 10px;
                         position: relative;
@@ -865,7 +974,7 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
                         font-size: 0.64rem;
                         line-height: 1.35;
                         font-weight: 600;
-                        color: var(--brand-ink);
+                        color: #0d0d0d;
                         transform: translateY(0);
                     }
                     .im-draft-line { display: block; }
@@ -874,8 +983,8 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
                         margin-top: 2px;
                         padding: 2px 5px;
                         border-radius: 5px;
-                        background: rgba(241, 90, 41, 0.14);
-                        color: var(--brand-accent);
+                        background: rgba(16, 163, 127, 0.14);
+                        color: #0d7a5f;
                         font-weight: 800;
                     }
                     .im-draft-words {
@@ -894,7 +1003,7 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
                     .im-send {
                         flex-shrink: 0;
                         margin-left: 6px; width: 22px; height: 22px; border-radius: 50%;
-                        background: #0B1F33; color: #fff; font-size: 12px; font-weight: 800;
+                        background: #0d0d0d; color: #fff; font-size: 12px; font-weight: 800;
                         display: flex; align-items: center; justify-content: center;
                     }
 
@@ -1096,10 +1205,12 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
                         z-index: 2;
                     }
                     .im-paste-flag, .im-words-flag {
-                        color: var(--brand-accent);
-                        background: rgba(241, 90, 41, 0.12);
+                        top: 34px;
+                        color: #0d7a5f;
+                        background: rgba(16, 163, 127, 0.14);
                     }
                     .im-copied-flag {
+                        top: 34px;
                         color: #0B6B4F;
                         background: #D8F3E8;
                     }
@@ -1118,31 +1229,32 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
                     }
 
                     .im-flow-caps {
-                        display: flex;
-                        flex-direction: column;
-                        gap: 4px;
+                        display: grid;
+                        grid-template-columns: 1fr 1fr;
+                        gap: 2px 8px;
                         list-style: none;
                         margin: 0;
                         padding: 0;
                     }
                     .im-flow-caps li {
                         position: relative;
-                        overflow: hidden;
+                        overflow: visible;
                         display: flex;
                         align-items: flex-start;
-                        gap: 8px;
+                        gap: 6px;
                         margin: 0;
-                        padding: 6px 8px;
-                        border-radius: 10px;
-                        font-size: 0.8rem;
+                        padding: 5px 6px;
+                        border-radius: 8px;
+                        font-size: 0.72rem;
                         font-weight: 600;
                         color: var(--text-secondary);
-                        line-height: 1.4;
+                        line-height: 1.35;
                         opacity: 0.42;
                         background: transparent;
                         cursor: pointer;
                         border: none;
                         width: 100%;
+                        min-width: 0;
                         text-align: left;
                         font-family: inherit;
                         z-index: 0;
@@ -1154,6 +1266,12 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
                         background: rgba(241, 90, 41, 0.16);
                         pointer-events: none;
                         z-index: 0;
+                        border-radius: 8px;
+                    }
+                    .im-step-text {
+                        min-width: 0;
+                        flex: 1;
+                        overflow-wrap: anywhere;
                     }
                     .im-flow-caps li > :not(.im-step-fill) {
                         position: relative;
@@ -1227,45 +1345,91 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
 
                     @media (max-width: 720px) {
                         .im-manual-guide {
-                            grid-template-columns: 1fr;
+                            display: flex;
+                            flex-direction: column;
+                            gap: 10px;
+                            padding: 10px;
                         }
                         .im-flow-window {
-                            max-height: 180px;
+                            width: 100%;
+                            height: 200px;
+                            max-height: none;
+                            margin: 0;
                         }
+                        .im-flow-steps { display: none; }
                     }
 
                     @media (max-width: 600px) {
-                        .im-flow-window {
-                            aspect-ratio: 16 / 9;
+                        .im-modal-v5 {
                             width: 100%;
-                            max-height: 160px;
+                            max-width: 100%;
+                            height: 92dvh;
+                            max-height: 92dvh;
+                        }
+                        .im-body {
+                            padding: 10px 12px;
+                            background: var(--bg-canvas);
+                        }
+                        .im-status-bar {
+                            margin: 0 12px;
+                            min-height: 8px;
+                            padding: 0;
+                        }
+                        .im-flow-window {
+                            width: 100%;
+                            height: 190px;
+                            max-height: none;
                             margin: 0;
-                            border-radius: 12px;
-                            border: 1px solid var(--border-default);
-                            box-shadow: var(--elevation-1);
+                            border-radius: 10px;
+                            border: 1px solid #e4e7ec;
                         }
                         .im-browser-bar {
-                            height: 28px;
-                            background: #F3F5F7;
-                            padding: 0 8px;
+                            height: 34px;
+                            background: #ececf1;
+                            padding: 0 12px;
                         }
-                        .im-browser-dots { display: none; }
-                        .im-browser-omni { height: 18px; }
-                        .im-url { font-size: 0.62rem; justify-content: center; }
-                        .im-bubble { font-size: 0.68rem; padding: 7px 8px; }
-                        .im-json { font-size: 0.58rem; }
+                        .im-browser-dots { display: block; }
+                        .im-browser-omni { height: 22px; }
+                        .im-url { font-size: 0.72rem; justify-content: flex-start; }
+                        .im-bubble { font-size: 0.7rem; padding: 7px 9px; }
+                        .im-json { font-size: 0.64rem; }
+                        .im-manual-lead {
+                            font-size: 0.78rem;
+                            font-weight: 700;
+                            line-height: 1.35;
+                        }
                         .im-flow-caps {
-                            gap: 6px;
-                        }
-                        .im-manual-container .im-textarea-v4 {
-                            min-height: 180px;
+                            gap: 2px 6px;
                         }
                         .im-flow-caps li {
-                            font-size: 0.86rem;
+                            font-size: 0.62rem;
+                            font-weight: 600;
+                            padding: 3px 4px;
+                            gap: 4px;
+                            line-height: 1.25;
+                            opacity: 0.55;
+                        }
+                        .im-flow-caps li.is-active {
+                            font-weight: 800;
+                        }
+                        .im-step-n {
+                            width: 16px;
+                            height: 16px;
+                            font-size: 0.6rem;
+                            margin-top: 0;
+                        }
+                        .im-json-slot {
+                            flex: 1 0 auto;
+                            min-height: 88px;
+                        }
+                        .im-json-slot .im-textarea-v4 {
+                            min-height: 88px;
                         }
                         .im-header {
                             padding: var(--space-sm) var(--space-md) 0;
+                            background: var(--bg-surface);
                         }
+                        .im-title { font-size: 1.05rem; margin-bottom: 4px; }
                         .im-tabs-horizontal {
                             width: 100%;
                         }
@@ -1275,28 +1439,39 @@ export default function ImportModal({ onImport, onClose, importing, error, logge
                         }
                         .im-footer-v5 {
                             flex-direction: column;
-                            gap: var(--space-sm);
-                            padding: var(--space-md);
+                            gap: 8px;
+                            padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px));
                             height: auto;
+                            background: var(--bg-surface);
                         }
                         .im-footer-left, .im-footer-right {
                             width: 100%;
                             justify-content: center;
                         }
                         .im-external-ai-group {
-                            flex-direction: column;
+                            flex-direction: row;
                             width: 100%;
                         }
                         .im-footer-link-btn {
-                            width: 100%;
+                            flex: 1;
+                            width: auto;
                             justify-content: center;
+                            height: 40px;
+                            font-size: 0.8rem;
+                            padding: 0 10px;
+                            white-space: nowrap;
+                        }
+                        .im-footer-spacer {
+                            display: flex;
                         }
                         .im-btn-v5 {
                             flex: 1;
+                            height: 38px !important;
+                            font-size: 0.88rem !important;
                         }
                         .im-textarea-v4 {
-                            font-size: 0.95rem;
-                            padding: var(--space-md);
+                            font-size: 0.9rem;
+                            padding: var(--space-sm) var(--space-md);
                         }
                     }
 
@@ -1335,6 +1510,57 @@ export function formatImportSuccess(result, quota) {
         if (remaining === 0) text += '，之後請用手動匯入'
     }
     return text
+}
+
+function ManualPane({ jsonText, onJsonChange, tourMode, detectedCount }) {
+    const scrollRef = useRef(null)
+    const [showScrollCue, setShowScrollCue] = useState(false)
+
+    const updateScrollCue = () => {
+        const el = scrollRef.current
+        if (!el) return
+        setShowScrollCue(el.scrollHeight - el.scrollTop - el.clientHeight > 20)
+    }
+
+    useEffect(() => {
+        const el = scrollRef.current
+        if (!el) return
+        updateScrollCue()
+        el.addEventListener('scroll', updateScrollCue, { passive: true })
+        const ro = new ResizeObserver(updateScrollCue)
+        ro.observe(el)
+        return () => {
+            el.removeEventListener('scroll', updateScrollCue)
+            ro.disconnect()
+        }
+    }, [jsonText])
+
+    return (
+        <div className="im-manual-wrap">
+            <div className="im-manual-container" ref={scrollRef}>
+                <ManualGuide />
+                <div className="im-json-slot">
+                    <p className="im-json-slot-label">貼上 JSON 或「原文 / 譯文」</p>
+                    <textarea
+                        className="im-textarea-v4 im-code-editor"
+                        placeholder={'JSON 或每行：huis / 房子'}
+                        value={jsonText}
+                        onChange={onJsonChange}
+                        disabled={tourMode}
+                        readOnly={tourMode}
+                    />
+                    {detectedCount > 0 && (
+                        <div className="im-field-hint" style={{ color: 'var(--good)', marginTop: 0 }}>
+                            辨識到 {detectedCount} 張卡
+                        </div>
+                    )}
+                </div>
+            </div>
+            {showScrollCue && (
+                <div className="im-scroll-cue">下滑還有內容 · 貼上 JSON</div>
+            )}
+        </div>
+    )
 }
 
 function ManualGuide() {
@@ -1384,28 +1610,27 @@ function ManualGuide() {
 
     return (
         <div className="im-manual-guide">
-            <div className="im-manual-copy">
-                <p className="im-manual-lead">用 ChatGPT / Gemini 整理成 JSON，再貼回這裡。</p>
-                <ol
-                    className="im-flow-caps"
-                    onMouseEnter={() => setHold(true)}
-                    onMouseLeave={() => setHold(false)}
-                >
-                    {FLOW_STEPS.map((s, i) => (
-                        <li
-                            key={s.n}
-                            className={step === i ? 'is-active' : ''}
-                            onMouseEnter={() => hoverStep(i)}
-                            style={step === i ? { '--im-progress': `${progress}%` } : undefined}
-                        >
-                            <span className="im-step-fill" />
-                            <span className="im-step-n">{s.n}</span>
-                            {s.text}
-                        </li>
-                    ))}
-                </ol>
-            </div>
+            <p className="im-manual-lead">用 ChatGPT 整理成 JSON，再貼回這裡。</p>
             <ExternalAiDemo step={step} />
+            <ol
+                className="im-flow-caps"
+                onMouseEnter={() => setHold(true)}
+                onMouseLeave={() => setHold(false)}
+            >
+                {FLOW_STEPS.map((s, i) => (
+                    <li
+                        key={s.n}
+                        className={step === i ? 'is-active' : ''}
+                        onMouseEnter={() => hoverStep(i)}
+                        onClick={() => hoverStep(i)}
+                        style={step === i ? { '--im-progress': `${progress}%` } : undefined}
+                    >
+                        <span className="im-step-fill" />
+                        <span className="im-step-n">{s.n}</span>
+                        <span className="im-step-text">{s.text}</span>
+                    </li>
+                ))}
+            </ol>
         </div>
     )
 }
@@ -1413,44 +1638,46 @@ function ManualGuide() {
 const STEP_MS = 5000
 
 const FLOW_STEPS = [
-    { n: 1, label: '步驟 1 · 點擊複製提示並開啟', text: '點擊下方「複製提示並開啟 ChatGPT」' },
-    { n: 2, label: '步驟 2 · 貼上提示詞', text: '把提示詞貼進輸入框（先別送出）' },
-    { n: 3, label: '步驟 3 · 加上自己的單字', text: '滑到提示詞最後，貼上生字後再送出' },
-    { n: 4, label: '步驟 4 · 等待 JSON', text: '等待 AI 輸出 JSON' },
-    { n: 5, label: '步驟 5 · 複製結果', text: '點右下角複製圖示' },
-    { n: 6, label: '步驟 6 · 貼回這裡匯入', text: '回到這裡，貼上結果後匯入' },
+    { n: 1, label: '步驟 1 · 點擊複製提示並開啟', text: '點橘色按鈕開 ChatGPT' },
+    { n: 2, label: '步驟 2 · 貼上提示詞', text: '先貼提示詞，別急著送出' },
+    { n: 3, label: '步驟 3 · 加上自己的單字', text: '滑到最後，貼生字再送出' },
+    { n: 4, label: '步驟 4 · 等待 JSON', text: '等 AI 產出 JSON' },
+    { n: 5, label: '步驟 5 · 複製結果', text: '點右下角複製' },
+    { n: 6, label: '步驟 6 · 貼回這裡匯入', text: '回來貼上後匯入' },
 ]
 
 function ExternalAiDemo({ step }) {
     return (
         <div className="im-flow-demo" data-step={step} aria-hidden="true">
             <div className="im-flow-window">
+                <div className="im-flow-stage">
                 <div className="im-browser-bar">
                     <span className="im-browser-dots" />
                     <div className="im-browser-omni">
-                        <span className="im-url app">toocheep.app/import</span>
+                        <span className="im-url app">本網站 · 匯入單字</span>
                         <span className="im-url gpt">chatgpt.com</span>
                     </div>
                 </div>
                 <div className="im-browser-page">
                     <div className="im-view click">
                         <div className="im-click-scene">
-                            <p className="im-click-label">匯入單字 · 手動 / JSON</p>
+                            <span className="im-place-tag app">本 App</span>
+                            <p className="im-click-label">點這個橘色按鈕</p>
                             <div className="im-click-btns">
                                 <span className="im-flow-chip gpt im-click-target">
                                     複製提示並開啟 ChatGPT ↗
                                     <span className="im-flow-cursor" />
                                 </span>
-                                <span className="im-flow-chip gem">複製提示並開啟 Gemini ↗</span>
                             </div>
                         </div>
                     </div>
 
                     <div className="im-view app">
                         <div className="im-mini-modal">
-                            <div className="im-mini-title">匯入單字 · 手動 / JSON</div>
+                            <span className="im-place-tag app">本 App</span>
+                            <div className="im-mini-title">貼回這裡匯入</div>
                             <div className="im-mini-box">
-                                <span className="im-flow-placeholder">貼上 ChatGPT / Gemini 的整段回覆</span>
+                                <span className="im-flow-placeholder">貼上 ChatGPT 的整段回覆</span>
                                 <pre className="im-flow-pasted">{`[
   { "front": "kinderen", "lemma": "kind" },
   { "front": "huiswerk", "lemma": "huiswerk" }
@@ -1459,12 +1686,15 @@ function ExternalAiDemo({ step }) {
                             <span className="im-app-paste-flag">⌘V 貼上結果</span>
                             <div className="im-flow-app-btns">
                                 <span className="im-flow-chip gpt">複製提示並開啟 ChatGPT ↗</span>
-                                <span className="im-flow-chip gem">Gemini ↗</span>
                             </div>
                         </div>
                     </div>
 
                     <div className="im-view chat">
+                        <div className="im-gpt-top">
+                            <span className="im-gpt-mark" />
+                            ChatGPT
+                        </div>
                         <div className="im-chat-thread">
                             <div className="im-bubble user prompt">
                                 <span className="im-prompt-body">你是荷蘭語教授。請把單字整理成純 JSON 陣列，含 front、lemma、forms、例句與聯想記憶法。</span>
@@ -1503,6 +1733,7 @@ opbellen`}</span>
                         <span className="im-words-flag">滑到最後再貼生字</span>
                         <span className="im-copied-flag">已複製結果</span>
                     </div>
+                </div>
                 </div>
             </div>
             <div className="im-flow-steps">
