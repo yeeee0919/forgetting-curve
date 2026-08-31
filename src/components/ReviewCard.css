@@ -178,7 +178,8 @@
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    transition: background 0.15s var(--spring-smooth), border-color 0.15s var(--spring-smooth);
+    cursor: pointer;
+    transition: background 0.15s var(--spring-smooth), border-color 0.15s var(--spring-smooth), color 0.15s var(--spring-smooth);
 }
 
 .rc-autoplay-btn:active {
@@ -186,8 +187,15 @@
 }
 
 .rc-autoplay-btn.on {
-    background: rgba(11, 143, 140, 0.1);
+    background: rgba(11, 143, 140, 0.12);
     border-color: var(--brand-primary);
+    color: var(--brand-primary);
+}
+
+.rc-autoplay-btn.off {
+    background: var(--again-bg);
+    border-color: var(--again);
+    color: var(--again);
 }
 
 /* ── Card ── */

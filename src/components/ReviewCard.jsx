@@ -439,9 +439,11 @@ export default function ReviewCard({ dueCards, onRate, onDone, onDelete, onUpdat
         </div>
 
         <button
-          className={`rc-autoplay-btn ${autoPlay ? 'on' : ''}`}
+          className={`rc-autoplay-btn ${autoPlay ? 'on' : 'off'}`}
           onClick={toggleAutoPlay}
-          title={autoPlay ? '關閉自動發音' : '開啟自動發音'}
+          title={autoPlay ? '自動發音開著，點一下關閉' : '聲音已關閉，點一下開啟'}
+          aria-pressed={autoPlay}
+          aria-label={autoPlay ? '自動發音已開啟' : '聲音已關閉'}
         >
           <Icon name={autoPlay ? 'volume' : 'volumeOff'} size={18} />
         </button>
